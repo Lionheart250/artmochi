@@ -15,9 +15,7 @@ const multer = require('multer'); // Add multer for file uploads
 const path = require('path');
 const fs = require('fs');
 const helmet = require('helmet');
-const { uploadToS3 } = require('./utils/s3');
-const userRoutes = require('./src/routes/users').default;
-
+const { uploadToS3 } = require('./src/config/s3');
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -78,14 +76,12 @@ app.use((req, res, next) => {
 
 // 4. Static files and logging
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/profile_pictures', express.static('profile_pictures'));
 
 
 // 3. Serve profile pictures on '/profile_picture'
 
 // 4. Static files and logging
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/profile_pictures', express.static('profile_pictures'));
 
 
 // 3. Serve profile pictures on '/profile_picture'
@@ -113,13 +109,6 @@ app.use((req, res, next) => {
     }
     next();
 });
-
-// Directory setup and logging
-const uploadDir = path.join(__dirname, 'profile_pictures');
-if (!fs.existsSync(uploadDir)){
-    fs.mkdirSync(uploadDir, { recursive: true });
-    console.log('Created upload directory at:', uploadDir);
-}
 
 // Database setup
 console.log('Running in:', process.env.NODE_ENV, 'mode');
@@ -290,16 +279,6 @@ const optionalAuthenticateToken = (req, res, next) => {
 };
 
 // Add after middleware setup
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, './profile_pictures')
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now();
-        cb(null, `profile_${req.user.userId}_${uniqueSuffix}${path.extname(file.originalname)}`);
-    }
-});
-
 const upload = multer({
     storage: multer.memoryStorage(),
     fileFilter: (req, file, cb) => {

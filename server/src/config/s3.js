@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, S3ServiceException } from '@aws-sdk/client-s3';
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 
 // Validate environment variables
 const requiredEnvVars = ['AWS_REGION', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'S3_BUCKET_NAME'];
@@ -8,27 +8,22 @@ for (const envVar of requiredEnvVars) {
   }
 }
 
-export const s3Client = new S3Client({
+const s3Client = new S3Client({
   region: process.env.AWS_REGION,
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
   }
 });
 
-interface UploadResult {
-  success: boolean;
-  url?: string;
-  error?: string;
-}
-
-export const uploadToS3 = async (file: Buffer, key: string): Promise<UploadResult> => {
+const uploadToS3 = async (file, key) => {
   try {
     const command = new PutObjectCommand({
       Bucket: process.env.S3_BUCKET_NAME,
       Key: key,
       Body: file,
-      ServerSideEncryption: 'AES256'
+      ServerSideEncryption: 'AES256',
+      ACL: 'public-read'
     });
     
     await s3Client.send(command);
@@ -37,9 +32,11 @@ export const uploadToS3 = async (file: Buffer, key: string): Promise<UploadResul
       url: `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`
     };
   } catch (error) {
-    const errorMessage = error instanceof S3ServiceException 
-      ? error.message 
-      : 'Unknown error occurred during upload';
-    return { success: false, error: errorMessage };
+    return { 
+      success: false, 
+      error: error.message || 'Unknown error occurred during upload'
+    };
   }
 };
+
+module.exports = { s3Client, uploadToS3 };
