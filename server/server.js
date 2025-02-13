@@ -44,9 +44,9 @@ app.use(helmet({
 const allowedOrigins = [
     'https://www.artmochi.com',
     'https://artmochi.com',
-    'https://artmochi-frontend-production.up.railway.app', // Frontend on Railway
+    'https://artmochi-frontend-production.up.railway.app',
     'http://localhost:3001',
-    'https://artmochi-production.up.railway.app'  // Backend on Railway if needed
+    'https://artmochi-production.up.railway.app'
 ];
 
 // 2. Update CORS options
@@ -60,10 +60,14 @@ const corsOptions = {
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range']
 };
 
 app.use(cors(corsOptions));
+
+// Add this before your routes
+app.options('*', cors(corsOptions));
 
 // Add header size settings
 app.use((req, res, next) => {
@@ -499,7 +503,7 @@ app.post('/logout', (req, res) => {
 // --- Image Routes ---
 
 // Modify images endpoint to use global sort
-app.get('/images', optionalAuthenticateToken, async (req, res) => {
+app.get('/images', cors(corsOptions), optionalAuthenticateToken, async (req, res) => {
     try {
         const { sortType = 'newest', page = 1, limit = 20 } = req.query;
         const offset = (page - 1) * limit;
