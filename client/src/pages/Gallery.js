@@ -370,14 +370,17 @@ const Gallery = () => {
             const nextImage = images[nextIndex];
             if (nextImage && nextImage.id !== activeImageId) {
                 try {
-                    // Pre-fetch the details first
-                    
-                    
-                    // Then update UI state
+                    // 1. Update UI immediately
                     setModalImage(nextImage.image_url);
                     setActiveImageId(nextImage.id);
+                    
+                    // 2. Get fresh data first time
                     await fetchImageDetails(nextImage.id);
+                    
+                    // 3. Update URL after we have data
                     navigate(`?id=${nextImage.id}`, { replace: true });
+                    
+                    // 4. Get fresh data again to ensure we have latest
                     await fetchImageDetails(nextImage.id);
                 } catch (error) {
                     console.error('Error fetching next image details:', error);

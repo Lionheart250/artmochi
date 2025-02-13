@@ -511,10 +511,10 @@ const Profile = () => {
 
     const openModal = async (image) => {
         try {
-            setModalImage(image);
+            setModalImage(image.image_url);  // Change this to match Gallery.js
             setActiveImageId(image.id);
-            setModalOpen(true);
             await fetchImageDetails(image.id);
+            navigate(`?id=${image.id}`, { replace: true });
         } catch (error) {
             console.error('Error fetching image details:', error);
         }
@@ -534,14 +534,40 @@ const Profile = () => {
         const nextImage = currentImages[newIndex];
         if (nextImage) {
             try {
-                setModalImage(nextImage);
+                // Update to match Gallery.js
+                setModalImage(nextImage.image_url);
                 setActiveImageId(nextImage.id);
+                await fetchImageDetails(nextImage.id);
+                navigate(`?id=${nextImage.id}`, { replace: true });
                 await fetchImageDetails(nextImage.id);
             } catch (error) {
                 console.error('Error fetching next image details:', error);
             }
         }
     };
+
+    useEffect(() => {
+            const handleKeyDown = (e) => {
+                if (!modalImage) return;
+    
+                switch(e.key) {
+                    case 'ArrowLeft':
+                        navigateImage(-1);
+                        break;
+                    case 'ArrowRight':
+                        navigateImage(1);
+                        break;
+                    case 'Escape':
+                        closeModal();
+                        break;
+                    default:
+                        break;
+                }
+            };
+    
+            window.addEventListener('keydown', handleKeyDown);
+            return () => window.removeEventListener('keydown', handleKeyDown);
+        }, [modalImage, activeImageId]);
 
     const isAdmin = user && user.role === 'admin';
 
@@ -674,45 +700,6 @@ const Profile = () => {
             isMounted = false;
         };
     }, [id]);
-
-    const handleFileChange = (e) => {
-        setFile(e.target.files[0]);
-    };
-
-    const handleUpload = async () => {
-        if (!file) {
-            setMessage('Please select a file to upload.');
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('profile_picture', file);
-
-        const token = localStorage.getItem('token');
-        try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/upload_profile_picture`, {                
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                body: formData
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            console.log('Profile picture updated:', data);
-            setMessage('Profile picture updated successfully.');
-
-            // Re-fetch the profile picture
-            await fetchProfilePicture();
-        } catch (error) {
-            console.error('Error updating profile picture:', error);
-            setMessage('Failed to update profile picture.');
-        }
-    };
 
     const fetchProfilePicture = async () => {
         const token = localStorage.getItem('token');
@@ -1046,7 +1033,7 @@ const Profile = () => {
                                 >
                                     &lt;
                                 </button>
-                                <img className="profile-modal-image" src={modalImage.image_url} alt="Enlarged" />
+                                <img className="profile-modal-image" src={modalImage} alt="Enlarged" />
                                 {isAdmin && (
                                     <div className="profile-delete-section">
                                         <button className="profile-delete-button" onClick={handleDeleteImage}>
