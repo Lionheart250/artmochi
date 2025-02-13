@@ -231,15 +231,11 @@ const Profile = () => {
             setBio(data.bio || '');
             
             // Only update profile picture if it exists
-            if (data.profile_picture && data.profile_picture !== 'default-avatar.png') {
-                const baseUrl = process.env.REACT_APP_API_URL;
-                const picturePath = data.profile_picture.startsWith('/') 
-                    ? data.profile_picture 
-                    : `/${data.profile_picture}`;
-                setProfilePicture(`${baseUrl}${picturePath}`);
+            if (data.profile_picture) {
+                // Use the S3 URL directly if it's from S3
+                setProfilePicture(constructProfilePicUrl(data.profile_picture));
             } else {
-                // Keep existing profile picture if available, otherwise set default
-                setProfilePicture(prev => prev || '/default-avatar.png');
+                setProfilePicture('/default-avatar.png');
             }
         } catch (error) {
             console.error('Error fetching profile:', error);
@@ -271,11 +267,9 @@ const Profile = () => {
 
             const data = await response.json();
             if (data.success) {
-                // Update to use the full S3 URL directly from the response
+                // Use the S3 URL directly
                 setProfilePicture(data.filepath);
                 setTempProfilePicture(data.filepath);
-                // Fetch the updated profile to ensure everything is in sync
-                await fetchUserProfile();
                 setMessage('Profile picture updated successfully');
             } else {
                 throw new Error(data.error || 'Failed to upload profile picture');
@@ -620,7 +614,14 @@ const Profile = () => {
 
     const constructProfilePicUrl = (path) => {
         if (!path) return '/default-avatar.png';
-        const baseUrl = process.env.REACT_APP_API_URL;        
+        
+        // If it's already a full S3 URL, return it as is
+        if (path.startsWith('http')) {
+            return path;
+        }
+        
+        // Otherwise, append to API URL
+        const baseUrl = process.env.REACT_APP_API_URL;
         const picturePath = path.startsWith('/') ? path : `/${path}`;
         return `${baseUrl}${picturePath}`;
     };
