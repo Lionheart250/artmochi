@@ -4,6 +4,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
 import debounce from 'lodash.debounce';
+import { getImageUrl } from '../utils/imageUtils';
+
 import './Profile.css';
 import { ReactComponent as LikeIcon } from '../assets/icons/like.svg';
 import { ReactComponent as CommentIcon } from '../assets/icons/comment.svg';
@@ -247,14 +249,28 @@ const Profile = () => {
     };
 
     const handleProfilePictureChange = async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setProfilePictureFile(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setTempProfilePicture(reader.result);
-            };
-            reader.readAsDataURL(file);
+        if (!e.target.files?.[0]) return;
+        
+        const formData = new FormData();
+        formData.append('image', e.target.files[0]);
+      
+        try {
+          const response = await fetch(`${process.env.REACT_APP_API_URL}/api/users/upload-profile-picture`, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include'
+          });
+      
+          const data = await response.json();
+          if (data.success) {
+            setProfilePicture(data.url);
+            setTempProfilePicture(data.url);
+          } else {
+            setMessage('Failed to upload profile picture');
+          }
+        } catch (error) {
+          console.error('Error uploading profile picture:', error);
+          setMessage('Error uploading profile picture');
         }
     };
 
@@ -1025,12 +1041,13 @@ const Profile = () => {
                             <div className="profile-modal-info">
                                 <div className="profile-user-info">
                                     <img 
-                                        src={imageUserDetails[activeImageId]?.profile_picture ? 
-                                            `${process.env.REACT_APP_API_URL}/profile_pictures/${imageUserDetails[activeImageId]?.profile_picture.split('/').pop()}` : 
-                                            '/default-avatar.png'}
+                                        src={getImageUrl(imageUserDetails[activeImageId]?.profile_picture, 'profile')} 
                                         alt="Profile"
                                         className="profile-user-avatar"
-                                        onClick={() => navigate(`/profile/${imageUserDetails[activeImageId]?.user_id}`)}
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.src = '/default-avatar.png';
+                                        }}
                                     />
                                     <div className="profile-user-details">
                                         <h4 onClick={() => navigate(`/profile/${imageUserDetails[activeImageId]?.user_id}`)}>

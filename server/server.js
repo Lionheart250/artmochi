@@ -39,10 +39,6 @@ app.use(helmet({
     crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }
 }));
 
-// Static file serving configuration
-app.use('/profile_pictures', express.static(path.join(__dirname, 'profile_pictures')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
 // Update CORS configuration
 const allowedOrigins = [
     'https://www.artmochi.com',
@@ -74,15 +70,13 @@ app.use((req, res, next) => {
     res.setHeader('Connection', 'keep-alive');
     next();
 });
-// Ensure directories exist
-const ensureDirectoryExists = (directory) => {
-    if (!fs.existsSync(directory)) {
-        fs.mkdirSync(directory, { recursive: true });
-    }
-};
 
-ensureDirectoryExists(path.join(__dirname, 'profile_pictures'));
-ensureDirectoryExists(path.join(__dirname, 'uploads'));
+// 4. Static files and logging
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/profile_pictures', express.static('profile_pictures'));
+
+
+// 3. Serve profile pictures on '/profile_picture'
 
 // 4. Static files and logging
 app.use(express.static(path.join(__dirname, 'public')));
@@ -301,8 +295,8 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ 
-    storage: storage,
+const upload = multer({
+    storage: multer.memoryStorage(),
     fileFilter: (req, file, cb) => {
         if (file.mimetype.startsWith('image/')) {
             cb(null, true);
@@ -310,7 +304,7 @@ const upload = multer({
             cb(new Error('Not an image file'));
         }
     }
-}).single('image'); // Changed from 'profile_picture' to 'image'
+});
 
 // --- User Routes ---
 
@@ -692,37 +686,32 @@ const FORGE_URL = 'http://127.0.0.1:7860';
 
 // Generate image
 app.post('/generate_image', authenticateTokenWithAutoRefresh, async (req, res) => {
-    const { prompt, negativePrompt, width, height, distilled_cfg_scale, steps, sampler_name } = req.body;
-    const userId = req.user.userId;
-
     try {
-        // Generate image with ForgeUI
-        const response = await axios.post(`${FORGE_URL}/sdapi/v1/txt2img`, {
-            prompt: prompt,
-            negative_prompt: negativePrompt,
-            width: width,
-            height: height,
-            cfg_scale: 1,
-            distilled_cfg_scale: distilled_cfg_scale || 3.5,
-            steps: steps || 20,
-            sampler_name: "Euler",
-            scheduler: "Simple",
-            batch_size: 1,
-            seed: -1
-        });
+        // ... existing ForgeUI call ...
 
         if (response.data?.images?.[0]) {
-            const imageUrl = `data:image/png;base64,${response.data.images[0]}`;
+            // Upload to S3 instead of storing base64
+            const key = `generated/${Date.now()}-${userId}.jpg`;
+            const imageBuffer = Buffer.from(response.data.images[0], 'base64');
+            
+            const s3Result = await uploadToS3(imageBuffer, key);
+            if (!s3Result.success) {
+                throw new Error(s3Result.error);
+            }
+
             const result = await pool.query(
                 `INSERT INTO images (user_id, image_url, prompt, negative_prompt, steps, width, height) 
                 VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-                [userId, imageUrl, prompt, negativePrompt, steps, width, height]
+                [userId, s3Result.url, prompt, negativePrompt, steps, width, height]
             );
 
-            res.json({ image: response.data.images[0], imageId: result.rows[0].id });
+            res.json({ 
+                image: s3Result.url, 
+                imageId: result.rows[0].id 
+            });
         }
     } catch (error) {
-        console.error('ForgeUI Error:', error.response?.data || error.message);
+        console.error('Image generation error:', error);
         res.status(500).json({ error: 'Failed to generate image' });
     }
 });
@@ -1123,59 +1112,41 @@ app.post('/add_favorite', authenticateTokenWithAutoRefresh, (req, res) => {
 });
 
 // Upload Profile Picture
-app.post('/upload_profile_picture', authenticateTokenWithAutoRefresh, async (req, res) => {
-    upload(req, res, async function(err) {
-        if (err instanceof multer.MulterError) {
-            return res.status(400).json({ error: err.message });
-        } else if (err) {
-            return res.status(500).json({ error: 'Error uploading file' });
+app.post('/upload_profile_picture', authenticateTokenWithAutoRefresh, upload.single('image'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
         }
 
         const userId = req.user.userId;
-        const filepath = req.file.path;
-        const filename = req.file.filename;
+        const key = `profile-pictures/${userId}-${Date.now()}.jpg`;
 
-        try {
-            await pool.query('BEGIN');
-
-            // Delete old picture if exists
-            const oldPicture = await pool.query(
-                'SELECT filepath FROM profile_pictures WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1',
-                [userId]
-            );
-
-            if (oldPicture.rows[0]?.filepath) {
-                try {
-                    await fs.promises.unlink(oldPicture.rows[0].filepath);
-                } catch (err) {
-                    console.log('No previous profile picture to delete');
-                }
-            }
-
-            // Insert new picture
-            await pool.query(
-                'INSERT INTO profile_pictures (user_id, filename, filepath) VALUES ($1, $2, $3)',
-                [userId, filename, filepath]
-            );
-
-            // Update user profile
-            await pool.query(
-                'UPDATE users SET profile_picture = $1 WHERE id = $2',
-                [filepath, userId]
-            );
-
-            await pool.query('COMMIT');
-
-            res.json({ 
-                success: true,
-                profilePicturePath: filepath 
-            });
-        } catch (error) {
-            await pool.query('ROLLBACK');
-            console.error('Error handling profile picture:', error);
-            res.status(500).json({ error: 'Failed to process profile picture' });
+        // Upload to S3
+        const s3Result = await uploadToS3(req.file.buffer, key);
+        if (!s3Result.success) {
+            throw new Error(s3Result.error);
         }
-    });
+
+        await pool.query('BEGIN');
+
+        // Insert new picture in profile_pictures table
+        const result = await pool.query(
+            'INSERT INTO profile_pictures (user_id, filename, filepath) VALUES ($1, $2, $3) RETURNING id',
+            [userId, key, s3Result.url]
+        );
+
+        await pool.query('COMMIT');
+
+        res.json({ 
+            success: true,
+            profilePictureUrl: s3Result.url,
+            id: result.rows[0].id
+        });
+    } catch (error) {
+        await pool.query('ROLLBACK');
+        console.error('Error handling profile picture:', error);
+        res.status(500).json({ error: 'Failed to process profile picture' });
+    }
 });
 
 // Update profile picture retrieval endpoint
@@ -1186,8 +1157,7 @@ app.get('/profile_picture', authenticateTokenWithAutoRefresh, async (req, res) =
     try {
         const query = `
             SELECT 
-                u.profile_picture,
-                pp.filepath,
+                pp.filepath as profile_picture_url,
                 u.username
             FROM users u
             LEFT JOIN profile_pictures pp 
@@ -1196,6 +1166,7 @@ app.get('/profile_picture', authenticateTokenWithAutoRefresh, async (req, res) =
                     SELECT id 
                     FROM profile_pictures 
                     WHERE user_id = u.id 
+                    AND deleted_at IS NULL
                     ORDER BY created_at DESC 
                     LIMIT 1
                 )
@@ -1210,7 +1181,7 @@ app.get('/profile_picture', authenticateTokenWithAutoRefresh, async (req, res) =
         }
         
         const profilePicture = result.rows[0].filepath || 
-                             result.rows[0].profile_picture || 
+                             result.rows[0].profile_picture_url || 
                              'default-avatar.png';
                              
         console.log('Selected profile picture:', profilePicture);
@@ -1232,13 +1203,20 @@ app.put('/update_profile/:id', authenticateTokenWithAutoRefresh, async (req, res
 
     try {
         await client.query('BEGIN');
+        
         const query = `
             UPDATE users
             SET username = COALESCE($1, username),
                 bio = COALESCE($2, bio)
             WHERE id = $3
-            RETURNING username, bio
+            RETURNING username, bio,
+                (SELECT filepath FROM profile_pictures 
+                 WHERE user_id = $3 
+                 AND deleted_at IS NULL
+                 ORDER BY created_at DESC 
+                 LIMIT 1) as profile_picture_url
         `;
+        
         const { rows } = await client.query(query, [username, bio, userId]);
         await client.query('COMMIT');
 
@@ -1246,7 +1224,13 @@ app.put('/update_profile/:id', authenticateTokenWithAutoRefresh, async (req, res
             return res.status(404).json({ error: 'User not found' });
         }
 
-        res.json({ message: 'Profile updated successfully', data: rows[0] });
+        res.json({ 
+            message: 'Profile updated successfully', 
+            data: {
+                ...rows[0],
+                profile_picture: rows[0].profile_picture_url || '/default-avatar.png'
+            }
+        });
     } catch (err) {
         await client.query('ROLLBACK');
         console.error('Error updating profile:', err);
@@ -1360,44 +1344,31 @@ app.post('/update_profile', authenticateTokenWithAutoRefresh, async (req, res) =
 });
 
 
-app.get('/user_images/:userId', authenticateTokenWithAutoRefresh, (req, res) => {
-    console.log('Request params:', req.params);
-    console.log('Authenticated user:', req.user);
-    const userId = req.params.userId;
-
-    if (!userId) {
-        return res.status(400).json({ error: 'User ID is required' });
-    }
-
-    // Add detailed logging
-    const query = `
-        SELECT images.*, users.username, users.profile_picture 
-        FROM images 
-        JOIN users ON images.user_id = users.id 
-        WHERE user_id = $1 
-        ORDER BY created_at DESC
-    `;
-    
-    console.log('Executing query with userId:', userId);
-
-    pool.query(query, [userId], (err, result) => {
-        if (err) {
-            console.error('Error fetching user images:', err);
-            return res.status(500).json({ error: 'Failed to fetch user images' });
-        }
+app.get('/user_images/:userId', authenticateTokenWithAutoRefresh, async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT i.*, 
+                   u.username, 
+                   COALESCE(pp.filepath, u.profile_picture) as profile_picture
+            FROM images i
+            JOIN users u ON i.user_id = u.id
+            LEFT JOIN profile_pictures pp ON pp.user_id = u.id 
+                AND pp.id = (
+                    SELECT id FROM profile_pictures 
+                    WHERE user_id = u.id 
+                    AND deleted_at IS NULL
+                    ORDER BY created_at DESC 
+                    LIMIT 1
+                )
+            WHERE i.user_id = $1 
+            ORDER BY i.created_at DESC
+        `, [req.params.userId]);
         
-        // Log each image's details
-        result.rows.forEach(img => {
-            console.log('Image:', {
-                id: img.id,
-                user_id: img.user_id,
-                created_at: img.created_at
-            });
-        });
-        
-        console.log('Found images for user:', result.rows?.length);
         res.json({ images: result.rows });
-    });
+    } catch (error) {
+        console.error('Error fetching user images:', error);
+        res.status(500).json({ error: 'Failed to fetch user images' });
+    }
 });
 
 // Follow user
@@ -1607,24 +1578,32 @@ app.get('/user/:userId/followers', authenticateTokenWithAutoRefresh, async (req,
 });
 
 app.post('/save_generated_image', authenticateTokenWithAutoRefresh, async (req, res) => {
-    const { imageUrl, prompt, userId } = req.body;
+    const { imageData, prompt, userId } = req.body;
     
     try {
+        const key = `saved/${Date.now()}-${userId}.jpg`;
+        const imageBuffer = Buffer.from(imageData, 'base64');
+        
+        const s3Result = await uploadToS3(imageBuffer, key);
+        if (!s3Result.success) {
+            throw new Error(s3Result.error);
+        }
+
         const result = await pool.query(
             `INSERT INTO images (user_id, image_url, prompt, created_at) 
              VALUES ($1, $2, $3, NOW()) 
              RETURNING id`,
-            [userId, imageUrl, prompt]
+            [userId, s3Result.url, prompt]
         );
         
         res.json({ 
             success: true, 
             imageId: result.rows[0].id,
-            message: 'Image saved successfully' 
+            imageUrl: s3Result.url
         });
     } catch (error) {
         console.error('Error saving image:', error);
-        res.status(500).json({ error: 'Failed to save image to database' });
+        res.status(500).json({ error: 'Failed to save image' });
     }
 });
 
