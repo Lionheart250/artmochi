@@ -1,6 +1,8 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { s3Client } from '../config/s3';
-import { db } from '../db';
+
+// Import the existing pool from server.js
+const pool = require('../../server').pool;
 
 interface ProfilePictureResult {
   success: boolean;
@@ -28,8 +30,8 @@ export const uploadProfilePicture = async (
     await s3Client.send(command);
     const url = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
 
-    // Insert into profile_pictures table
-    const result = await db.query(
+    // Use the existing pool
+    const result = await pool.query(
       `INSERT INTO profile_pictures (user_id, filename, filepath) 
        VALUES ($1, $2, $3) 
        RETURNING id`,
@@ -52,7 +54,7 @@ export const uploadProfilePicture = async (
 
 export const getLatestProfilePicture = async (userId: string): Promise<string | null> => {
   try {
-    const result = await db.query(
+    const result = await pool.query(
       `SELECT filepath 
        FROM profile_pictures 
        WHERE user_id = $1 
@@ -71,7 +73,7 @@ export const getLatestProfilePicture = async (userId: string): Promise<string | 
 
 export const softDeleteProfilePicture = async (pictureId: number): Promise<boolean> => {
   try {
-    await db.query(
+    await pool.query(
       `UPDATE profile_pictures 
        SET deleted_at = CURRENT_TIMESTAMP 
        WHERE id = $1`,
