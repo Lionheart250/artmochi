@@ -53,8 +53,7 @@ const Gallery = () => {
             console.log('Opening modal for image ID:', image.id);
             setActiveImageId(image.id);
             setModalOpen(true);
-            fetchImageDetails(image.id);
-            fetchAllData(image.id);
+            fetchImageDetails(image.id); // Only need this one call
         }, 300),
         []
     );
@@ -349,9 +348,8 @@ const Gallery = () => {
     const openModal = (image) => {
         setModalImage(image.image_url);
         setActiveImageId(image.id);
-        console.log('Opening modal for image ID:', image.id); // Debug log
-        fetchImageDetails(image.id);
-        fetchAllData(image.id);
+        console.log('Opening modal for image ID:', image.id);
+        fetchImageDetails(image.id); // Only need this one call
         navigate(`?id=${image.id}`, { replace: true });
     };
 
