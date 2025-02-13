@@ -1629,19 +1629,22 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
 
             // Upload to S3 instead of converting to base64
             const key = `generated/${Date.now()}-${req.user.userId}.webp`;
-            const imageUrl = await uploadToS3(
+            const s3Result = await uploadToS3(
                 imageResponse.data,
                 key,
                 'image/webp'
             );
 
-            // Save S3 URL to database
+            if (!s3Result.success) {
+                throw new Error('Failed to upload to S3');
+            }
+
             const result = await pool.query(
                 `INSERT INTO images (user_id, image_url, prompt, negative_prompt, steps, width, height) 
                 VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
                 [
                     req.user.userId,
-                    imageUrl,
+                    s3Result.url,  // Use the URL from the response object
                     req.body.input.prompt,
                     req.body.input.negative_prompt || '',
                     req.body.input.num_inference_steps,
@@ -1651,7 +1654,7 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
             );
 
             res.json({
-                image: imageUrl,
+                image: s3Result.url,  // Use the URL from the response object
                 imageId: result.rows[0].id
             });
         }

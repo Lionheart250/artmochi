@@ -205,8 +205,8 @@ const handleSubmit = async (e) => {
 
         const data = await response.json();
         
-        if (data.output && data.output[0]) {
-            setImage(data.output[0]);
+        if (data.image) {  // Changed from data.output
+            setImage(data.image);  // Use data.image instead of data.output[0]
             console.log('Image generated successfully:', data);
         } else if (data.error) {
             throw new Error(data.error);
