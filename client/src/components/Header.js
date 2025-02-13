@@ -34,18 +34,17 @@ const Header = () => {
     useEffect(() => {
         const fetchProfilePicture = async () => {
             const token = localStorage.getItem('token');
-            if (!token) return;
+            if (!token || !user?.id) return;
     
             try {
                 const response = await fetch(
-                    `${process.env.REACT_APP_API_URL}/profile_picture`,                    
+                    `${process.env.REACT_APP_API_URL}/user_profile/${user.id}`,                    
                     {
-                        method: 'GET',
                         headers: {
                             'Authorization': `Bearer ${token}`,
-                            'Accept': 'application/json'
+                            'Content-Type': 'application/json'
                         },
-                        credentials: 'same-origin'
+                        credentials: 'include'
                     }
                 );
     
@@ -53,8 +52,7 @@ const Header = () => {
 
                 const data = await response.json();
                 if (data.profile_picture) {
-                    const fileName = data.profile_picture.split('/').pop();
-                    setHeaderProfilePic(`${process.env.REACT_APP_API_URL}/profile_pictures/${fileName}`);
+                    setHeaderProfilePic(data.profile_picture);
                 }
             } catch (error) {
                 console.error('Profile picture fetch error:', error);
@@ -62,10 +60,8 @@ const Header = () => {
             }
         };
 
-        if (user?.id) {
-            fetchProfilePicture();
-        }
-    }, [user]);
+        fetchProfilePicture();
+    }, [user?.id, profilePicture]); // Add profilePicture as dependency
 
     // Header position effect
     useEffect(() => {
@@ -108,6 +104,39 @@ const Header = () => {
         };
     }, [isMoreMenuOpen]); // Add isMoreMenuOpen dependency
 
+    const profilePicElement = (
+        <img 
+            src={headerProfilePic || '/default-avatar.png'}
+            alt={user?.username}
+            className="header-profile-pic"
+            onError={(e) => {
+                if (!headerProfilePic) {
+                    const token = localStorage.getItem('token');
+                    if (token && user?.id) {
+                        // Retry fetch on error
+                        fetch(`${process.env.REACT_APP_API_URL}/user_profile/${user.id}`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            credentials: 'include'
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.profile_picture) {
+                                setHeaderProfilePic(data.profile_picture);
+                            }
+                        })
+                        .catch(() => {
+                            e.target.src = '/default-avatar.png';
+                        });
+                    }
+                }
+                e.target.src = '/default-avatar.png';
+            }}
+        />
+    );
+
     return (
         <>
             <header className={`header ${headerPosition}-header ${isMoreMenuOpen ? 'drawer-open' : ''}`}>
@@ -141,12 +170,7 @@ const Header = () => {
                                 </NavLink>
                                 {user ? (
                                     <NavLink to={`/profile/${user.id}`} className="side-nav-link">
-                                        <img 
-                                            src={getImageUrl(profilePicture, 'profile')}
-                                            alt={user.username}
-                                            className="header-profile-pic"
-                                            onError={(e) => e.target.src = '/default-avatar.png'}
-                                        />
+                                        {profilePicElement}
                                         <span>Profile</span>
                                     </NavLink>
                                 ) : (
@@ -182,13 +206,8 @@ const Header = () => {
                         <div className="header-auth-buttons">
                             {user ? (
                                 <div className="profile-dropdown" onClick={toggleDropdown} ref={dropdownRef}>
-                                    <img 
-                                        src={getImageUrl(profilePicture, 'profile')}
-                                        alt={user.username}
-                                        className="header-profile-pic"
-                                        onError={(e) => e.target.src = '/default-avatar.png'}
-                                    />
-                                    <span className="header-username">{user.username}</span>
+                                    {profilePicElement}
+                                    <span className="header-username">{user?.username}</span>
                                     {isDropdownOpen && (
                                         <div className="dropdown-menu">
                                             <NavLink to={`/profile/${user.id}`}>Profile</NavLink>

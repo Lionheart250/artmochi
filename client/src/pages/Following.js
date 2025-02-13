@@ -26,11 +26,15 @@ const Following = () => {
     const [isFollowing, setIsFollowing] = useState(false);
     const navigate = useNavigate();
 
-    const handleImageClick = (image) => {
-        setModalImage(image);
-        setActiveImageId(image.id);
-        setModalOpen(true);
-        fetchAllData(image.id);
+    const handleImageClick = async (image) => {
+        try {
+            setModalImage(image);
+            setActiveImageId(image.id);
+            setModalOpen(true);
+            await fetchImageDetails(image.id);
+        } catch (error) {
+            console.error('Error opening modal:', error);
+        }
     };
 
     const closeModal = () => {
@@ -145,15 +149,25 @@ const Following = () => {
             const data = await response.json();
             console.log('Following posts:', data);
     
+            // Fetch user profiles for all posts
+            const userProfiles = await Promise.all(
+                data.map(post => 
+                    fetch(`${process.env.REACT_APP_API_URL}/user_profile/${post.user_id}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }).then(res => res.json())
+                )
+            );
+    
             const details = {};
             const likesMap = {};
             const commentsMap = {};
             const userLikedSet = new Set();
     
-            data.forEach(post => {
+            // Combine post data with user profiles
+            data.forEach((post, index) => {
                 details[post.id] = {
-                    username: post.username,
-                    profile_picture: post.profile_picture,
+                    username: userProfiles[index].username,
+                    profile_picture: userProfiles[index].profile_picture,
                     user_id: post.user_id
                 };
                 likesMap[post.id] = post.like_count;
@@ -177,8 +191,7 @@ const Following = () => {
         fetchFollowingPosts();
     }, []);
 
-    const navigateImage = (direction) => {
-        if (!modalImage) return;
+    const navigateImage = async (direction) => {
         const currentIndex = images.findIndex(img => img.id === activeImageId);
         let newIndex;
         
@@ -188,10 +201,16 @@ const Following = () => {
             newIndex = currentIndex + 1 >= images.length ? 0 : currentIndex + 1;
         }
         
-        const newImage = images[newIndex];
-        setModalImage(newImage);
-        setActiveImageId(newImage.id);
-        fetchAllData(newImage.id);
+        const nextImage = images[newIndex];
+        if (nextImage) {
+            try {
+                setModalImage(nextImage);
+                setActiveImageId(nextImage.id);
+                await fetchImageDetails(nextImage.id);
+            } catch (error) {
+                console.error('Error navigating:', error);
+            }
+        }
     };
 
     const fetchAllData = async (imageId) => {
@@ -277,41 +296,59 @@ const fetchImageDetails = async (imageId) => {
     try {
         // First get image details
         const imageDetailsResponse = await fetch(`${process.env.REACT_APP_API_URL}/images/${imageId}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
         });
-        
+
         const imageData = await imageDetailsResponse.json();
         
-        // Then fetch comments and follow status
-        const [commentsResponse, followStatusResponse] = await Promise.all([
-            fetch(`${process.env.REACT_APP_API_URL}/fetch_comments?id=${imageId}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            }),
-            fetch(`${process.env.REACT_APP_API_URL}/user/${imageData.user_id}/stats`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            })
-        ]);
+        // Get the user's profile data
+        const userProfileResponse = await fetch(`${process.env.REACT_APP_API_URL}/user_profile/${imageData.user_id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
 
-        const [comments, stats] = await Promise.all([
-            commentsResponse.json(),
-            followStatusResponse.json()
-        ]);
+        const userProfileData = await userProfileResponse.json();
 
-        // Update states with correct URL construction
         setImageUserDetails(prev => ({
             ...prev,
             [imageId]: {
-                ...stats,
-                profile_picture: stats.profile_picture ? 
-                    `${process.env.REACT_APP_API_URL}/profile_pictures/${stats.profile_picture.split('/').pop()}` :
-                    '/default-avatar.png'
+                ...imageData,
+                username: userProfileData.username,
+                profile_picture: userProfileData.profile_picture
             }
         }));
 
-        setComments(prev => ({
-            ...prev,
-            [imageId]: comments.comments
-        }));
+        // Fetch comments
+        const commentsResponse = await fetch(`${process.env.REACT_APP_API_URL}/fetch_comments?id=${imageId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (commentsResponse.ok) {
+            const commentsData = await commentsResponse.json();
+            
+            // Fetch profile data for each comment author
+            const commentUserProfiles = await Promise.all(
+                commentsData.comments.map(comment => 
+                    fetch(`${process.env.REACT_APP_API_URL}/user_profile/${comment.user_id}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }).then(res => res.json())
+                )
+            );
+
+            // Combine comment data with profile data
+            const commentsWithProfiles = commentsData.comments.map((comment, index) => ({
+                ...comment,
+                profile_picture: commentUserProfiles[index].profile_picture
+            }));
+
+            setComments(prev => ({
+                ...prev,
+                [imageId]: commentsWithProfiles
+            }));
+        }
 
     } catch (error) {
         console.error('Error fetching image details:', error);
@@ -431,10 +468,15 @@ const fetchImageDetails = async (imageId) => {
                         >
                             <div className="following-user-info">
                                 <img 
-                                    src={getImageUrl(imageUserDetails[image.id]?.profile_picture, 'profile')}
+                                    src={imageUserDetails[image.id]?.profile_picture || '/default-avatar.png'}
                                     alt="Profile"
                                     className="following-user-avatar"
-                                    onError={(e) => e.target.src = '/default-avatar.png'}
+                                    onError={(e) => {
+                                        if (!imageUserDetails[image.id]?.profile_picture) {
+                                            fetchImageDetails(image.id);
+                                        }
+                                        e.target.src = '/default-avatar.png';
+                                    }}
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         navigate(`/profile/${image.user_id}`);
@@ -469,10 +511,15 @@ const fetchImageDetails = async (imageId) => {
                 <div className="profile-modal-info">
                     <div className="profile-user-info">
                         <img 
-                            src={getImageUrl(imageUserDetails[activeImageId]?.profile_picture, 'profile')}
-                            alt="Profile"
-                            className="profile-user-avatar"
-                            onError={(e) => e.target.src = '/default-avatar.png'}
+                            src={imageUserDetails[activeImageId]?.profile_picture || '/default-avatar.png'}
+                            alt={imageUserDetails[activeImageId]?.username || 'Profile'}
+                            className="following-user-avatar"
+                            onError={(e) => {
+                                if (!imageUserDetails[activeImageId]?.profile_picture) {
+                                    fetchImageDetails(activeImageId);
+                                }
+                                e.target.src = '/default-avatar.png';
+                            }}
                             onClick={() => navigate(`/profile/${imageUserDetails[activeImageId]?.user_id}`)}
                         />
                         <div className="profile-user-details">

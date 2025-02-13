@@ -54,6 +54,7 @@ const Profile = () => {
     const [showFollowingModal, setShowFollowingModal] = useState(false);
     const [followersList, setFollowersList] = useState([]);
     const [followingList, setFollowingList] = useState([]);
+    const [imageDetailsLoading, setImageDetailsLoading] = useState(false);
 
     const formatDate = (date) => {
         if (!date) return '';
@@ -68,79 +69,71 @@ const Profile = () => {
     const fetchImageDetails = async (imageId) => {
         const token = localStorage.getItem('token');
         if (!token) return;
-    
+
+        setImageDetailsLoading(true);
         try {
-            // First get image details to get user_id
-            const imageDetailsResponse = await fetch(`${process.env.REACT_APP_API_URL}/images/${imageId}`, {                
+            // First get image details
+            const imageDetailsResponse = await fetch(`${process.env.REACT_APP_API_URL}/images/${imageId}`, {
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+            const imageData = await imageDetailsResponse.json();
+            
+            // Get the user's profile data
+            const userProfileResponse = await fetch(`${process.env.REACT_APP_API_URL}/user_profile/${imageData.user_id}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-    
-            if (!imageDetailsResponse.ok) {
-                throw new Error('Failed to fetch image details');
-            }
-    
-            const imageData = await imageDetailsResponse.json();
+
+            const userProfileData = await userProfileResponse.json();
+
             setImageUserDetails(prev => ({
                 ...prev,
-                [imageId]: imageData
+                [imageId]: {
+                    ...imageData,
+                    username: userProfileData.username,
+                    profile_picture: userProfileData.profile_picture
+                }
             }));
-    
-            // Now fetch comments and follow status with known user_id
-            const [commentsResponse, followStatusResponse] = await Promise.all([
-                + fetch(`${process.env.REACT_APP_API_URL}/fetch_comments?id=${imageId}`, {                    
-                    headers: { 'Authorization': `Bearer ${token}` }
-                }),
-                + fetch(`${process.env.REACT_APP_API_URL}/user/${imageData.user_id}/stats`, {                    
-                    headers: { 'Authorization': `Bearer ${token}` }
-                })
-            ]);
-    
+
+            // Fetch comments with profile pictures
+            const commentsResponse = await fetch(`${process.env.REACT_APP_API_URL}/fetch_comments?id=${imageId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
             if (commentsResponse.ok) {
                 const commentsData = await commentsResponse.json();
-                setComments(prev => ({ 
-                    ...prev, 
-                    [imageId]: commentsData.comments 
+                
+                // Fetch profile data for each comment author
+                const commentUserProfiles = await Promise.all(
+                    commentsData.comments.map(comment => 
+                        fetch(`${process.env.REACT_APP_API_URL}/user_profile/${comment.user_id}`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        }).then(res => res.json())
+                    )
+                );
+
+                // Combine comment data with profile data
+                const commentsWithProfiles = commentsData.comments.map((comment, index) => ({
+                    ...comment,
+                    profile_picture: commentUserProfiles[index].profile_picture
                 }));
-                
-                const commentLikesMap = {};
-                const userLikedCommentsSet = new Set();
-                
-                commentsData.comments.forEach(comment => {
-                    commentLikesMap[comment.id] = comment.like_count;
-                    if (comment.user_has_liked) {
-                        userLikedCommentsSet.add(comment.id);
-                    }
-                });
-                
-                setCommentLikes(prev => ({
+
+                setComments(prev => ({
                     ...prev,
-                    ...commentLikesMap
+                    [imageId]: commentsWithProfiles
                 }));
-                
-                setUserLikedComments(userLikedCommentsSet);
             }
-    
-            if (followStatusResponse.ok) {
-                const followStatus = await followStatusResponse.json();
-                setIsFollowing(followStatus.is_following);
-            }
-    
+
         } catch (error) {
             console.error('Error fetching image details:', error);
+        } finally {
+            setImageDetailsLoading(false);
         }
     };
-    
-    // Call fetchImageDetails when opening modal
-    const debouncedOpenModal = useCallback(
-        debounce((image) => {
-            setModalImage(image);
-            setActiveImageId(image.id);
-            fetchImageDetails(image.id);
-            fetchAllData(image.id); // Change from fetchImageDetails to fetchAllData
-            setModalOpen(true);
-        }, 300),
-        []
-    );
 
     // Add debug logs
     useEffect(() => {
@@ -515,9 +508,19 @@ const Profile = () => {
             console.error('Error fetching data:', error);
         }
     };
-    const navigateImage = (direction) => {
-        if (!modalImage) return;
-        
+
+    const openModal = async (image) => {
+        try {
+            setModalImage(image);
+            setActiveImageId(image.id);
+            setModalOpen(true);
+            await fetchImageDetails(image.id);
+        } catch (error) {
+            console.error('Error fetching image details:', error);
+        }
+    };
+
+    const navigateImage = async (direction) => {
         const currentImages = activeTab === 'likes' ? likedImages : images;
         const currentIndex = currentImages.findIndex(img => img.id === activeImageId);
         
@@ -528,11 +531,16 @@ const Profile = () => {
             newIndex = currentIndex + 1 >= currentImages.length ? 0 : currentIndex + 1;
         }
         
-        const newImage = currentImages[newIndex];
-        setModalImage(newImage);
-        setActiveImageId(newImage.id);
-        fetchAllData(newImage.id); // Change from fetchImageDetails to fetchAllData
-        fetchImageDetails(newImage.id);
+        const nextImage = currentImages[newIndex];
+        if (nextImage) {
+            try {
+                setModalImage(nextImage);
+                setActiveImageId(nextImage.id);
+                await fetchImageDetails(nextImage.id);
+            } catch (error) {
+                console.error('Error fetching next image details:', error);
+            }
+        }
     };
 
     const isAdmin = user && user.role === 'admin';
@@ -1000,7 +1008,7 @@ const Profile = () => {
                         <div 
                             key={image.id} 
                             className="profile-item"
-                            onClick={() => debouncedOpenModal(image)}
+                            onClick={() => openModal(image)}
                         >
                             <img src={image.image_url} alt={image.prompt} />
                         </div>
@@ -1017,7 +1025,7 @@ const Profile = () => {
                             <div 
                                 key={image.id} 
                                 className="profile-item"
-                                onClick={() => debouncedOpenModal(image)}
+                                onClick={() => openModal(image)}
                             >
                                 <img src={image.image_url} alt={image.prompt} />
                             </div>
@@ -1056,11 +1064,13 @@ const Profile = () => {
                             <div className="profile-modal-info">
                                 <div className="profile-user-info">
                                     <img 
-                                        src={getImageUrl(imageUserDetails[activeImageId]?.profile_picture, 'profile')} 
-                                        alt="Profile"
+                                        src={imageUserDetails[activeImageId]?.profile_picture || '/default-avatar.png'} 
+                                        alt={imageUserDetails[activeImageId]?.username || 'Profile'}
                                         className="profile-user-avatar"
                                         onError={(e) => {
-                                            e.target.onerror = null;
+                                            if (!imageUserDetails[activeImageId]?.profile_picture) {
+                                                fetchImageDetails(activeImageId);
+                                            }
                                             e.target.src = '/default-avatar.png';
                                         }}
                                     />

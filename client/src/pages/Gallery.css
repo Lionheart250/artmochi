@@ -165,7 +165,15 @@
     display: flex;
     align-items: center;
     padding: 12px;
+    background-color: #1a1a1a;
     border-bottom: 1px solid #2f2f2f;
+}
+
+.gallery-user-info img {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    object-fit: cover;
 }
 
 .gallery-user-avatar {
