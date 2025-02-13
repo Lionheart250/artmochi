@@ -12,5 +12,5 @@ export const getImageUrl = (path, type = 'image') => {
   }
 
   // Handle S3 paths
-  return `https://${process.env.REACT_APP_S3_BUCKET_NAME}.s3.${process.env.REACT_APP_AWS_REGION}.amazonaws.com/${type}s/${path}`;
+  return path;
 };

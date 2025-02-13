@@ -10,6 +10,7 @@ import { ReactComponent as UpgradeIcon } from '../assets/icons/upgrade.svg';
 import { ReactComponent as CreditsIcon } from '../assets/icons/credits.svg';
 import { ReactComponent as SettingsIcon } from '../assets/icons/settings.svg';
 import { ReactComponent as MoreIcon } from '../assets/icons/more.svg';
+import { getImageUrl } from '../utils/imageUtils';
 
 const Header = () => {
     const { user, logout } = useAuth();
@@ -140,7 +141,12 @@ const Header = () => {
                                 </NavLink>
                                 {user ? (
                                     <NavLink to={`/profile/${user.id}`} className="side-nav-link">
-                                        <img src={headerProfilePic} alt="Profile" className="nav-icon header-profile-pic" />
+                                        <img 
+                                            src={getImageUrl(profilePicture, 'profile')}
+                                            alt={user.username}
+                                            className="header-profile-pic"
+                                            onError={(e) => e.target.src = '/default-avatar.png'}
+                                        />
                                         <span>Profile</span>
                                     </NavLink>
                                 ) : (
@@ -177,9 +183,10 @@ const Header = () => {
                             {user ? (
                                 <div className="profile-dropdown" onClick={toggleDropdown} ref={dropdownRef}>
                                     <img 
-                                        src={headerProfilePic} 
-                                        alt="Profile" 
+                                        src={getImageUrl(profilePicture, 'profile')}
+                                        alt={user.username}
                                         className="header-profile-pic"
+                                        onError={(e) => e.target.src = '/default-avatar.png'}
                                     />
                                     <span className="header-username">{user.username}</span>
                                     {isDropdownOpen && (

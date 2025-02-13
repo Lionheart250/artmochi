@@ -8,6 +8,7 @@ import { ReactComponent as CommentIcon } from '../assets/icons/comment.svg';
 import { ReactComponent as ShareIcon } from '../assets/icons/share.svg';
 import { ReactComponent as BookmarkIcon } from '../assets/icons/bookmark.svg';
 import { useAuth } from '../context/AuthContext';
+import { getImageUrl } from '../utils/imageUtils';
 
 const Gallery = () => {
     const { user } = useAuth();
@@ -1042,12 +1043,10 @@ useEffect(() => {
                                     <div className="gallery-modal-info">
                                         <div className="gallery-user-info">
                                             <img 
-                                                 src={imageUserDetails[activeImageId]?.profile_picture ? 
-                                                    `${process.env.REACT_APP_API_URL}/profile_pictures/${imageUserDetails[activeImageId]?.profile_picture.split('/').pop()}` : 
-                                                    '/default-avatar.png'}
+                                                src={getImageUrl(imageUserDetails[activeImageId]?.profile_picture, 'profile')}
                                                 alt="Profile"
-                                                className="gallery-user-avatar"
-                                                onClick={() => handleUsernameClick(imageUserDetails[activeImageId]?.user_id)}
+                                                className="user-avatar"
+                                                onError={(e) => e.target.src = '/default-avatar.png'}
                                             />
                                             <div className="gallery-user-details">
                                         <h4 onClick={() => navigate(`/profile/${imageUserDetails[activeImageId]?.user_id}`)}>
@@ -1093,9 +1092,7 @@ useEffect(() => {
                                                     <li key={`comment-${comment.id}-${comment.created_at}`} className="gallery-comment-item">
                                                         <div className="gallery-comment-avatar">
                                                             <img 
-                                                                src={comment.profile_picture ? 
-                                                                    `${process.env.REACT_APP_API_URL}/${comment.profile_picture}` :
-                                                                    '/default-avatar.png'} 
+                                                                src={getImageUrl(comment.profile_picture, 'profile')}
                                                                 alt={comment.username}
                                                                 onError={(e) => e.target.src = '/default-avatar.png'}
                                                             />

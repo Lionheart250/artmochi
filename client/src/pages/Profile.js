@@ -1104,9 +1104,7 @@ const Profile = () => {
                                             <li key={`comment-${comment.id}-${comment.created_at}`} className="profile-comment-item">
                                                 <div className="profile-comment-avatar">
                                                     <img 
-                                                        src={comment.profile_picture ? 
-                                                        `${process.env.REACT_APP_API_URL}/profile_pictures/${comment.profile_picture.split('/').pop()}` : 
-                                                        '/default-avatar.png'} 
+                                                        src={getImageUrl(comment.profile_picture, 'profile')} 
                                                         alt={comment.username}
                                                         onError={(e) => e.target.src = '/default-avatar.png'}
                                                     />
@@ -1239,10 +1237,10 @@ const Profile = () => {
                             {followersList.map(follower => (
                                 <div key={follower.id} className="user-list-item">
                                     <div className="user-info" onClick={() => navigate(`/profile/${follower.id}`)}>
-                                    <img src={follower.profile_picture ? 
-                                        `${process.env.REACT_APP_API_URL}/profile_pictures/${follower.profile_picture.split('/').pop()}` : 
-                                        '/default-avatar.png'}
-                                    alt={follower.username} />                                        
+                                    <img src={getImageUrl(follower.profile_picture, 'profile')}
+                                    alt={follower.username}
+                                    onError={(e) => e.target.src = '/default-avatar.png'}
+                                    />                                        
                                     <span>{follower.username}</span>
                                     </div>
                                     <button 
@@ -1270,9 +1268,7 @@ const Profile = () => {
                                 <div key={user.id} className="user-list-item">
                                     <div className="user-info" onClick={() => navigate(`/profile/${user.id}`)}>
                                         <img 
-                                            src={user.profile_picture ? 
-                                                `${process.env.REACT_APP_API_URL}/profile_pictures/${user.profile_picture.split('/').pop()}` : 
-                                                '/default-avatar.png'}
+                                            src={getImageUrl(user.profile_picture, 'profile')}
                                             alt={user.username}
                                             onError={(e) => {
                                                 e.target.onerror = null;
