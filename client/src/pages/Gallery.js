@@ -345,28 +345,7 @@ const Gallery = () => {
         }
     };
 
-    const openModal = (image) => {
-        setModalImage(image.image_url);
-        setActiveImageId(image.id);
-        console.log('Opening modal for image ID:', image.id);
-        fetchImageDetails(image.id); // Only need this one call
-        navigate(`?id=${image.id}`, { replace: true });
-    };
-
-    const closeModal = () => {
-        setModalImage(null);
-        setActiveImageId(null);
-        navigate('', { replace: true });
-    };
-
-    // Add effect to watch image loading
-    useEffect(() => {
-        if (fetchingRef.current && images.length > 0) {
-            fetchingRef.current = false;
-        }
-    }, [images.length]);
-
-    const navigateImage = (direction) => {
+    const navigateImage = async (direction) => {
         // Use already sorted images from state
         const currentIndex = images.findIndex(img => img.id === activeImageId);
         
@@ -400,13 +379,46 @@ const Gallery = () => {
         if (nextIndex >= 0 && nextIndex < images.length) {
             const nextImage = images[nextIndex];
             if (nextImage && nextImage.id !== activeImageId) {
-                setActiveImageId(nextImage.id);
+                // First update the image and ID
                 setModalImage(nextImage.image_url);
-                fetchImageDetails(nextImage.id);
-                navigate(`?id=${nextImage.id}`, { replace: true });
+                setActiveImageId(nextImage.id);
+                
+                // Fetch details before navigating
+                try {
+                    await fetchImageDetails(nextImage.id);
+                    navigate(`?id=${nextImage.id}`, { replace: true });
+                } catch (error) {
+                    console.error('Error fetching next image details:', error);
+                }
             }
         }
     };
+
+    const openModal = async (image) => {
+        setModalImage(image.image_url);
+        setActiveImageId(image.id);
+        console.log('Opening modal for image ID:', image.id);
+        
+        try {
+            await fetchImageDetails(image.id);
+            navigate(`?id=${image.id}`, { replace: true });
+        } catch (error) {
+            console.error('Error fetching image details:', error);
+        }
+    };
+
+    const closeModal = () => {
+        setModalImage(null);
+        setActiveImageId(null);
+        navigate('', { replace: true });
+    };
+
+    // Add effect to watch image loading
+    useEffect(() => {
+        if (fetchingRef.current && images.length > 0) {
+            fetchingRef.current = false;
+        }
+    }, [images.length]);
 
     useEffect(() => {
         const handleKeyDown = (e) => {
