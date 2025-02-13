@@ -552,10 +552,10 @@ const Profile = () => {
     
                 switch(e.key) {
                     case 'ArrowLeft':
-                        navigateImage(-1);
+                        navigateImage('prev');
                         break;
                     case 'ArrowRight':
-                        navigateImage(1);
+                        navigateImage('next');
                         break;
                     case 'Escape':
                         closeModal();
