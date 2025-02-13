@@ -1086,7 +1086,7 @@ app.post('/add_favorite', authenticateTokenWithAutoRefresh, (req, res) => {
 });
 
 // Upload Profile Picture
-app.post('/upload_profile_picture', authenticateTokenWithAutoRefresh, upload.single('image'), async (req, res) => {
+app.post('/upload_profile_picture', cors(corsOptions),  authenticateTokenWithAutoRefresh, upload.single('image'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ error: 'No file uploaded' });
@@ -1098,12 +1098,12 @@ app.post('/upload_profile_picture', authenticateTokenWithAutoRefresh, upload.sin
         // Upload to S3
         const s3Result = await uploadToS3(req.file.buffer, key);
         if (!s3Result.success) {
-            throw new Error(s3Result.error);
+            throw new Error(s3Result.error || 'Failed to upload to S3');
         }
 
+        // Save to database
         await pool.query('BEGIN');
 
-        // Insert new picture in profile_pictures table
         const result = await pool.query(
             'INSERT INTO profile_pictures (user_id, filename, filepath) VALUES ($1, $2, $3) RETURNING id',
             [userId, key, s3Result.url]
@@ -1111,20 +1111,23 @@ app.post('/upload_profile_picture', authenticateTokenWithAutoRefresh, upload.sin
 
         await pool.query('COMMIT');
 
-        res.json({ 
+        res.json({
             success: true,
-            profilePictureUrl: s3Result.url,
+            filepath: s3Result.url,
             id: result.rows[0].id
         });
     } catch (error) {
         await pool.query('ROLLBACK');
-        console.error('Error handling profile picture:', error);
-        res.status(500).json({ error: 'Failed to process profile picture' });
+        console.error('Profile picture upload error:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message || 'Failed to upload profile picture' 
+        });
     }
 });
 
 // Update profile picture retrieval endpoint
-app.get('/profile_picture', authenticateTokenWithAutoRefresh, async (req, res) => {
+app.get('/profile_picture', cors(corsOptions),  authenticateTokenWithAutoRefresh, async (req, res) => {
     const userId = req.user.userId; // Changed from req.user.id to req.user.userId
     console.log('Fetching profile picture for user:', userId);
     

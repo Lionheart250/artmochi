@@ -253,29 +253,30 @@ const Profile = () => {
         
         const formData = new FormData();
         formData.append('image', e.target.files[0]);
-      
+
         try {
             setLoading(true);
             const response = await fetch(`${process.env.REACT_APP_API_URL}/upload_profile_picture`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    // Remove Content-Type header - let browser set it with boundary
                 },
-                body: formData,
-                credentials: 'include'
+                credentials: 'include',
+                body: formData
             });
-      
+
             if (!response.ok) {
                 throw new Error('Failed to upload profile picture');
             }
-      
+
             const data = await response.json();
             if (data.success) {
-                setProfilePicture(data.profilePicturePath);
-                setTempProfilePicture(data.profilePicturePath);
+                setProfilePicture(data.filepath); // Change to match server response
+                setTempProfilePicture(data.filepath);
                 setMessage('Profile picture updated successfully');
             } else {
-                setMessage('Failed to upload profile picture');
+                throw new Error(data.error || 'Failed to upload profile picture');
             }
         } catch (error) {
             console.error('Error uploading profile picture:', error);
