@@ -19,6 +19,35 @@ const { uploadToS3 } = require('./src/config/s3');
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Update CORS configuration
+const allowedOrigins = [
+    'https://www.artmochi.com',
+    'https://artmochi.com',
+    'https://artmochi-frontend-production.up.railway.app',
+    'http://localhost:3001',
+    'https://artmochi-production.up.railway.app'
+];
+
+// 4. Update your corsOptions to include more headers
+const corsOptions = {
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept', 'X-Requested-With'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    maxAge: 86400 // 24 hours
+};
+
+// 1. First, move the CORS setup to the very top of your middleware stack
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
 // Add after express initialization
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ 
@@ -38,30 +67,7 @@ app.use(helmet({
     crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }
 }));
 
-// Update CORS configuration
-const allowedOrigins = [
-    'https://www.artmochi.com',
-    'https://artmochi.com',
-    'https://artmochi-frontend-production.up.railway.app',
-    'http://localhost:3001',
-    'https://artmochi-production.up.railway.app'
-];
-
 // 2. Update CORS options
-const corsOptions = {
-    origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
-    exposedHeaders: ['Content-Range', 'X-Content-Range']
-};
-
 app.use(cors(corsOptions));
 
 // Add this before your routes
@@ -85,22 +91,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 // 3. Serve profile pictures on '/profile_picture'
-app.use('/profile_picture', (req, res, next) => {
-    const origin = req.headers.origin;
-    if (allowedOrigins.includes(origin)) {
-        res.header('Access-Control-Allow-Origin', origin);
-    }
-    res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Cross-Origin-Resource-Policy', 'cross-origin');
-    
-    if (req.method === 'OPTIONS') {
-        return res.sendStatus(200);
-    }
-    next();
-}, express.static(path.join(__dirname, 'profile_pictures')));
-
 app.use((req, res, next) => {
     console.log(`${req.method} ${req.path}`);
     if (req.url.includes('/profile_pictures')) {
@@ -481,7 +471,7 @@ app.post('/logout', (req, res) => {
 
 // --- Image Routes ---
 
-// Modify images endpoint to use global sort
+// 2. Add corsOptions to all your routes that handle images
 app.get('/images', cors(corsOptions), optionalAuthenticateToken, async (req, res) => {
     try {
         const { sortType = 'newest', page = 1, limit = 20 } = req.query;
@@ -553,7 +543,7 @@ app.get('/images', cors(corsOptions), optionalAuthenticateToken, async (req, res
     }
 });
 
-app.post('/images', optionalAuthenticateToken, async (req, res) => {
+app.post('/images', cors(corsOptions), optionalAuthenticateToken, async (req, res) => {
     try {
         const { sortType = 'newest', page = 1, limit = 20 } = req.query;
         const { globalLikeCounts, globalCommentCounts } = req.body;
