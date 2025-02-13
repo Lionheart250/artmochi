@@ -1,7 +1,11 @@
+import express from 'express';
 import multer from 'multer';
 import { uploadProfilePicture, getLatestProfilePicture } from '../utils/profilePicture';
 
+const router = express.Router();
 const upload = multer();
+const pool = require('../../server').pool;
+
 
 router.put('/profile-picture', upload.single('image'), async (req, res) => {
   try {
@@ -12,7 +16,7 @@ router.put('/profile-picture', upload.single('image'), async (req, res) => {
     const imageUrl = await uploadProfilePicture(req.file.buffer, req.user.id);
     
     // Update user profile in database
-    await db.query(
+    await pool.query(
       'UPDATE users SET profile_picture_url = $1 WHERE id = $2',
       [imageUrl, req.user.id]
     );
@@ -57,3 +61,5 @@ router.get('/profile-picture/:userId', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch profile picture' });
   }
 });
+
+export default router;

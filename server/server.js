@@ -16,6 +16,7 @@ const path = require('path');
 const fs = require('fs');
 const helmet = require('helmet');
 const { uploadToS3 } = require('./utils/s3');
+const userRoutes = require('./src/routes/users').default;
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -1702,6 +1703,8 @@ if (process.env.NODE_ENV !== 'production') {
         });
     });
 }
+
+app.use('/api/users', userRoutes);
 
 // Start server
 app.listen(port, () => {
