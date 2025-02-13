@@ -7,6 +7,7 @@ import { ReactComponent as ShareIcon } from '../assets/icons/share.svg';
 import { ReactComponent as BookmarkIcon } from '../assets/icons/bookmark.svg';
 import './Following.css';
 import { useAuth } from '../context/AuthContext';
+import { getImageUrl } from '../utils/imageUtils';
 
 const Following = () => {
     const { user } = useAuth();
@@ -430,8 +431,10 @@ const fetchImageDetails = async (imageId) => {
                         >
                             <div className="following-user-info">
                                 <img 
-                                    src={`${process.env.REACT_APP_API_URL}/${imageUserDetails[image.id]?.profile_picture}`}                                    alt="Profile"
+                                    src={getImageUrl(imageUserDetails[image.id]?.profile_picture, 'profile')}
+                                    alt="Profile"
                                     className="following-user-avatar"
+                                    onError={(e) => e.target.src = '/default-avatar.png'}
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         navigate(`/profile/${image.user_id}`);
@@ -466,9 +469,10 @@ const fetchImageDetails = async (imageId) => {
                 <div className="profile-modal-info">
                     <div className="profile-user-info">
                         <img 
-                            src={`${process.env.REACT_APP_API_URL}/${imageUserDetails[activeImageId]?.profile_picture}` || '/default-avatar.png'}                            
+                            src={getImageUrl(imageUserDetails[activeImageId]?.profile_picture, 'profile')}
                             alt="Profile"
                             className="profile-user-avatar"
+                            onError={(e) => e.target.src = '/default-avatar.png'}
                             onClick={() => navigate(`/profile/${imageUserDetails[activeImageId]?.user_id}`)}
                         />
                         <div className="profile-user-details">
@@ -506,9 +510,10 @@ const fetchImageDetails = async (imageId) => {
                         {comments[activeImageId]?.map((comment) => (
                             <div key={comment.id} className="profile-comment">
                                 <img 
-                                    src={`${process.env.REACT_APP_API_URL}/${comment.profile_picture}` || '/default-avatar.png'}                                    
+                                    src={getImageUrl(comment.profile_picture, 'profile')}
                                     alt=""
                                     className="profile-comment-avatar"
+                                    onError={(e) => e.target.src = '/default-avatar.png'}
                                     onClick={() => navigate(`/profile/${comment.user_id}`)}
                                 />
                                 <div className="profile-comment-content">

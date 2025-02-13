@@ -107,70 +107,81 @@ const Gallery = () => {
     }, [location, images, modalOpen]); // Add proper dependencies
 
     const fetchImageDetails = async (imageId) => {
-            const token = localStorage.getItem('token');
-            if (!token) return;
-        
-            try {
-                // First get image details to get user_id
-                const imageDetailsResponse = await fetch(`${process.env.REACT_APP_API_URL}/images/${imageId}`, {                
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-        
-                if (!imageDetailsResponse.ok) {
-                    throw new Error('Failed to fetch image details');
-                }
-        
-                const imageData = await imageDetailsResponse.json();
-                setImageUserDetails(prev => ({
-                    ...prev,
-                    [imageId]: imageData
-                }));
-        
-                // Now fetch comments and follow status with known user_id
-                const [commentsResponse, followStatusResponse] = await Promise.all([
-                    + fetch(`${process.env.REACT_APP_API_URL}/fetch_comments?id=${imageId}`, {                    
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    }),
-                    + fetch(`${process.env.REACT_APP_API_URL}/user/${imageData.user_id}/stats`, {                    
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    })
-                ]);
-        
-                if (commentsResponse.ok) {
-                    const commentsData = await commentsResponse.json();
-                    setComments(prev => ({ 
-                        ...prev, 
-                        [imageId]: commentsData.comments 
-                    }));
-                    
-                    const commentLikesMap = {};
-                    const userLikedCommentsSet = new Set();
-                    
-                    commentsData.comments.forEach(comment => {
-                        commentLikesMap[comment.id] = comment.like_count;
-                        if (comment.user_has_liked) {
-                            userLikedCommentsSet.add(comment.id);
-                        }
-                    });
-                    
-                    setCommentLikes(prev => ({
-                        ...prev,
-                        ...commentLikesMap
-                    }));
-                    
-                    setUserLikedComments(userLikedCommentsSet);
-                }
-        
-                if (followStatusResponse.ok) {
-                    const followStatus = await followStatusResponse.json();
-                    setIsFollowing(followStatus.is_following);
-                }
-        
-            } catch (error) {
-                console.error('Error fetching image details:', error);
+        const token = localStorage.getItem('token');
+        if (!token) return;
+    
+        try {
+            // First get image details to get user_id
+            const imageDetailsResponse = await fetch(`${process.env.REACT_APP_API_URL}/images/${imageId}`, {
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+    
+            if (!imageDetailsResponse.ok) {
+                throw new Error('Failed to fetch image details');
             }
-        };
-        
+    
+            const imageData = await imageDetailsResponse.json();
+            console.log('Image details received:', imageData); // Debug log
+    
+            // Update image details with correct profile picture handling
+            setImageUserDetails(prev => ({
+                ...prev,
+                [imageId]: {
+                    ...imageData,
+                    profile_picture: imageData.profile_picture // This will be handled by getImageUrl
+                }
+            }));
+    
+            // Now fetch comments and follow status with known user_id
+            const [commentsResponse, followStatusResponse] = await Promise.all([
+                fetch(`${process.env.REACT_APP_API_URL}/fetch_comments?id=${imageId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    credentials: 'include'
+                }),
+                fetch(`${process.env.REACT_APP_API_URL}/user/${imageData.user_id}/stats`, {
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    credentials: 'include'
+                })
+            ]);
+    
+            if (commentsResponse.ok) {
+                const commentsData = await commentsResponse.json();
+                setComments(prev => ({ 
+                    ...prev, 
+                    [imageId]: commentsData.comments 
+                }));
+                
+                const commentLikesMap = {};
+                const userLikedCommentsSet = new Set();
+                
+                commentsData.comments.forEach(comment => {
+                    commentLikesMap[comment.id] = comment.like_count;
+                    if (comment.user_has_liked) {
+                        userLikedCommentsSet.add(comment.id);
+                    }
+                });
+                
+                setCommentLikes(prev => ({
+                    ...prev,
+                    ...commentLikesMap
+                }));
+                
+                setUserLikedComments(userLikedCommentsSet);
+            }
+    
+            if (followStatusResponse.ok) {
+                const followStatus = await followStatusResponse.json();
+                setIsFollowing(followStatus.is_following);
+            }
+    
+        } catch (error) {
+            console.error('Error fetching image details:', error);
+        }
+    };
 
     const handleLike = async (imageId) => {
         const token = localStorage.getItem('token');
@@ -1044,21 +1055,22 @@ useEffect(() => {
                                         <div className="gallery-user-info">
                                             <img 
                                                 src={getImageUrl(imageUserDetails[activeImageId]?.profile_picture, 'profile')}
-                                                alt="Profile"
+                                                alt={imageUserDetails[activeImageId]?.username || 'Profile'}
                                                 className="user-avatar"
                                                 onError={(e) => e.target.src = '/default-avatar.png'}
+                                                onClick={() => navigate(`/profile/${imageUserDetails[activeImageId]?.user_id}`)}
                                             />
                                             <div className="gallery-user-details">
-                                        <h4 onClick={() => navigate(`/profile/${imageUserDetails[activeImageId]?.user_id}`)}>
-                                            {imageUserDetails[activeImageId]?.username}
-                                        </h4>
-                                        {user && user.id !== parseInt(imageUserDetails[activeImageId]?.user_id) && (
-                                            <button 
-                                                className={`gallery-follow-btn ${isFollowing ? 'following' : ''}`}
-                                                onClick={() => handleModalFollowToggle(imageUserDetails[activeImageId]?.user_id, isFollowing)}
-                                            >
-                                                {isFollowing ? 'Following' : 'Follow'}
-                                            </button>
+                                                <h4 onClick={() => navigate(`/profile/${imageUserDetails[activeImageId]?.user_id}`)}>
+                                                    {imageUserDetails[activeImageId]?.username}
+                                                </h4>
+                                                {user && user.id !== parseInt(imageUserDetails[activeImageId]?.user_id) && (
+                                                    <button 
+                                                        className={`gallery-follow-btn ${isFollowing ? 'following' : ''}`}
+                                                        onClick={() => handleModalFollowToggle(imageUserDetails[activeImageId]?.user_id, isFollowing)}
+                                                    >
+                                                        {isFollowing ? 'Following' : 'Follow'}
+                                                    </button>
                                                 )}
                                                 <span className="gallery-creation-date">
                                                     {formatDate(images.find(img => img.id === activeImageId)?.created_at)}
