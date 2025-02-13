@@ -370,15 +370,15 @@ const Gallery = () => {
             const nextImage = images[nextIndex];
             if (nextImage && nextImage.id !== activeImageId) {
                 try {
-                    // Set new image first
+                    // Pre-fetch the details first
+                    
+                    
+                    // Then update UI state
                     setModalImage(nextImage.image_url);
                     setActiveImageId(nextImage.id);
-                    
-                    // Then fetch its details
                     await fetchImageDetails(nextImage.id);
-                    
-                    // Update URL last
                     navigate(`?id=${nextImage.id}`, { replace: true });
+                    await fetchImageDetails(nextImage.id);
                 } catch (error) {
                     console.error('Error fetching next image details:', error);
                 }
@@ -1085,19 +1085,39 @@ useEffect(() => {
                                     </div>
                                     <div className="gallery-modal-info">
                                         <div className="gallery-user-info">
-                                            <img 
-                                                src={getImageUrl(imageUserDetails[activeImageId]?.profile_picture, 'profile')}
-                                                alt={imageUserDetails[activeImageId]?.username || 'Profile'}
-                                                className="user-avatar"
-                                                onError={(e) => {
-                                                    // If profile picture isn't loaded, try to fetch it again
-                                                    if (!imageUserDetails[activeImageId]?.profile_picture) {
-                                                        retryFetchDetails(activeImageId);
-                                                    }
+                                        <img 
+                                            src={getImageUrl(imageUserDetails[activeImageId]?.profile_picture, 'profile')}
+                                            alt={imageUserDetails[activeImageId]?.username || 'Profile'}
+                                            className="user-avatar"
+                                            onError={async (e) => {
+                                                // Only try to refetch if we have an activeImageId
+                                                if (!imageUserDetails[activeImageId]) {
                                                     e.target.src = '/default-avatar.png';
-                                                }}
-                                                onClick={() => navigate(`/profile/${imageUserDetails[activeImageId]?.user_id}`)}
-                                            />
+                                                    return;
+                                                }
+
+                                                // Check if we haven't tried retrying yet
+                                                if (!e.target.dataset.retried) {
+                                                    e.target.dataset.retried = true;
+                                                    e.preventDefault();
+                                                    
+                                                    try {
+                                                        await retryFetchDetails(activeImageId);
+                                                        const newProfilePic = imageUserDetails[activeImageId]?.profile_picture;
+                                                        if (newProfilePic) {
+                                                            e.target.src = getImageUrl(newProfilePic, 'profile');
+                                                        } else {
+                                                            e.target.src = '/default-avatar.png';
+                                                        }
+                                                    } catch (error) {
+                                                        e.target.src = '/default-avatar.png';
+                                                    }
+                                                } else {
+                                                    e.target.src = '/default-avatar.png';
+                                                }
+                                            }}
+                                            onClick={() => navigate(`/profile/${imageUserDetails[activeImageId]?.user_id}`)}
+                                        />
                                             <div className="gallery-user-details">
                                                 <h4 onClick={() => navigate(`/profile/${imageUserDetails[activeImageId]?.user_id}`)}>
                                                     {imageUserDetails[activeImageId]?.username}
