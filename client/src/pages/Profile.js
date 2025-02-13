@@ -260,7 +260,6 @@ const Profile = () => {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    // Remove Content-Type header - let browser set it with boundary
                 },
                 credentials: 'include',
                 body: formData
@@ -272,8 +271,11 @@ const Profile = () => {
 
             const data = await response.json();
             if (data.success) {
-                setProfilePicture(data.filepath); // Change to match server response
+                // Update to use the full S3 URL directly from the response
+                setProfilePicture(data.filepath);
                 setTempProfilePicture(data.filepath);
+                // Fetch the updated profile to ensure everything is in sync
+                await fetchUserProfile();
                 setMessage('Profile picture updated successfully');
             } else {
                 throw new Error(data.error || 'Failed to upload profile picture');
