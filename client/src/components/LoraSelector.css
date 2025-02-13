@@ -1,0 +1,187 @@
+.lora-selector {
+    background: #1a1a1a;
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+}
+
+.lora-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Two columns */
+    gap: 1rem;
+}
+
+.lora-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: #2a2a2a;
+    border-radius: 4px;
+}
+
+.lora-item label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #fff;
+}
+
+.lora-item input[type="checkbox"] {
+    accent-color: #ff0050; /* TikTok red */
+}
+
+.lora-item input[type="range"] {
+    flex: 1;
+    margin: 0 1rem;
+    accent-color: #00f2ea; /* TikTok cyan */
+}
+
+.lora-item span {
+    color: #fff;
+}
+
+.lora-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.lora-weight {
+    width: 100%;
+}
+
+.weight-value {
+    text-align: center;
+    font-size: 0.9em;
+    color: #888;
+}
+
+.lora-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.lora-popup {
+    background: #1a1a1a;
+    padding: 2rem;
+    border-radius: 8px;
+    max-width: 800px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    color: #fff;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.lora-popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+}
+
+.lora-popup-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #ff0050; /* TikTok red */
+}
+
+.lora-popup .close-button {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.lora-popup .close-button:hover {
+    color: #ff0050; /* TikTok red */
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.section-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #00f2ea; /* TikTok cyan */
+}
+
+.lora-section {
+    padding: 1rem 0;
+}
+
+.presets-section {
+    margin-bottom: 20px;
+    padding: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.preset-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.lora-popup .preset-button {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.lora-popup .preset-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.lora-popup .lora-action-btn {
+    padding: 8px 16px;
+    margin: 5px;
+    background: #fe2c55;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.lora-popup .lora-action-btn:hover {
+    background: #d91442;
+    transform: translateY(-1px);
+}
+
+/* Remove generic button:hover */
+/* Remove this as it conflicts with specific button styles
+button:hover {
+    background: #e60045;
+}
+*/
+
+/* Keep disabled state but scope it */
+.lora-popup button:disabled {
+    background: rgba(255, 0, 80, 0.5);
+    cursor: not-allowed;
+}

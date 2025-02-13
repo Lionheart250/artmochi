@@ -1,0 +1,4 @@
+[build]
+src = "server"
+command = "npm start"
+language = "nodejs"

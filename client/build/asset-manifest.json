@@ -1,0 +1,22 @@
+{
+  "files": {
+    "main.css": "/static/css/main.92f4b5cf.css",
+    "main.js": "/static/js/main.88cf891d.js",
+    "static/media/settings.svg": "/static/media/settings.3c67d2194926bca39ffa75898b2d82aa.svg",
+    "static/media/share.svg": "/static/media/share.a2248bed652d0dfbf8e392c8cfb6a9a8.svg",
+    "static/media/credits.svg": "/static/media/credits.a1f8032f0dfdf446220ee1ce986b4daa.svg",
+    "index.html": "/index.html",
+    "static/media/following.svg": "/static/media/following.840348a0bab3fb51edae618272e11542.svg",
+    "static/media/explore.svg": "/static/media/explore.e5231c5e2559836da00625864edb6319.svg",
+    "static/media/like.svg": "/static/media/like.cd5defc4356835b9dd6a31b365eeec84.svg",
+    "static/media/more.svg": "/static/media/more.2feb9ccdc12d50692e41f09db5d72926.svg",
+    "static/media/comment.svg": "/static/media/comment.8b5eab82dcadeceef2af11f49d4d25c9.svg",
+    "static/media/bookmark.svg": "/static/media/bookmark.9132cb3fd754e4ee0a9aec16fcee2a26.svg",
+    "static/media/upgrade.svg": "/static/media/upgrade.fff08df4ba2df95db7cf565f6d25f99b.svg",
+    "static/media/create.svg": "/static/media/create.bb46b1486696810062604e58971256b6.svg"
+  },
+  "entrypoints": [
+    "static/css/main.92f4b5cf.css",
+    "static/js/main.88cf891d.js"
+  ]
+}

@@ -1,0 +1,410 @@
+/* Main Layout */
+.gallery-container {
+    margin-left: 12.5rem;
+    padding: 80px 20px 20px;
+    background: #000;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    min-height: 100vh;
+}
+
+/* Grid Layout */
+.gallery-grid {
+    display: flex;
+    flex-direction: row;
+    place-content: stretch center;
+    box-sizing: border-box;
+    width: 100%;
+    gap: 0.3rem;
+}
+
+.gallery-column {
+    display: flex;
+    flex-direction: column;
+    place-content: stretch flex-start;
+    flex: 1 1 0%;
+    width: 0px;
+    gap: 0.3rem;
+}
+
+/* Thumbnail Items */
+.gallery-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+.gallery-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 5px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.gallery-item:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.gallery-item:hover img {
+    transform: scale(1.1);
+}
+
+/* Modal Base */
+.gallery-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    animation: galleryFadeIn 0.3s ease-in-out forwards;
+}
+
+.gallery-modal-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    overflow: hidden;
+    transform: scale(0.7);
+    animation: galleryScaleIn 0.3s ease-in-out forwards;
+}
+
+/* Fix modal main layout */
+.gallery-modal-main {
+    display: flex;
+    height: 100%;
+    flex-direction: row;
+}
+
+/* Fix modal image container */
+.gallery-modal-image-container {
+    flex: 2;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    background: #000;
+}
+
+/* Fix modal image */
+.gallery-modal-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+/* Modal Info Panel */
+.gallery-modal-info {
+    flex: 1;
+    height: 100%;
+    padding: 20px; /* Change from 30px back to 20px */
+    background: #1a1a1a;
+    overflow-y: auto;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    color: white;
+}
+
+/* Replace your gallery nav button styles with these exact ones from Profile */
+.gallery-modal-nav-left,
+.gallery-modal-nav-right {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    z-index: 1001;
+    padding: 10px;
+}
+
+.gallery-modal-nav-left {
+    left: 20px;
+}
+
+.gallery-modal-nav-right {
+    right: 20px;
+}
+
+.gallery-modal-nav-left:hover,
+.gallery-modal-nav-right:hover {
+    color: #fe2c55;
+}
+
+/* Fix close button */
+.gallery-close-button {
+    position: absolute;
+    top: 10px;
+    left: 15px;
+    color: white;
+    font-size: 28px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    z-index: 1001;
+}
+
+/* User Info Section */
+.gallery-user-info {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid #2f2f2f;
+}
+
+.gallery-user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-right: 12px;
+    cursor: pointer;
+}
+
+/* Update user details section */
+.gallery-user-details {
+    flex: 1;
+}
+
+.gallery-user-details h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    color: white;
+}
+
+.gallery-follow-btn {
+    padding: 4px 12px;
+    border-radius: 4px;
+    border: 1px solid #fe2c55;
+    background: transparent;
+    color: #fe2c55;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.gallery-follow-btn.following {
+    background: #fe2c55;
+    color: white;
+}
+
+/* Comments Section */
+.gallery-comments-section {
+    padding: 20px;  /* Keep this */
+    border-top: 1px solid #2f2f2f;  /* Keep this */
+}
+
+/* Comments List */
+.gallery-comments-list {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.gallery-comment-item {
+    display: flex;
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.gallery-comment-avatar {
+    width: 32px;
+    height: 32px;
+    margin-right: 12px;
+}
+
+.gallery-comment-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+}
+
+.gallery-comment-content {
+    flex: 1;
+}
+
+.gallery-comment-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.gallery-comment-username {
+    font-weight: 600;
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.gallery-comment-time {
+    font-size: 12px;
+    color: #888;
+}
+
+.gallery-comment-text {
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Comment Form */
+.gallery-comment-form {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.gallery-comment-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #333;
+    border-radius: 4px;
+    background: #1a1a1a;
+    color: white;
+}
+
+.gallery-comment-submit {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    background: #fe2c55;
+    color: white;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.gallery-comment-submit:hover {
+    background: #d91442;
+}
+
+/* Animations */
+@keyframes galleryFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes galleryScaleIn {
+    from { transform: scale(0.7); } /* Change back to 0.7 from 0.8 */
+    to { transform: scale(1); }
+}
+
+/* Delete Button */
+.gallery-delete-section {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1001;
+}
+
+/* Make sure delete button matches */
+.gallery-delete-button {
+    padding: 8px 16px;
+    background: rgba(255, 44, 85, 0.9);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.gallery-delete-button:hover {
+    background: rgba(255, 31, 71, 1);
+    transform: translateY(-1px);
+}
+
+/* Admin Controls */
+.admin-controls {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 100;
+}
+
+.admin-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    background: #fe2c55;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.admin-button:hover {
+    background: #d91442;
+    transform: translateY(-1px);
+}
+
+.admin-button.delete {
+    background: #ff3b3b;
+}
+
+.admin-button.delete:hover {
+    background: #d63030;
+}
+
+.admin-button:disabled {
+    background: rgba(254, 44, 85, 0.5);
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Checkbox styling for image selection */
+.image-checkbox {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 20px;
+    height: 20px;
+    z-index: 2;
+    cursor: pointer;
+    accent-color: #fe2c55;
+}
+
+/* Add hover effect for selectable images */
+.gallery-item {
+    position: relative;
+}
+
+.gallery-item.selectable:hover::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 1;
+    border-radius: 4px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .gallery-modal-main {
+        flex-direction: column;
+    }
+    
+    .gallery-modal-info {
+        max-width: 100%;
+        height: auto;
+        max-height: 40vh;
+    }
+}

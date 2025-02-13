@@ -1,0 +1,118 @@
+.footer {
+    background: #121212;
+    padding: 7px 0; /* Reduced padding by 25% */
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    z-index: 1000;
+    transition: all 0.3s ease;
+    color: #ffffff;
+}
+
+.footer.hidden {
+    transform: translateY(100%);
+}
+
+.footer.visible {
+    transform: translateY(0);
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    overflow: hidden;
+}
+
+.footer-brand h3 {
+    color: #fe2c55;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+}
+
+.footer-brand p {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+    margin: 0;
+}
+
+.footer-links {
+    display: flex;
+    gap: 24px;
+}
+
+.footer-links a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.2s ease;
+}
+
+.footer-links a:hover {
+    color: #fe2c55;
+}
+
+.footer-copyright {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 12px;
+    margin: 0;
+}
+
+/* Add margin to main content to prevent footer overlap */
+.main-content {
+    margin-bottom: 80px;
+}
+
+.bottom-footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    padding: 16px;
+    transform: translateY(100%);
+    z-index: 1000;
+
+}
+
+.bottom-footer.visible {
+    transform: translateY(0);
+}
+
+.side-footer {
+    position: fixed;
+    right: 0;
+    top: 60px;
+    bottom: 0;
+    width: 240px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+
+}
+
+.side-footer .footer-content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.side-footer .footer-links {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.side-footer a {
+    color: #ffffff;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.side-footer a:hover {
+    color: #fe2c55;
+}
