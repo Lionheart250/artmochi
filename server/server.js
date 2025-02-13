@@ -1677,8 +1677,6 @@ if (process.env.NODE_ENV !== 'production') {
     });
 }
 
-app.use('/api/users', userRoutes);
-
 // Start server
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
