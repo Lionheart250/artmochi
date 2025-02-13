@@ -204,20 +204,20 @@ const handleSubmit = async (e) => {
         });
 
         const data = await response.json();
-        if (data.error) {
+        
+        if (data.output && data.output[0]) {
+            setImage(data.output[0]);
+            console.log('Image generated successfully:', data);
+        } else if (data.error) {
             throw new Error(data.error);
-        }
-
-        if (data.image) {
-            setImage(data.image);
-            console.log('Image generated and saved with ID:', data.imageId);
         } else {
+            console.error('Unexpected response:', data);
             throw new Error('No image in response');
         }
 
     } catch (error) {
         console.error('Error:', error);
-        setError('Failed to generate image');
+        setError(error.message || 'Failed to generate image');
     } finally {
         setLoading(false);
     }
@@ -465,6 +465,8 @@ const LoadingText = () => (
                             <div className="loading-container">
                                 <LoadingText />
                             </div>
+                        ) : error ? (
+                            <div className="error-message">{error}</div>
                         ) : image ? (
                             <img src={image} alt="Generated" className="generated-image" />
                         ) : (
