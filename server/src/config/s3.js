@@ -22,21 +22,22 @@ const uploadToS3 = async (file, key) => {
       Bucket: process.env.S3_BUCKET_NAME,
       Key: key,
       Body: file,
-      ServerSideEncryption: 'AES256',
-      ACL: 'public-read'
+      ContentType: 'image/jpeg'
     });
     
     await s3Client.send(command);
+    
     return {
       success: true,
       url: `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`
     };
   } catch (error) {
+    console.error('S3 upload error:', error);
     return { 
       success: false, 
-      error: error.message || 'Unknown error occurred during upload'
+      error: error.message 
     };
   }
 };
 
-module.exports = { s3Client, uploadToS3 };
+module.exports = { uploadToS3 };
