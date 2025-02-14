@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "NODE_ENV=production node server.js",
-    "dev": "NODE_ENV=development nodemon server.js"
+    "dev": "NODE_ENV=development nodemon server.js",
+    "migrate-images": "node scripts/migrateImages.js"
   },
   "keywords": [],
   "author": "",
@@ -24,7 +25,7 @@
     "helmet": "^4.6.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
-    "pg": "^8.13.1",
+    "pg": "^8.13.3",
     "sq": "^0.0.1",
     "sqlite3": "^5.1.7"
   },

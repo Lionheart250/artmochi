@@ -158,7 +158,7 @@ const fluxLoras = [
         defaultWeight: 1.0,
         url: 'https://civitai.com/api/download/models/1091576?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
     },
-    {
+   /* {
         id: 'turbo-detailer',
         name: 'Turbo Detailer',
         defaultWeight: 1.0,
@@ -193,7 +193,7 @@ const fluxLoras = [
         name: 'Ultra Realistic',
         defaultWeight: 1.0,
         url: 'https://civitai.com/api/download/models/1026423?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
-    }
+    } */
 ];
 
 const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
