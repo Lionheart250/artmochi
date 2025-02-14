@@ -1,56 +1,58 @@
 import React, { useEffect, useRef, memo } from 'react';
 
 const LoadingSpirals = memo(() => {
-  const containerRef = useRef(null);
+  const spiralRef = useRef(null);
+  const spiral2Ref = useRef(null);
+  const spiral = "Generating your image";
+  const ANIMATION_DURATION = 2000;
+  const ANIMATION_OFFSET = 500;
+  const SPIRAL2_OFFSET = 4000;
   const animationInitialized = useRef(false);
 
   useEffect(() => {
     if (animationInitialized.current) return;
     animationInitialized.current = true;
 
-    const text = "Generating your image";
-    const duration = 2000;
-    const baseOffset = 500;
-    const secondSpiralOffset = 4000;
-
-    const createSpiral = (isSecond) => {
-      const spiral = document.createElement('div');
-      spiral.className = 'spiral-text';
+    if (spiralRef.current) {
+      spiralRef.current.innerHTML = '';
       
-      text.split('').forEach((char, i) => {
+      spiral.split('').forEach((char, i) => {
         const div = document.createElement('div');
         div.innerText = char;
-        div.className = 'character';
+        div.classList.add('character');
         div.style.setProperty('--i', i + 1);
-        
-        // Calculate different delays for each spiral
-        const delay = isSecond 
-          ? -(baseOffset + secondSpiralOffset) + (i * duration / text.length)
-          : -baseOffset + (i * duration / text.length);
-          
-        div.style.animationDelay = `${delay}ms`;
-        spiral.appendChild(div);
+        div.style.animationDelay = `${(i * ANIMATION_DURATION / 16) - ANIMATION_OFFSET - ANIMATION_DURATION}ms`;
+        spiralRef.current.appendChild(div);
       });
+    }
 
-      return spiral;
-    };
-
-    if (containerRef.current) {
-      containerRef.current.innerHTML = '';
-      containerRef.current.appendChild(createSpiral(false)); // First spiral
-      containerRef.current.appendChild(createSpiral(true));  // Second spiral with offset
+    if (spiral2Ref.current) {
+      spiral2Ref.current.innerHTML = '';
+      
+      spiral.split('').forEach((char, i) => {
+        const div = document.createElement('div');
+        div.innerText = char;
+        div.classList.add('character');
+        div.style.setProperty('--i', i + 1);
+        div.style.animationDelay = `${-(ANIMATION_OFFSET + SPIRAL2_OFFSET) + (i * ANIMATION_DURATION / 16)}ms`;
+        spiral2Ref.current.appendChild(div);
+      });
     }
 
     return () => {
       animationInitialized.current = false;
-      if (containerRef.current) {
-        containerRef.current.innerHTML = '';
-      }
+      if (spiralRef.current) spiralRef.current.innerHTML = '';
+      if (spiral2Ref.current) spiral2Ref.current.innerHTML = '';
     };
   }, []);
 
-  return <div ref={containerRef} className="loading-text" />;
-}, () => true);
+  return (
+    <div className="loading-text">
+      <div ref={spiralRef} className="spiral-text" />
+      <div ref={spiral2Ref} className="spiral-text" />
+    </div>
+  );
+}, () => true); // Always return true to prevent any re-renders
 
 LoadingSpirals.displayName = 'LoadingSpirals';
 
