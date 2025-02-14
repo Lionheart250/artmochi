@@ -20,6 +20,14 @@ const { S3Client, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const app = express();
 const port = process.env.PORT || 3000;
 
+const s3Client = new S3Client({
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    }
+});
+
 // Update CORS configuration
 const allowedOrigins = [
     'https://www.artmochi.com',
@@ -763,6 +771,9 @@ app.delete('/images/:id', authenticateTokenWithAutoRefresh, async (req, res) => 
     
     try {
       await client.query('BEGIN');
+      
+      // Get the user's role from the auth token
+      const isAdmin = req.user.role === 'admin';
       
       // First get the image URL
       const imageQuery = isAdmin 
