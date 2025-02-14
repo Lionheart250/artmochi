@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import './ImageGenerator.css';
 import LoraSelector from '../components/LoraSelector';
+import LoadingSpirals from '../components/LoadingSpirals';
 
 // Add constants at top
 const dimensions = {
@@ -51,10 +52,6 @@ const ImageGenerator = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [enableUpscale, setEnableUpscale] = useState(false); // State for upscaling
-  const [spiral] = useState("Generating your image");
-  const [spiral2] = useState("Generating your image");
-  const spiralRef = useRef(null);
-  const spiral2Ref = useRef(null);
   const [selectedLoras, setSelectedLoras] = useState({});
   const [isLoraOpen, setIsLoraOpen] = useState(false);
   const [categories, setCategories] = useState([]); // State for categories
@@ -93,45 +90,6 @@ const ImageGenerator = () => {
       navigate('/login');
     }
   }, [navigate]);
-
-  // First spiral animation
-  useEffect(() => {
-    if (loading && spiralRef.current) {
-        spiralRef.current.innerHTML = '';
-      
-        spiral.split('').forEach((char, i) => {
-            const div = document.createElement('div');
-            div.innerText = char;
-            div.classList.add('character');
-            div.style.setProperty('--i', i + 1);
-            // Start animation immediately but keep movement pattern
-            div.style.animationDelay = `${(i * ANIMATION_DURATION / 16) - ANIMATION_OFFSET - ANIMATION_DURATION}ms`;
-            spiralRef.current.appendChild(div);
-        });
-    }
-}, [loading, spiral]);
-
-  // Second spiral animation
-  useEffect(() => {
-    if (loading && spiral2Ref.current) {
-      spiral2Ref.current.innerHTML = '';
-      
-      spiral2.split('').forEach((char, i) => {
-        const div = document.createElement('div');
-        div.innerText = char;
-        div.classList.add('character');
-        div.style.setProperty('--i', i + 1);
-        div.style.animationDelay = `${-(ANIMATION_OFFSET + SPIRAL2_OFFSET) + (i * ANIMATION_DURATION / 16)}ms`;
-        spiral2Ref.current.appendChild(div);
-      });
-    }
-    
-    return () => {
-      if (spiral2Ref.current) {
-        spiral2Ref.current.innerHTML = '';
-      }
-    };
-  }, [loading, spiral2]);
 
   const buildLoraString = () => {
     return Object.entries(selectedLoras)
@@ -240,38 +198,7 @@ const validUpscalers = [
     "SwinIR 4x"
 ];
 
-const LoadingText = () => (
-    <div className="loading-text">
-        <div ref={spiralRef} className="spiral-text">
-            {spiral.split('').map((char, i) => (
-                <span 
-                    key={i} 
-                    className="character"
-                    style={{
-                        '--i': i + 1,
-                        animationDelay: `${-ANIMATION_OFFSET + (i * ANIMATION_DURATION / 16)}ms`
-                    }}
-                >
-                    {char}
-                </span>
-            ))}
-        </div>
-        <div ref={spiral2Ref} className="spiral-text">
-            {spiral2.split('').map((char, i) => (
-                <span 
-                    key={i} 
-                    className="character"
-                    style={{
-                        '--i': i + 1,
-                        animationDelay: `${-(ANIMATION_OFFSET + SPIRAL2_OFFSET) + (i * ANIMATION_DURATION / 16)}ms`
-                    }}
-                >
-                    {char}
-                </span>
-            ))}
-        </div>
-    </div>
-);
+const LoadingText = () => <LoadingSpirals />;
 
   return (
     <div className="image-generator">
