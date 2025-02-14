@@ -16,6 +16,7 @@ const path = require('path');
 const fs = require('fs');
 const helmet = require('helmet');
 const { uploadToS3 } = require('./src/config/s3');
+const { S3Client, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -279,6 +280,24 @@ const upload = multer({
         }
     }
 });
+
+const deleteFromS3 = async (imageUrl) => {
+    try {
+      // Extract the key from the full S3 URL
+      const key = imageUrl.split('.amazonaws.com/')[1];
+      
+      const command = new DeleteObjectCommand({
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: key
+      });
+  
+      await s3Client.send(command);
+      return { success: true };
+    } catch (error) {
+      console.error('S3 deletion error:', error);
+      return { success: false, error: error.message };
+    }
+  };
 
 // --- User Routes ---
 
@@ -740,27 +759,49 @@ app.get('/image_likes/:imageId', authenticateTokenWithAutoRefresh, (req, res) =>
 
 // Delete image
 app.delete('/images/:id', authenticateTokenWithAutoRefresh, async (req, res) => {
+    const client = await pool.connect();
+    
     try {
-        const isAdmin = req.user.role === 'admin';
-        
-        const query = isAdmin 
-            ? 'DELETE FROM images WHERE id = $1 RETURNING *'
-            : 'DELETE FROM images WHERE id = $1 AND user_id = $2 RETURNING *';
-            
-        const params = isAdmin ? [req.params.id] : [req.params.id, req.user.userId];
-        
-        const result = await pool.query(query, params);
-
-        if (result.rowCount === 0) {
-            return res.status(404).json({ error: 'Image not found or unauthorized' });
-        }
-
-        res.json({ success: true });
+      await client.query('BEGIN');
+      
+      // First get the image URL
+      const imageQuery = isAdmin 
+        ? 'SELECT image_url FROM images WHERE id = $1'
+        : 'SELECT image_url FROM images WHERE id = $1 AND user_id = $2';
+      
+      const imageParams = isAdmin ? [req.params.id] : [req.params.id, req.user.userId];
+      const imageResult = await client.query(imageQuery, imageParams);
+  
+      if (imageResult.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'Image not found or unauthorized' });
+      }
+  
+      const imageUrl = imageResult.rows[0].image_url;
+  
+      // Delete from S3
+      const s3Result = await deleteFromS3(imageUrl);
+      if (!s3Result.success) {
+        throw new Error(`Failed to delete from S3: ${s3Result.error}`);
+      }
+  
+      // Delete from database
+      const deleteQuery = isAdmin 
+        ? 'DELETE FROM images WHERE id = $1'
+        : 'DELETE FROM images WHERE id = $1 AND user_id = $2';
+      
+      await client.query(deleteQuery, imageParams);
+      await client.query('COMMIT');
+  
+      res.json({ success: true });
     } catch (error) {
-        console.error('Delete error:', error);
-        res.status(500).json({ error: 'Failed to delete image' });
+      await client.query('ROLLBACK');
+      console.error('Delete error:', error);
+      res.status(500).json({ error: 'Failed to delete image' });
+    } finally {
+      client.release();
     }
-});
+  });
 
 // Fetch likes for a specific image
 app.get('/fetch_likes', authenticateTokenWithAutoRefresh, async (req, res) => {
@@ -1687,3 +1728,4 @@ if (process.env.NODE_ENV !== 'production') {
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
   });
+

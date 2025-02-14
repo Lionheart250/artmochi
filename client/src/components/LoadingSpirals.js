@@ -13,7 +13,7 @@ const LoadingSpirals = memo(() => {
     const baseOffset = 500;
     const secondSpiralOffset = 4000;
 
-    const createSpiral = (offset) => {
+    const createSpiral = (isSecond) => {
       const spiral = document.createElement('div');
       spiral.className = 'spiral-text';
       
@@ -22,7 +22,13 @@ const LoadingSpirals = memo(() => {
         div.innerText = char;
         div.className = 'character';
         div.style.setProperty('--i', i + 1);
-        div.style.animationDelay = `${-(baseOffset + offset) + (i * duration / text.length)}ms`;
+        
+        // Calculate different delays for each spiral
+        const delay = isSecond 
+          ? -(baseOffset + secondSpiralOffset) + (i * duration / text.length)
+          : -baseOffset + (i * duration / text.length);
+          
+        div.style.animationDelay = `${delay}ms`;
         spiral.appendChild(div);
       });
 
@@ -31,8 +37,8 @@ const LoadingSpirals = memo(() => {
 
     if (containerRef.current) {
       containerRef.current.innerHTML = '';
-      containerRef.current.appendChild(createSpiral(0));
-      containerRef.current.appendChild(createSpiral(secondSpiralOffset));
+      containerRef.current.appendChild(createSpiral(false)); // First spiral
+      containerRef.current.appendChild(createSpiral(true));  // Second spiral with offset
     }
 
     return () => {
@@ -44,7 +50,7 @@ const LoadingSpirals = memo(() => {
   }, []);
 
   return <div ref={containerRef} className="loading-text" />;
-}, () => true); // Force memo to always return true, preventing all re-renders
+}, () => true);
 
 LoadingSpirals.displayName = 'LoadingSpirals';
 
