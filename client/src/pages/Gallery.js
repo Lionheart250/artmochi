@@ -946,78 +946,76 @@ useEffect(() => {
 
     return (
         <div className="gallery-page">
-            {isAdmin && (
-                <div className="admin-controls">
-                    <button 
-                        onClick={() => setSelectionMode(!selectionMode)}
-                        className="admin-button"
-                    >
-                        {selectionMode ? 'Cancel Selection' : 'Select Images'}
-                    </button>
-                    {selectionMode && (
-                        <>
-                            <button 
-                                onClick={handleSelectAll}
-                                className="admin-button"
-                            >
-                                Select All
-                            </button>
-                            <button 
-                                onClick={handleBulkDelete}
-                                className="admin-button delete"
-                                disabled={selectedImages.size === 0}
-                            >
-                                Delete Selected ({selectedImages.size})
-                            </button>
-                            <button 
-                                onClick={() => setSelectedImages(new Set())}
-                                className="admin-button"
-                            >
-                                Clear Selection
-                            </button>
-                        </>
-                    )}
-                </div>
-            )}
             <div className="gallery-container">
                 <>
                     <div className="gallery-controls">
-                        <select 
-                            value={sortType} 
-                            onChange={(e) => handleSort(e.target.value)}
-                            className="gallery-sort"
-                        >
-                            <option value="newest">Newest</option>
-                            <option value="mostLiked">Most Liked</option>
-                            <option value="mostCommented">Most Commented</option>
-                            <option value="trending">Trending</option>
-                        </select>
-
-                        {sortType === 'trending' && (
-                            <select
-                                value={timeRange}
+                        <div className="gallery-filter-controls">
+                            <select 
+                                className="gallery-sort" 
+                                value={sortType} 
+                                onChange={(e) => setSortType(e.target.value)}
+                            >
+                                <option value="newest">Newest</option>
+                                <option value="mostLiked">Most Liked</option>
+                                <option value="mostCommented">Most Commented</option>
+                                <option value="trending">Trending</option>
+                            </select>
+                            
+                            <select 
+                                className="gallery-time-range" 
+                                value={timeRange} 
                                 onChange={(e) => setTimeRange(e.target.value)}
-                                className="gallery-time-range"
                             >
                                 <option value="day">24 Hours</option>
                                 <option value="week">This Week</option>
                                 <option value="month">This Month</option>
                                 <option value="year">This Year</option>
                             </select>
-                        )}
+                            
+                            <select 
+                                className="gallery-category" 
+                                value={selectedCategory} 
+                                onChange={(e) => setSelectedCategory(e.target.value)}
+                            >
+                                <option value="all">All Categories</option>
+                                <option value="portraits">Portraits</option>
+                                <option value="landscapes">Landscapes</option>
+                                <option value="abstract">Abstract</option>
+                                <option value="anime">Anime</option>
+                                {/* Add more categories as needed */}
+                            </select>
+                        </div>
 
-                        <select
-                            value={selectedCategory}
-                            onChange={(e) => setSelectedCategory(e.target.value)}
-                            className="gallery-category"
-                        >
-                            <option value="all">All Categories</option>
-                            <option value="portraits">Portraits</option>
-                            <option value="landscapes">Landscapes</option>
-                            <option value="abstract">Abstract</option>
-                            <option value="anime">Anime</option>
-                            {/* Add more categories as needed */}
-                        </select>
+                        {isAdmin && (
+                            <div className="admin-controls">
+                                <div className="admin-controls-primary">
+                                    <button 
+                                        className="admin-button"
+                                        onClick={() => setSelectionMode(!selectionMode)}
+                                        disabled={loading}
+                                    >
+                                        {selectionMode ? 'Cancel Selection' : 'Select Images'}
+                                    </button>
+                                </div>
+                                {selectionMode && (
+                                    <div className="admin-controls-secondary">
+                                        <button 
+                                            onClick={handleSelectAll}
+                                            className="admin-button"
+                                        >
+                                            Select All
+                                        </button>
+                                        <button 
+                                            onClick={handleBulkDelete}
+                                            className="admin-button delete"
+                                            disabled={selectedImages.size === 0}
+                                        >
+                                            Delete Selected ({selectedImages.size})
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                     <h2 className="gallery-heading"></h2>
                     <div className="gallery-grid" ref={gridRef}>
