@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { useAuth } from '../context/AuthContext'; // Adjust path to your AuthContext
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
@@ -64,10 +64,6 @@ const ImageGenerator = () => {
   const [scheduler, setScheduler] = useState("Karras");
   const [showAdvanced, setShowAdvanced] = useState(false); // Add state for advanced section toggle
   const [distilledCfgScale, setDistilledCfgScale] = useState(3.5);
-
-  const ANIMATION_DURATION = 2000; // 2 seconds for full animation
-  const ANIMATION_OFFSET = 500; // 0.5 second offset
-  const SPIRAL2_OFFSET = 4000; // Additional offset for second spiral
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -198,7 +194,9 @@ const validUpscalers = [
     "SwinIR 4x"
 ];
 
-const LoadingText = () => <LoadingSpirals />;
+const MemoizedLoadingText = memo(() => <LoadingSpirals />);
+
+const LoadingText = () => <MemoizedLoadingText />;
 
   return (
     <div className="image-generator">
