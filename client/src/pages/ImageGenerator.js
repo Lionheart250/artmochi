@@ -194,9 +194,7 @@ const validUpscalers = [
     "SwinIR 4x"
 ];
 
-const MemoizedLoadingText = memo(() => <LoadingSpirals />);
-
-const LoadingText = () => <MemoizedLoadingText />;
+const LoadingText = LoadingSpirals;
 
   return (
     <div className="image-generator">
