@@ -25,7 +25,9 @@ const LoadingSpirals = memo(() => {
         spiralRef.current.appendChild(div);
       });
     }
+  }, []);
 
+  useEffect(() => {
     if (spiral2Ref.current) {
       spiral2Ref.current.innerHTML = '';
       
@@ -40,9 +42,9 @@ const LoadingSpirals = memo(() => {
     }
 
     return () => {
-      animationInitialized.current = false;
-      if (spiralRef.current) spiralRef.current.innerHTML = '';
-      if (spiral2Ref.current) spiral2Ref.current.innerHTML = '';
+      if (spiral2Ref.current) {
+        spiral2Ref.current.innerHTML = '';
+      }
     };
   }, []);
 
@@ -52,7 +54,7 @@ const LoadingSpirals = memo(() => {
       <div ref={spiral2Ref} className="spiral-text" />
     </div>
   );
-}, () => true); // Always return true to prevent any re-renders
+}, () => true); // Prevent re-renders
 
 LoadingSpirals.displayName = 'LoadingSpirals';
 
