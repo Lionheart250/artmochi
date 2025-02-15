@@ -32,12 +32,29 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const login = (newToken, newRefreshToken) => {
-        localStorage.setItem('token', newToken);
-        localStorage.setItem('refreshToken', newRefreshToken);
-        setToken(newToken);
-        setRefreshToken(newRefreshToken);
-        decodeAndSetUser(newToken);
+    const login = async (token, refreshToken) => {
+        try {
+            // Store tokens
+            localStorage.setItem('token', token);
+            localStorage.setItem('refreshToken', refreshToken);
+            
+            // Decode token to get user info
+            const decoded = jwtDecode(token);
+            
+            // Update auth state
+            setUser({
+                userId: decoded.userId,
+                username: decoded.username,
+                role: decoded.role
+            });
+            setIsAuthenticated(true);
+            
+            // Return the token for chaining
+            return token;
+        } catch (error) {
+            console.error('Login error:', error);
+            throw error;
+        }
     };
 
     const logout = () => {

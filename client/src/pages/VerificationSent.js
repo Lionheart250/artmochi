@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, Link, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useProfile } from '../context/ProfileContext';
 import './VerificationSent.css';
 
 const VerificationSent = () => {
@@ -8,6 +9,7 @@ const VerificationSent = () => {
   const { email, message } = state || {};
   const [verificationStatus, setVerificationStatus] = useState('waiting');
   const { login } = useAuth();
+  const { fetchUserProfile } = useProfile();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,10 +27,16 @@ const VerificationSent = () => {
 
         if (response.ok && data.isVerified) {
           setVerificationStatus('verified');
-          // Auto login if tokens are provided
+          
           if (data.token && data.refreshToken) {
+            // First update auth state
             await login(data.token, data.refreshToken);
-            navigate('/');
+            
+            // Then fetch user profile
+            await fetchUserProfile(data.token);
+            
+            // Finally navigate
+            navigate('/', { replace: true });
           }
         }
       } catch (error) {
@@ -36,10 +44,9 @@ const VerificationSent = () => {
       }
     };
 
-    // Check every 5 seconds
-    const interval = setInterval(checkVerification, 5000);
+    const interval = setInterval(checkVerification, 3000);
     return () => clearInterval(interval);
-  }, [email, login, navigate]);
+  }, [email, login, fetchUserProfile, navigate]);
 
   return (
     <div className="verification-sent-container">

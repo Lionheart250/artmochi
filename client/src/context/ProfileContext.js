@@ -9,11 +9,30 @@ export const ProfileProvider = ({ children }) => {
         setProfilePicture(newPicturePath);
     };
 
+    const fetchUserProfile = async (token) => {
+        try {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/user/profile`, {
+                headers: {
+                    'Authorization': `Bearer ${token || localStorage.getItem('token')}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setProfilePicture(data.profilePicture);
+                return data;
+            }
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        }
+    };
+
     return (
         <ProfileContext.Provider value={{ 
             profilePicture, 
             setProfilePicture,
-            updateProfilePicture 
+            updateProfilePicture,
+            fetchUserProfile
         }}>
             {children}
         </ProfileContext.Provider>
