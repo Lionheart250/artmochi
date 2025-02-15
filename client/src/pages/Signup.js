@@ -126,35 +126,19 @@ function Signup() {
         });
 
         const data = await response.json();
-        console.log('Signup response status:', response.status);
-        console.log('Signup response data:', data);
-
+        
         if (response.ok) {
-            // Store the token and refresh token
-            const { token, refreshToken } = data;
-            localStorage.setItem('token', token);
-            localStorage.setItem('refreshToken', refreshToken);
-
-            // Decode the token to get user information
-            const decodedToken = jwtDecode(token);
-            localStorage.setItem('userId', decodedToken.userId); // Save userId to localStorage
-
-            // Call the login function to update the user context
-            login(token, refreshToken); // Add refresh token if available
-
-            // Fetch and set the profile picture
-            await fetchProfilePicture(token);
-
-            alert(data.message);
-            navigate('/'); // Redirect to the home page or dashboard
+            // With email verification, we don't get tokens immediately
+            alert(data.message || 'Please check your email to verify your account');
+            navigate('/login'); // Redirect to login page
         } else {
-            setError(data.error || 'An error occurred.');
+            setError(data.error || 'An error occurred during signup.');
         }
     } catch (err) {
         console.error('Signup error:', err);
         setError('Failed to connect to the server.');
     }
-  };
+};
 
   return (
     <div className="signup-container">
