@@ -423,7 +423,46 @@ app.get('/verify-email/:token', async (req, res) => {
     const { token } = req.params;
 
     try {
-        // First check if token is expired
+        // First check if user is already verified
+        const userCheck = await pool.query(
+            `SELECT id, username, role, is_verified, email 
+             FROM users 
+             WHERE verification_token = $1 
+             OR (email = (SELECT email FROM users WHERE verification_token = $1))`,
+            [token]
+        );
+
+        if (userCheck.rows.length === 0) {
+            return res.status(400).json({ 
+                error: 'Invalid verification link' 
+            });
+        }
+
+        const user = userCheck.rows[0];
+
+        // If already verified, send success with tokens
+        if (user.is_verified) {
+            const authToken = jwt.sign(
+                { userId: user.id, username: user.username, role: user.role }, 
+                process.env.JWT_SECRET, 
+                { expiresIn: '7d' }
+            );
+            
+            const refreshToken = jwt.sign(
+                { userId: user.id, username: user.username, role: user.role }, 
+                process.env.REFRESH_SECRET, 
+                { expiresIn: '30d' }
+            );
+
+            return res.json({ 
+                message: 'Email already verified',
+                token: authToken,
+                refreshToken,
+                userId: user.id
+            });
+        }
+
+        // If not verified and token is valid, verify the user
         const tokenCheck = await pool.query(
             `SELECT * FROM users 
              WHERE verification_token = $1 
@@ -432,18 +471,13 @@ app.get('/verify-email/:token', async (req, res) => {
         );
 
         if (tokenCheck.rows.length === 0) {
-            // Get email for resend functionality
-            const expiredUser = await pool.query(
-                'SELECT email FROM users WHERE verification_token = $1',
-                [token]
-            );
             return res.status(400).json({ 
                 error: 'Verification link expired',
-                email: expiredUser.rows[0]?.email
+                email: user.email
             });
         }
 
-        // If token is valid, proceed with verification
+        // Update user to verified status
         const result = await pool.query(
             `UPDATE users 
              SET is_verified = true, 
@@ -453,8 +487,6 @@ app.get('/verify-email/:token', async (req, res) => {
             [token]
         );
 
-        const user = result.rows[0];
-        
         // Generate tokens for auto-login
         const authToken = jwt.sign(
             { userId: user.id, username: user.username, role: user.role }, 
