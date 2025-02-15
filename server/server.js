@@ -1955,6 +1955,49 @@ app.post('/resend-verification', async (req, res) => {
     }
 });
 
+app.post('/check-verification', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const result = await pool.query(
+      'SELECT id, username, role, is_verified FROM users WHERE email = $1',
+      [email]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = result.rows[0];
+
+    if (user.is_verified) {
+      // Generate tokens for auto-login
+      const token = jwt.sign(
+        { userId: user.id, username: user.username, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      const refreshToken = jwt.sign(
+        { userId: user.id, username: user.username, role: user.role },
+        process.env.REFRESH_SECRET,
+        { expiresIn: '30d' }
+      );
+
+      return res.json({
+        isVerified: true,
+        token,
+        refreshToken
+      });
+    }
+
+    res.json({ isVerified: false });
+  } catch (error) {
+    console.error('Check verification error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Error handling middleware
 if (process.env.NODE_ENV === 'production') {
     app.use((err, req, res, next) => {
