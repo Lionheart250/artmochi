@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import axios from 'axios';
+import { useProfile } from './ProfileContext';
 
 const AuthContext = createContext();
 
@@ -9,6 +10,7 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [token, setToken] = useState(localStorage.getItem('token'));
     const [refreshToken, setRefreshToken] = useState(localStorage.getItem('refreshToken'));
+    const { fetchUserProfile } = useProfile();
 
     const decodeAndSetUser = (token) => {
         try {
@@ -39,6 +41,10 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('token', token);
             localStorage.setItem('refreshToken', refreshToken);
             
+            // Set tokens in state
+            setToken(token);
+            setRefreshToken(refreshToken);
+            
             // Decode token to get user info
             const decoded = jwtDecode(token);
             
@@ -50,7 +56,9 @@ export const AuthProvider = ({ children }) => {
             });
             setIsAuthenticated(true);
             
-            // Return the token for chaining
+            // Fetch profile data immediately after login
+            await fetchUserProfile(token);
+            
             return token;
         } catch (error) {
             console.error('Login error:', error);
@@ -85,6 +93,38 @@ export const AuthProvider = ({ children }) => {
 
         refreshAuthToken();
     }, [token, refreshToken]);
+
+    useEffect(() => {
+        const initializeAuth = async () => {
+            const token = localStorage.getItem('token');
+            if (token) {
+                try {
+                    const decoded = jwtDecode(token);
+                    // Check if token is expired
+                    if (decoded.exp * 1000 > Date.now()) {
+                        setUser({
+                            userId: decoded.userId,
+                            username: decoded.username,
+                            role: decoded.role
+                        });
+                        setIsAuthenticated(true);
+                        // Also fetch profile on init
+                        await fetchUserProfile(token);
+                    } else {
+                        // Token expired, clean up
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('refreshToken');
+                    }
+                } catch (error) {
+                    console.error('Token initialization error:', error);
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('refreshToken');
+                }
+            }
+        };
+
+        initializeAuth();
+    }, []);
 
     return (
         <AuthContext.Provider value={{
