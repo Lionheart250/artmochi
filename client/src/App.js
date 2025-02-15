@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Settings from './pages/Settings';
 import Profile from './pages/Profile';
+import EmailVerification from './pages/EmailVerification';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import { AuthProvider } from './context/AuthContext';
@@ -29,6 +30,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/verify-email/:token" element={<EmailVerification />} />
             <Route path="*" element={<div>404 Not Found</div>} />
           </Routes>
           <Footer />

@@ -17,6 +17,8 @@ const fs = require('fs');
 const helmet = require('helmet');
 const { uploadToS3 } = require('./src/config/s3');
 const { S3Client, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -79,7 +81,34 @@ app.use(helmet({
 // 2. Update CORS options
 app.use(cors(corsOptions));
 
-// Add this before your routes
+// Add this helper function
+const sendVerificationEmail = async (email, token) => {
+    const verificationLink = `${process.env.FRONTEND_URL}/verify-email/${token}`;
+    
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Verify Your Email - ArtMochi',
+        html: `
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h1 style="color: #fe2c55;">Welcome to ArtMochi!</h1>
+                <p>Please verify your email address by clicking the link below:</p>
+                <a href="${verificationLink}" 
+                   style="display: inline-block; padding: 12px 24px; 
+                          background-color: #fe2c55; color: white; 
+                          text-decoration: none; border-radius: 4px;">
+                    Verify Email
+                </a>
+                <p>This link will expire in 24 hours.</p>
+                <p>If you didn't create an account, please ignore this email.</p>
+            </div>
+        `
+    };
+
+    await transporter.sendMail(mailOptions);
+};
+
+// Add before your routes
 app.options('*', cors(corsOptions));
 
 // Add header size settings
@@ -307,43 +336,80 @@ const deleteFromS3 = async (imageUrl) => {
     }
   };
 
+const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    secure: false, // true for 465, false for other ports
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD
+    }
+});
+
+// Add after transporter setup
+transporter.verify(function (error, success) {
+    if (error) {
+        console.log('SMTP config error:', error);
+    } else {
+        console.log('SMTP server is ready');
+    }
+});
+
 // --- User Routes ---
 
-// Register User
+// Modify your signup endpoint
 app.post('/signup', async (req, res) => {
     const { username, email, password } = req.body;
     const client = await pool.connect();
-
+    
     try {
         await client.query('BEGIN');
-
-        // Reset sequence if needed
-        await client.query(`
-            SELECT setval('users_id_seq', COALESCE((SELECT MAX(id) FROM users), 0))
-        `);
-
-        // Hash password and create user
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const result = await client.query(
-            'INSERT INTO users (username, password, email, role) VALUES ($1, $2, $3, $4) RETURNING id, username, role',
-            [username, hashedPassword, email, 'user']
+        
+        // Check if username or email already exists
+        const existingUser = await client.query(
+            'SELECT username, email FROM users WHERE username = $1 OR email = $2',
+            [username, email]
         );
 
-        const user = result.rows[0];
-        const token = jwt.sign({ userId: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-        const refreshToken = jwt.sign({ userId: user.id, username: user.username, role: user.role }, REFRESH_SECRET, { expiresIn: '30d' });
+        if (existingUser.rows.length > 0) {
+            const field = existingUser.rows[0].username === username ? 'username' : 'email';
+            throw new Error(`${field} already exists`);
+        }
 
+        // Generate verification token
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const verificationExpiry = new Date();
+        verificationExpiry.setHours(verificationExpiry.getHours() + 24); // 24 hour expiry
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        // Insert new user
+        const result = await client.query(
+            `INSERT INTO users (
+                username, email, password, 
+                verification_token, verification_expiry, 
+                is_verified, role
+            ) VALUES ($1, $2, $3, $4, $5, false, $6) 
+            RETURNING id`,
+            [username, email, hashedPassword, verificationToken, verificationExpiry, 'user']
+        );
+
+        // Send verification email
+        await sendVerificationEmail(email, verificationToken);
+        
         await client.query('COMMIT');
-        res.json({ id: user.id, token, refreshToken, message: 'Signup successful' });
+
+        res.status(201).json({
+            message: 'Registration successful! Please check your email to verify your account.',
+            requiresVerification: true
+        });
 
     } catch (error) {
         await client.query('ROLLBACK');
-        console.error('Registration error:', error);
+        console.error('Signup error:', error);
         
-        if (error.constraint === 'users_username_key') {
-            res.status(400).json({ error: 'Username already exists' });
-        } else if (error.constraint === 'users_email_key') {
-            res.status(400).json({ error: 'Email already exists' });
+        if (error.message.includes('already exists')) {
+            res.status(400).json({ error: error.message });
         } else {
             res.status(500).json({ error: 'Registration failed' });
         }
@@ -351,6 +417,66 @@ app.post('/signup', async (req, res) => {
         client.release();
     }
 });
+
+// Add email verification endpoint
+app.get('/verify-email/:token', async (req, res) => {
+    const { token } = req.params;
+
+    try {
+        const result = await pool.query(
+            `UPDATE users 
+             SET is_verified = true, 
+                 verification_token = null 
+             WHERE verification_token = $1 
+             AND verification_expiry > NOW() 
+             RETURNING id`,
+            [token]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(400).json({ 
+                error: 'Invalid or expired verification token' 
+            });
+        }
+
+        res.json({ message: 'Email verified successfully' });
+    } catch (error) {
+        console.error('Verification error:', error);
+        res.status(500).json({ error: 'Verification failed' });
+    }
+});
+
+app.post('/check-credentials', async (req, res) => {
+    const { username, email } = req.body;
+
+    try {
+        // Check if username exists
+        const usernameCheck = await pool.query(
+            'SELECT id FROM users WHERE username = $1',
+            [username]
+        );
+
+        if (usernameCheck.rows.length > 0) {
+            return res.status(400).json({ error: 'Username is already taken' });
+        }
+
+        // Check if email exists
+        const emailCheck = await pool.query(
+            'SELECT id FROM users WHERE email = $1',
+            [email]
+        );
+
+        if (emailCheck.rows.length > 0) {
+            return res.status(400).json({ error: 'Email is already registered' });
+        }
+
+        res.json({ message: 'Credentials available' });
+    } catch (error) {
+        console.error('Error checking credentials:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 
 // User login
 app.post('/login', async (req, res) => {
@@ -362,22 +488,23 @@ app.post('/login', async (req, res) => {
             'SELECT * FROM users WHERE email = $1',
             [email]
         );
-        console.log('User found:', result.rows[0] ? 'yes' : 'no');
-        
+
         const user = result.rows[0];
         if (!user) {
-            return res.status(400).json({ error: 'Invalid email or password' });
+            return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        console.log('Password valid:', isPasswordValid);
-
-        if (!isPasswordValid) {
-            return res.status(400).json({ error: 'Invalid email or password' });
+        const validPassword = await bcrypt.compare(password, user.password);
+        if (!validPassword) {
+            return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        console.log('JWT_SECRET exists:', !!JWT_SECRET);
-        console.log('REFRESH_SECRET exists:', !!REFRESH_SECRET);
+        if (!user.is_verified) {
+            return res.status(403).json({ 
+                error: 'Please verify your email before logging in',
+                requiresVerification: true
+            });
+        }
 
         const role = user.role;
         const token = jwt.sign({ userId: user.id, username: user.username, role }, JWT_SECRET, { expiresIn: '7d' });
@@ -396,8 +523,9 @@ app.post('/login', async (req, res) => {
         );
 
         res.json({ token, refreshToken, userId: user.id, message: 'Login successful' });
+
     } catch (error) {
-        console.error('Error during login:', error);
+        console.error('Login error:', error);
         res.status(500).json({ error: 'Login failed' });
     }
 });
@@ -1298,7 +1426,8 @@ app.get('/user_profile/:id', authenticateTokenWithAutoRefresh, async (req, res) 
         const result = await pool.query(`
             SELECT 
                 u.username, 
-                u.bio, 
+                u.bio,
+                u.email, 
                 COALESCE(pp.filepath, u.profile_picture) as profile_picture
             FROM users u
             LEFT JOIN profile_pictures pp 
@@ -1324,6 +1453,7 @@ app.get('/user_profile/:id', authenticateTokenWithAutoRefresh, async (req, res) 
         console.log('Found user data:', {
             userId,
             username: row.username,
+            email: row.email,
             profile_picture: profilePicture
         });
 
@@ -1338,6 +1468,7 @@ app.get('/user_profile/:id', authenticateTokenWithAutoRefresh, async (req, res) 
             userId,
             username: row.username,
             bio: row.bio,
+            email: row.email,
             profile_picture: profilePicture
         });
     } catch (error) {
@@ -1369,6 +1500,40 @@ app.post('/update_profile', authenticateTokenWithAutoRefresh, async (req, res) =
     } catch (err) {
         console.error('Error updating profile:', err);
         res.status(500).json({ error: 'Failed to update profile' });
+    }
+});
+
+app.post('/change_password', authenticateTokenWithAutoRefresh, async (req, res) => {
+    const userId = req.user.userId;
+    const { currentPassword, newPassword } = req.body;
+    
+    try {
+        // First verify the current password
+        const userResult = await pool.query('SELECT password FROM users WHERE id = $1', [userId]);
+        
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const isPasswordValid = await bcrypt.compare(currentPassword, userResult.rows[0].password);
+        
+        if (!isPasswordValid) {
+            return res.status(401).json({ error: 'Current password is incorrect' });
+        }
+
+        // Hash the new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        
+        // Update the password
+        await pool.query(
+            'UPDATE users SET password = $1 WHERE id = $2',
+            [hashedPassword, userId]
+        );
+
+        res.json({ message: 'Password updated successfully' });
+    } catch (error) {
+        console.error('Password change error:', error);
+        res.status(500).json({ error: 'Failed to update password' });
     }
 });
 

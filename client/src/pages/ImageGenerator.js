@@ -382,7 +382,7 @@ const LoadingText = LoadingSpirals;
             {/* Preview Side */}
             <div className={`image-generator-preview-container ${loading ? 'loading' : ''}`}>
                 <div className="content-wrapper">
-                    <h2 className="image-generator-heading">Preview</h2>
+                    <h2 className="image-generator-heading"></h2>
                     <div className="preview-content">
                         {loading ? (
                             <div className="loading-container">

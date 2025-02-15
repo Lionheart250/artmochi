@@ -28,6 +28,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    margin-bottom: 15px;
 }
 
 .signup-label {
@@ -52,6 +53,10 @@
     background-color: #363636;
 }
 
+.signup-input.invalid {
+    border-color: #ff4d4d;
+}
+
 /* Submit Button */
 .signup-submit-btn {
     background-color: #fe2c55;
@@ -72,10 +77,12 @@
 
 /* Error Message */
 .signup-error {
-    color: #fe2c55;
-    font-size: 14px;
-    text-align: center;
-    margin-top: 8px;
+    color: #ff4d4d;
+    background-color: rgba(255, 77, 77, 0.1);
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    white-space: pre-line;
 }
 
 /* Add this to your existing CSS */
@@ -107,5 +114,55 @@
     .signup-submit-btn {
         font-size: 0.9rem;
     }
+}
+
+.password-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-container input {
+    width: 100%;
+    padding-right: 40px;
+}
+
+.eye-toggle-btn {
+    position: absolute;
+    right: 10px;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 8px;
+    color: #666;
+    transition: color 0.2s ease;
+    cursor: pointer;
+}
+
+.eye-toggle-btn:hover {
+    color: #333;
+}
+
+.password-requirements {
+    margin-top: 8px;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.password-requirements ul {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0;
+}
+
+.password-requirements li {
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.password-requirements li.valid {
+    color: #4CAF50;
 }
 

@@ -1,17 +1,149 @@
 .settings-container {
-    max-width: 600px;
-    margin: 140px auto;
-    padding: 20px;
+    display: flex;
+    gap: 2rem;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
     background: #1f1f1f;
     border-radius: 8px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
     color: #ffffff;
 }
 
+.settings-sidebar {
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.settings-nav-btn {
+    padding: 1rem;
+    text-align: left;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.settings-nav-btn:hover {
+    background-color: #2f2f2f;
+}
+
+.settings-nav-btn.active {
+    background-color: #fe2c55;
+}
+
+.settings-content {
+    flex: 1;
+    background-color: #1a1a1a;
+    border-radius: 12px;
+    padding: 2rem;
+}
+
+.settings-section {
+    margin-bottom: 2rem;
+}
+
 .settings-form {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 1rem;
+    max-width: 400px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    color: #fff;
+    font-size: 0.9rem;
+}
+
+.form-group input {
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid #2f2f2f;
+    background-color: #252525;
+    color: #fff;
+    font-size: 1rem;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #fe2c55;
+}
+
+.verification-status {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    margin-left: 0.5rem;
+}
+
+.verification-status.verified {
+    background-color: #28a745;
+}
+
+.verification-status.unverified {
+    background-color: #dc3545;
+}
+
+.settings-message {
+    margin-top: 1rem;
+    padding: 12px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.settings-message.success {
+    background-color: rgba(76, 175, 80, 0.1);
+    color: #4CAF50;
+    border: 1px solid #4CAF50;
+}
+
+.settings-message.error {
+    background-color: rgba(255, 77, 77, 0.1);
+    color: #ff4d4d;
+    border: 1px solid #ff4d4d;
+}
+
+.current-email {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background-color: #252525;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.verification-sent-message {
+    padding: 1rem;
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+    border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+    .settings-container {
+        flex-direction: column;
+    }
+
+    .settings-sidebar {
+        width: 100%;
+    }
+
+    .settings-nav-btn {
+        text-align: center;
+    }
 }
 
 .settings-form label {
@@ -53,47 +185,209 @@
     background: rgba(254, 44, 85, 0.1);
     color: #fe2c55;
     text-align: center;
+    white-space: pre-line;
 }
 
-.profile-picture-section {
+/* profile picture button size */
+.settings-profile-container {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    margin: 0 auto 2rem;
+    cursor: pointer;
+}
+
+.settings-avatar-label {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.settings-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #1a1a1a;
+    transition: filter 0.3s ease;
+}
+
+.settings-avatar-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
-.profile-picture {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #fe2c55;
+.settings-avatar-text {
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
 }
 
-.profile-picture.loading {
-    opacity: 0.5;
+.settings-avatar-label:hover .settings-avatar-overlay {
+    opacity: 1;
 }
 
+.settings-avatar-input {
+    display: none;
+}
+
+/* Remove these unused classes */
+.settings-avatar-btn,
+.profile-picture-section,
+.profile-picture-change-btn,
+.profile-picture-label,
+.profile-picture.loading,
 .profile-picture input {
     display: none;
 }
 
-.profile-picture-label {
-    padding: 8px 16px;
-    border-radius: 4px;
-    background: #fe2c55;
-    color: #ffffff;
-    font-size: 14px;
-    font-weight: 600;
+.password-requirements {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+}
+
+.password-requirements ul {
+    margin: 0.5rem 0 0 1rem;
+    padding: 0;
+}
+
+.password-requirements li {
+    margin-bottom: 0.25rem;
+    color: #666; /* Default color for unmet requirements */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.password-requirements li.valid {
+    color: #4CAF50; /* Green color for met requirements */
+}
+
+.password-requirements ul {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0;
+}
+
+/* Style for the checkmark and circle symbols */
+.password-requirements li::before {
+    transition: color 0.2s ease;
+}
+
+.password-requirements li.valid {
+    color: #4CAF50;
+}
+
+.password-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-container input {
+    width: 100%;
+    padding-right: 40px; /* Make room for the eye icon */
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    color: #666;
 }
 
-.profile-picture-label:hover {
-    background: #ff425f;
+.password-toggle-btn:hover {
+    color: #333;
 }
 
-.profile-picture-label.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+/* Remove default password reveal button in Edge browser */
+input::-ms-reveal,
+input::-ms-clear {
+    display: none;
+}
+
+.eye-toggle-btn {
+    position: absolute;
+    right: 10px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    transition: color 0.2s ease;
+}
+
+.eye-toggle-btn:hover {
+    color: #333;
+}
+
+.eye-toggle-btn:focus {
+    outline: none;
+}
+
+/* Remove any inherited button styles */
+.eye-toggle-btn:active {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+/* Add these specific styles for the eye toggle buttons */
+.password-input-container .eye-toggle-btn {
+    position: absolute;
+    right: 10px;
+    background: none !important; /* Override any inherited backgrounds */
+    border: none !important; /* Override any inherited borders */
+    box-shadow: none !important; /* Override any inherited shadows */
+    padding: 8px;
+    color: #666;
+    transition: color 0.2s ease;
+    min-width: unset !important; /* Override any inherited widths */
+    width: auto !important;
+    margin: 0 !important;
+}
+
+.password-input-container .eye-toggle-btn:hover {
+    background: none !important;
+    color: #333;
+}
+
+.password-input-container .eye-toggle-btn:active,
+.password-input-container .eye-toggle-btn:focus {
+    background: none !important;
+    outline: none;
+    box-shadow: none !important;
+}
+
+/* Ensure proper positioning of the input and button */
+.password-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-container input {
+    width: 100%;
+    padding-right: 40px; /* Make room for the eye icon */
 }

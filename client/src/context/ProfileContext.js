@@ -5,8 +5,16 @@ const ProfileContext = createContext();
 export const ProfileProvider = ({ children }) => {
     const [profilePicture, setProfilePicture] = useState('/default-avatar.png');
 
+    const updateProfilePicture = async (newPicturePath) => {
+        setProfilePicture(newPicturePath);
+    };
+
     return (
-        <ProfileContext.Provider value={{ profilePicture, setProfilePicture }}>
+        <ProfileContext.Provider value={{ 
+            profilePicture, 
+            setProfilePicture,
+            updateProfilePicture 
+        }}>
             {children}
         </ProfileContext.Provider>
     );
