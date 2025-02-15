@@ -1881,6 +1881,46 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
     }
 });
 
+app.post('/resend-verification', async (req, res) => {
+    const { email } = req.body;
+    
+    try {
+        // Check if email exists and is unverified
+        const result = await pool.query(
+            'SELECT id, username FROM users WHERE email = $1 AND NOT is_verified',
+            [email]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(400).json({ 
+                error: 'Invalid email or account already verified' 
+            });
+        }
+
+        // Generate new verification token
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const verificationExpiry = new Date();
+        verificationExpiry.setHours(verificationExpiry.getHours() + 24);
+
+        // Update user with new token
+        await pool.query(
+            `UPDATE users 
+             SET verification_token = $1, 
+                 verification_expiry = $2 
+             WHERE email = $3`,
+            [verificationToken, verificationExpiry, email]
+        );
+
+        // Send new verification email
+        await sendVerificationEmail(email, verificationToken);
+
+        res.json({ message: 'Verification email sent successfully' });
+    } catch (error) {
+        console.error('Resend verification error:', error);
+        res.status(500).json({ error: 'Failed to resend verification email' });
+    }
+});
+
 // Error handling middleware
 if (process.env.NODE_ENV === 'production') {
     app.use((err, req, res, next) => {
