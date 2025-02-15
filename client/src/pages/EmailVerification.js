@@ -52,8 +52,8 @@ const EmailVerification = () => {
 
             {status === 'error' && (
                 <div className="verification-message error">
-                    <h2>Email Already Verified</h2>
-                    <p>Your email has already been verified. You can now log in.</p>
+                    <h2>Email Verified</h2>
+                    <p>Your email has been verified. You can now log in.</p>
                     <button onClick={() => navigate('/login')} className="redirect-button">
                         Go to Login
                     </button>

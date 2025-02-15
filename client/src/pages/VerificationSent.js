@@ -15,8 +15,6 @@ const VerificationSent = () => {
   useEffect(() => {
     if (!email) return;
 
-    let isSubscribed = true;
-
     const checkVerification = async () => {
       try {
         const response = await fetch(`${process.env.REACT_APP_API_URL}/check-verification`, {
@@ -27,33 +25,22 @@ const VerificationSent = () => {
 
         const data = await response.json();
 
-        if (!isSubscribed) return;
-
         if (response.ok && data.isVerified) {
-          setVerificationStatus('verified');
-          
-          // Handle login sequence
+          // Do login first
           await login(data.token, data.refreshToken);
           await fetchUserProfile(data.token);
-          
-          // Force navigation after verification
-          if (isSubscribed) {
-            navigate('/', { replace: true });
-          }
+          // Navigate immediately, don't wait for state update
+          navigate('/', { replace: true });
+          // Set status after navigation started
+          setVerificationStatus('verified');
         }
       } catch (error) {
-        console.error('Verification check error:', error);
+        console.error('Check verification error:', error);
       }
     };
 
-    // Check immediately and then set up interval
-    checkVerification();
     const interval = setInterval(checkVerification, 2000);
-
-    return () => {
-      isSubscribed = false;
-      clearInterval(interval);
-    };
+    return () => clearInterval(interval);
   }, [email, login, navigate, fetchUserProfile]);
 
   return (
