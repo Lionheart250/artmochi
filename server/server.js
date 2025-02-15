@@ -423,21 +423,35 @@ app.get('/verify-email/:token', async (req, res) => {
     const { token } = req.params;
 
     try {
+        // First check if token is expired
+        const tokenCheck = await pool.query(
+            `SELECT * FROM users 
+             WHERE verification_token = $1 
+             AND verification_expiry > NOW()`,
+            [token]
+        );
+
+        if (tokenCheck.rows.length === 0) {
+            // Get email for resend functionality
+            const expiredUser = await pool.query(
+                'SELECT email FROM users WHERE verification_token = $1',
+                [token]
+            );
+            return res.status(400).json({ 
+                error: 'Verification link expired',
+                email: expiredUser.rows[0]?.email
+            });
+        }
+
+        // If token is valid, proceed with verification
         const result = await pool.query(
             `UPDATE users 
              SET is_verified = true, 
                  verification_token = null 
              WHERE verification_token = $1 
-             AND verification_expiry > NOW() 
-             RETURNING id, username, role, email`,
+             RETURNING id, username, role`,
             [token]
         );
-
-        if (result.rows.length === 0) {
-            return res.status(400).json({ 
-                error: 'Invalid or expired verification token' 
-            });
-        }
 
         const user = result.rows[0];
         
@@ -452,15 +466,6 @@ app.get('/verify-email/:token', async (req, res) => {
             { userId: user.id, username: user.username, role: user.role }, 
             process.env.REFRESH_SECRET, 
             { expiresIn: '30d' }
-        );
-
-        // Store refresh token
-        const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + 7);
-        
-        await pool.query(
-            'INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)',
-            [user.id, refreshToken, expiresAt]
         );
 
         res.json({ 
