@@ -62,6 +62,7 @@ function Signup() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false); // Add loading state
   const navigate = useNavigate();
   const { login } = useAuth(); // Destructure login from useAuth
   const { setProfilePicture } = useProfile(); // Destructure setProfilePicture from useProfile
@@ -93,52 +94,59 @@ function Signup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-
-    // Validate all fields
-    const validation = validateForm(username, email, password);
-    if (!validation.isValid) {
-        setError(validation.errors.join('\n'));
-        return;
-    }
-
-    const payload = { username, email, password };
+    setIsLoading(true); // Start loading
 
     try {
-        // First check if username or email already exists
-        const checkResponse = await fetch(`${process.env.REACT_APP_API_URL}/check-credentials`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, email }),
+      // Validate all fields
+      const validation = validateForm(username, email, password);
+      if (!validation.isValid) {
+        setError(validation.errors.join('\n'));
+        setIsLoading(false); // Stop loading on validation error
+        return;
+      }
+
+      // Rest of your existing signup logic...
+      const checkResponse = await fetch(`${process.env.REACT_APP_API_URL}/check-credentials`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email }),
+      });
+
+      const checkData = await checkResponse.json();
+      
+      if (!checkResponse.ok) {
+        setError(checkData.error || 'Username or email already exists');
+        setIsLoading(false); // Stop loading on error
+        return;
+      }
+
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        // Show success message and redirect
+        setIsLoading(false); // Stop loading on success
+        navigate('/verification-sent', { 
+          state: { 
+            email,
+            message: 'Registration successful! Please check your email to verify your account.' 
+          }
         });
-
-        const checkData = await checkResponse.json();
-        
-        if (!checkResponse.ok) {
-            setError(checkData.error || 'Username or email already exists');
-            return;
-        }
-
-        // If validation passes, proceed with signup
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/signup`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-        });
-
-        const data = await response.json();
-        
-        if (response.ok) {
-            // With email verification, we don't get tokens immediately
-            alert(data.message || 'Please check your email to verify your account');
-            navigate('/login'); // Redirect to login page
-        } else {
-            setError(data.error || 'An error occurred during signup.');
-        }
+      } else {
+        setError(data.error || 'An error occurred during signup.');
+        setIsLoading(false); // Stop loading on error
+      }
     } catch (err) {
-        console.error('Signup error:', err);
-        setError('Failed to connect to the server.');
+      console.error('Signup error:', err);
+      setError('Failed to connect to the server.');
+      setIsLoading(false); // Stop loading on error
     }
-};
+  };
 
   return (
     <div className="signup-container">
@@ -210,7 +218,20 @@ function Signup() {
                 </small>
             </div>
             {error && <div className="signup-error">{error}</div>}
-            <button type="submit" className="signup-submit-btn">Sign Up</button>
+            <button 
+              type="submit" 
+              className={`signup-submit-btn ${isLoading ? 'loading' : ''}`}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <span className="button-content">
+                  <span className="spinner"></span>
+                  Creating Account...
+                </span>
+              ) : (
+                'Sign Up'
+              )}
+            </button>
         </form>
         <div className="login-link">
             Already have an account? <a href="/login">Login</a>

@@ -67,12 +67,23 @@
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: all 0.3s ease;
     margin-top: 8px;
+    position: relative;
 }
 
 .signup-submit-btn:hover {
     background-color: #ef2950;
+}
+
+.signup-submit-btn.loading {
+    background-color: #d42548;
+    cursor: not-allowed;
+}
+
+.signup-submit-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
 }
 
 /* Error Message */
@@ -164,5 +175,26 @@
 
 .password-requirements li.valid {
     color: #4CAF50;
+}
+
+.button-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ffffff;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
