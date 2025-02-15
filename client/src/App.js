@@ -18,8 +18,8 @@ import './App.css';
 
 function App() {
   return (
-    <AuthProvider>
-      <ProfileProvider>
+    <ProfileProvider>
+      <AuthProvider>
         <Router>
           <Header />
           <Routes>
@@ -38,8 +38,8 @@ function App() {
           </Routes>
           <Footer />
         </Router>
-      </ProfileProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </ProfileProvider>
   );
 }
 

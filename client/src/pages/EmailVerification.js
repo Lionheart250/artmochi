@@ -20,11 +20,11 @@ const EmailVerification = () => {
                 if (response.ok) {
                     setStatus('success');
                     await login(data.token, data.refreshToken);
-                    await fetchUserProfile(data.token);
+                    await fetchUserProfile(data.token); // Fetch profile here
                     // Add 4 second delay before navigation
                     setTimeout(() => {
                         navigate('/', { replace: true });
-                    }, 2000);
+                    }, 4000);
                 } else {
                     setStatus('error');
                 }
