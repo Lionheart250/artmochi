@@ -3,13 +3,28 @@
     margin: 50px auto;
     padding: 20px;
     text-align: center;
+    background-color: #121212; /* Dark background to match theme */
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .verification-message {
-    background: #fff;
     padding: 30px;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background-color: #1e1e1e; /* Darker than container */
+    margin-bottom: 20px;
+}
+
+.verification-message h2 {
+    color: #ffffff;
+    margin-bottom: 15px;
+    font-size: 24px;
+}
+
+.verification-message p {
+    color: #cccccc;
+    margin-bottom: 20px;
+    font-size: 16px;
 }
 
 .verification-message.success {
@@ -17,27 +32,32 @@
 }
 
 .verification-message.error {
-    border-left: 4px solid #f44336;
+    border-left: 4px solid #fe2c55;
 }
 
-.resend-button {
+.resend-button, .redirect-button {
     background-color: #fe2c55;
     color: white;
     border: none;
     padding: 12px 24px;
     border-radius: 4px;
     cursor: pointer;
-    margin-top: 20px;
+    font-size: 16px;
     transition: background-color 0.2s;
 }
 
 .resend-button:disabled {
-    background-color: #cccccc;
+    background-color: #444444;
     cursor: not-allowed;
 }
 
+.resend-button:hover:not(:disabled),
+.redirect-button:hover {
+    background-color: #ef2950;
+}
+
 .loader {
-    border: 3px solid #f3f3f3;
+    border: 3px solid #333333;
     border-top: 3px solid #fe2c55;
     border-radius: 50%;
     width: 24px;
