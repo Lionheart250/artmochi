@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useProfile } from '../context/ProfileContext';
 import './VerificationSent.css';
 
 const VerificationSent = () => {
   const { state } = useLocation();
-  const { email, message } = state || {};
-  const [verificationStatus, setVerificationStatus] = useState('waiting');
-  const { login } = useAuth();
+  const { email } = state || {};
+  const [verificationStatus, setVerificationStatus] = useState('pending');
   const navigate = useNavigate();
+  const { login } = useAuth();
+  const { fetchUserProfile } = useProfile();
 
   useEffect(() => {
     if (!email) return;
@@ -25,40 +27,31 @@ const VerificationSent = () => {
 
         if (response.ok && data.isVerified) {
           setVerificationStatus('verified');
-          if (data.token && data.refreshToken) {
-            await login(data.token, data.refreshToken);
-            navigate('/', { replace: true });
-          }
+          await login(data.token, data.refreshToken);
+          await fetchUserProfile(data.token);
+          navigate('/', { replace: true });
         }
       } catch (error) {
-        console.error('Verification check error:', error);
+        console.error('Check verification error:', error);
       }
     };
 
-    const interval = setInterval(checkVerification, 3000);
+    const interval = setInterval(checkVerification, 2000);
     return () => clearInterval(interval);
-  }, [email, login, navigate]);
+  }, [email, login, navigate, fetchUserProfile]);
 
   return (
     <div className="verification-sent-container">
       <div className="verification-sent-card">
         <h2>Check Your Email</h2>
         <div className="email-icon">✉️</div>
-        <p>{message}</p>
-        <p className="email-sent-to">
-          We've sent a verification link to:<br />
-          <strong>{email}</strong>
-        </p>
+        <p>We've sent a verification link to:</p>
+        <p className="email-sent-to"><strong>{email}</strong></p>
         {verificationStatus === 'verified' && (
           <p className="verification-success">
             Email verified! Redirecting...
           </p>
         )}
-        <div className="verification-links">
-          <Link to="/login" className="login-link-button">
-            Go to Login
-          </Link>
-        </div>
       </div>
     </div>
   );

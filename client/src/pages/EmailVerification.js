@@ -17,12 +17,11 @@ const EmailVerification = () => {
                 const response = await fetch(`${process.env.REACT_APP_API_URL}/verify-email/${token}`);
                 const data = await response.json();
 
-                // Always consider it a success if we get tokens
-                if (response.ok && data.token && data.refreshToken) {
+                if (response.ok) {
                     setStatus('success');
                     await login(data.token, data.refreshToken);
                     await fetchUserProfile(data.token);
-                    setTimeout(() => navigate('/', { replace: true }), 1500);
+                    navigate('/', { replace: true });
                 } else {
                     setStatus('error');
                 }
@@ -47,14 +46,14 @@ const EmailVerification = () => {
             {status === 'success' && (
                 <div className="verification-message success">
                     <h2>Email Verified Successfully!</h2>
-                    <p>Redirecting to homepage...</p>
+                    <p>Redirecting...</p>
                 </div>
             )}
 
             {status === 'error' && (
                 <div className="verification-message error">
-                    <h2>Verification Failed</h2>
-                    <p>There was a problem verifying your email. Please try again or contact support.</p>
+                    <h2>Email Already Verified</h2>
+                    <p>Your email has already been verified. You can now log in.</p>
                     <button onClick={() => navigate('/login')} className="redirect-button">
                         Go to Login
                     </button>
