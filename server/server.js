@@ -429,7 +429,7 @@ app.get('/verify-email/:token', async (req, res) => {
                  verification_token = null 
              WHERE verification_token = $1 
              AND verification_expiry > NOW() 
-             RETURNING id`,
+             RETURNING id, username, role, email`,
             [token]
         );
 
@@ -439,7 +439,36 @@ app.get('/verify-email/:token', async (req, res) => {
             });
         }
 
-        res.json({ message: 'Email verified successfully' });
+        const user = result.rows[0];
+        
+        // Generate tokens for auto-login
+        const authToken = jwt.sign(
+            { userId: user.id, username: user.username, role: user.role }, 
+            process.env.JWT_SECRET, 
+            { expiresIn: '7d' }
+        );
+        
+        const refreshToken = jwt.sign(
+            { userId: user.id, username: user.username, role: user.role }, 
+            process.env.REFRESH_SECRET, 
+            { expiresIn: '30d' }
+        );
+
+        // Store refresh token
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 7);
+        
+        await pool.query(
+            'INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)',
+            [user.id, refreshToken, expiresAt]
+        );
+
+        res.json({ 
+            message: 'Email verified successfully',
+            token: authToken,
+            refreshToken,
+            userId: user.id
+        });
     } catch (error) {
         console.error('Verification error:', error);
         res.status(500).json({ error: 'Verification failed' });

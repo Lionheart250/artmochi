@@ -30,16 +30,21 @@ const EmailVerification = () => {
             const response = await fetch(`${process.env.REACT_APP_API_URL}/verify-email/${token}`);
             const data = await response.json();
 
-            if (response.ok) {
+            if (response.ok && data.token && data.refreshToken) {
+                // First set success status
                 setStatus('success');
-                // Auto login after verification
-                if (data.token && data.refreshToken) {
-                    await login(data.token, data.refreshToken);
-                    setTimeout(() => navigate('/'), 2000);
-                }
+                
+                // Perform login
+                await login(data.token, data.refreshToken);
+                
+                // Add a small delay before navigation
+                setTimeout(() => {
+                    navigate('/');
+                }, 2000);
             } else {
+                // Handle error cases
                 setEmail(data.email);
-                setStatus(data.error.includes('expired') ? 'expired' : 'invalid');
+                setStatus(data.error?.includes('expired') ? 'expired' : 'invalid');
             }
         } catch (error) {
             console.error('Verification error:', error);
@@ -115,6 +120,19 @@ const EmailVerification = () => {
                 <div className="verification-message">
                     <h2>Verification Email Sent!</h2>
                     <p>Please check your email for the new verification link.</p>
+                </div>
+            )}
+
+            {status === 'error' && (
+                <div className="verification-message error">
+                    <h2>Verification Failed</h2>
+                    <p>An error occurred during verification. Please try again or contact support.</p>
+                    <button 
+                        onClick={() => navigate('/login')} 
+                        className="redirect-button"
+                    >
+                        Go to Login
+                    </button>
                 </div>
             )}
         </div>
