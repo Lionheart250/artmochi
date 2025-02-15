@@ -423,12 +423,11 @@ app.get('/verify-email/:token', async (req, res) => {
     const { token } = req.params;
 
     try {
-        // First check if token exists or if user is already verified
+        // Check for the user with this token
         const userCheck = await pool.query(
-            `SELECT id, username, role, is_verified, email 
+            `SELECT id, username, role, is_verified, email, verification_token 
              FROM users 
-             WHERE verification_token = $1 
-             OR (email = (SELECT email FROM users WHERE verification_token = $1))`,
+             WHERE verification_token = $1`,
             [token]
         );
 
@@ -440,7 +439,38 @@ app.get('/verify-email/:token', async (req, res) => {
 
         const user = userCheck.rows[0];
 
-        // Generate tokens regardless of verification status
+        // If already verified, return success with tokens
+        if (user.is_verified) {
+            const authToken = jwt.sign(
+                { userId: user.id, username: user.username, role: user.role }, 
+                process.env.JWT_SECRET, 
+                { expiresIn: '7d' }
+            );
+            
+            const refreshToken = jwt.sign(
+                { userId: user.id, username: user.username, role: user.role }, 
+                process.env.REFRESH_SECRET, 
+                { expiresIn: '30d' }
+            );
+
+            return res.json({ 
+                message: 'Email already verified',
+                token: authToken,
+                refreshToken,
+                userId: user.id
+            });
+        }
+
+        // Verify the user
+        await pool.query(
+            `UPDATE users 
+             SET is_verified = true, 
+                 verification_token = null 
+             WHERE id = $1`,
+            [user.id]
+        );
+
+        // Generate tokens for auto-login
         const authToken = jwt.sign(
             { userId: user.id, username: user.username, role: user.role }, 
             process.env.JWT_SECRET, 
@@ -453,32 +483,13 @@ app.get('/verify-email/:token', async (req, res) => {
             { expiresIn: '30d' }
         );
 
-        // If already verified, just return success with tokens
-        if (user.is_verified) {
-            return res.json({ 
-                message: 'Email verified successfully',
-                alreadyVerified: true,
-                token: authToken,
-                refreshToken,
-                userId: user.id
-            });
-        }
-
-        // If not verified, verify the user
-        await pool.query(
-            `UPDATE users 
-             SET is_verified = true, 
-                 verification_token = null 
-             WHERE id = $1`,
-            [user.id]
-        );
-
         res.json({ 
             message: 'Email verified successfully',
             token: authToken,
             refreshToken,
             userId: user.id
         });
+
     } catch (error) {
         console.error('Verification error:', error);
         res.status(500).json({ error: 'Verification failed' });
