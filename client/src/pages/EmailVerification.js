@@ -31,29 +31,23 @@ const EmailVerification = () => {
             const response = await fetch(`${process.env.REACT_APP_API_URL}/verify-email/${token}`);
             const data = await response.json();
 
-            // Check for non-OK response first
-            if (!response.ok) {
-                setEmail(data.email || '');
-                setStatus(data.error?.includes('expired') ? 'expired' : 'invalid');
-                return;
-            }
-
-            // If we get here, verification was successful
-            setStatus('success');
-
-            // Only attempt login if we have tokens
-            if (data.token && data.refreshToken) {
-                try {
-                    await login(data.token, data.refreshToken);
-                    // Don't navigate immediately - let the success message show
-                    // The success message's JSX already shows "Redirecting to homepage..."
-                    requestAnimationFrame(() => navigate('/', { replace: true }));
-                } catch (loginError) {
-                    console.error('Login error:', loginError);
-                    setStatus('error');
+            if (response.ok) {
+                setStatus('success');
+                
+                if (data.token && data.refreshToken) {
+                    try {
+                        await login(data.token, data.refreshToken);
+                        setTimeout(() => {
+                            navigate('/', { replace: true });
+                        }, 1500);
+                    } catch (loginError) {
+                        console.error('Login error:', loginError);
+                        setStatus('error');
+                    }
                 }
             } else {
-                setStatus('error');
+                setEmail(data.email || '');
+                setStatus(data.error?.includes('expired') ? 'expired' : 'invalid');
             }
         } catch (error) {
             console.error('Verification error:', error);
