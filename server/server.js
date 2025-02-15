@@ -423,54 +423,23 @@ app.get('/verify-email/:token', async (req, res) => {
     const { token } = req.params;
 
     try {
-        // Check for the user with this token
+        // First check if user exists and get their current status
         const userCheck = await pool.query(
-            `SELECT id, username, role, is_verified, email, verification_token 
+            `SELECT id, username, role, is_verified, email 
              FROM users 
-             WHERE verification_token = $1`,
+             WHERE verification_token = $1 OR email = (
+                SELECT email FROM users WHERE verification_token = $1
+             )`,
             [token]
         );
 
         if (userCheck.rows.length === 0) {
-            return res.status(400).json({ 
-                error: 'Invalid verification link' 
-            });
+            return res.status(400).json({ error: 'Invalid verification link' });
         }
 
         const user = userCheck.rows[0];
 
-        // If already verified, return success with tokens
-        if (user.is_verified) {
-            const authToken = jwt.sign(
-                { userId: user.id, username: user.username, role: user.role }, 
-                process.env.JWT_SECRET, 
-                { expiresIn: '7d' }
-            );
-            
-            const refreshToken = jwt.sign(
-                { userId: user.id, username: user.username, role: user.role }, 
-                process.env.REFRESH_SECRET, 
-                { expiresIn: '30d' }
-            );
-
-            return res.json({ 
-                message: 'Email already verified',
-                token: authToken,
-                refreshToken,
-                userId: user.id
-            });
-        }
-
-        // Verify the user
-        await pool.query(
-            `UPDATE users 
-             SET is_verified = true, 
-                 verification_token = null 
-             WHERE id = $1`,
-            [user.id]
-        );
-
-        // Generate tokens for auto-login
+        // Generate auth tokens regardless of verification status
         const authToken = jwt.sign(
             { userId: user.id, username: user.username, role: user.role }, 
             process.env.JWT_SECRET, 
@@ -483,6 +452,18 @@ app.get('/verify-email/:token', async (req, res) => {
             { expiresIn: '30d' }
         );
 
+        // If not verified, verify them
+        if (!user.is_verified) {
+            await pool.query(
+                `UPDATE users 
+                 SET is_verified = true, 
+                     verification_token = null 
+                 WHERE id = $1`,
+                [user.id]
+            );
+        }
+
+        // Always return success with tokens
         res.json({ 
             message: 'Email verified successfully',
             token: authToken,

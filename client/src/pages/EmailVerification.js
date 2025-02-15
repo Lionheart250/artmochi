@@ -17,25 +17,14 @@ const EmailVerification = () => {
                 const response = await fetch(`${process.env.REACT_APP_API_URL}/verify-email/${token}`);
                 const data = await response.json();
 
-                if (!response.ok) {
+                // Always consider it a success if we get tokens
+                if (response.ok && data.token && data.refreshToken) {
+                    setStatus('success');
+                    await login(data.token, data.refreshToken);
+                    await fetchUserProfile(data.token);
+                    setTimeout(() => navigate('/', { replace: true }), 1500);
+                } else {
                     setStatus('error');
-                    return;
-                }
-
-                // Set success status
-                setStatus('success');
-
-                // Perform login
-                if (data.token && data.refreshToken) {
-                    try {
-                        await login(data.token, data.refreshToken);
-                        await fetchUserProfile(data.token);
-                        // Navigate after successful login
-                        navigate('/', { replace: true });
-                    } catch (loginError) {
-                        console.error('Login error:', loginError);
-                        setStatus('error');
-                    }
                 }
             } catch (error) {
                 console.error('Verification error:', error);
