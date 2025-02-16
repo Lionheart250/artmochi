@@ -140,17 +140,13 @@ const Gallery = () => {
 
     // 2. Optimize fetchImageDetails with caching and parallel requests
     const fetchImageDetails = async (imageId) => {
-        
+        if (!imageId) return;
         const token = localStorage.getItem('token');
         
         try {
-            // First get image details
+            // First get image details and user profile in parallel
             const imageResponse = await fetch(`${process.env.REACT_APP_API_URL}/images/${imageId}`, {
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include'
+                headers: { 'Authorization': `Bearer ${token}` }
             });
 
             const imageData = await imageResponse.json();
@@ -173,14 +169,34 @@ const Gallery = () => {
                 }
             }));
 
-            // Fetch comments
-            const commentsResponse = await fetch(`${process.env.REACT_APP_API_URL}/fetch_comments?id=${imageId}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            // Fetch comments, follow status, and likes in parallel
+            const [commentsResponse, followStatusResponse, likesResponse] = await Promise.all([
+                fetch(`${process.env.REACT_APP_API_URL}/fetch_comments?id=${imageId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }),
+                fetch(`${process.env.REACT_APP_API_URL}/user/${imageData.user_id}/stats`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }),
+                fetch(`${process.env.REACT_APP_API_URL}/likes/${imageId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+            ]);
+
+            const [commentsData, followStatus, likesData] = await Promise.all([
+                commentsResponse.json(),
+                followStatusResponse.json(),
+                likesResponse.json()
+            ]);
+
+            // Update follow status
+            if (followStatusResponse.ok) {
+                setIsFollowing(followStatus.is_following);
+            }
+
+            // Update likes
+            setLikes(prev => ({ ...prev, [imageId]: likesData.count }));
 
             if (commentsResponse.ok) {
-                const commentsData = await commentsResponse.json();
-                
                 // First, initialize comments array
                 setComments(prev => ({
                     ...prev,
@@ -188,15 +204,22 @@ const Gallery = () => {
                 }));
                 
                 if (commentsData.comments?.length > 0) {
-                    // Get each comment author's profile
+                    // Get each comment author's profile and likes
                     for (const comment of commentsData.comments) {
                         try {
-                            const profileResponse = await fetch(
-                                `${process.env.REACT_APP_API_URL}/user_profile/${comment.user_id}`, {
-                                headers: { 'Authorization': `Bearer ${token}` }
-                            });
+                            const [profileResponse, commentLikesResponse] = await Promise.all([
+                                fetch(`${process.env.REACT_APP_API_URL}/user_profile/${comment.user_id}`, {
+                                    headers: { 'Authorization': `Bearer ${token}` }
+                                }),
+                                fetch(`${process.env.REACT_APP_API_URL}/comment_likes/${comment.id}`, {
+                                    headers: { 'Authorization': `Bearer ${token}` }
+                                })
+                            ]);
                             
-                            const profileData = await profileResponse.json();
+                            const [profileData, commentLikesData] = await Promise.all([
+                                profileResponse.json(),
+                                commentLikesResponse.json()
+                            ]);
                             
                             // Update comments with profile data
                             setComments(prev => ({
@@ -211,8 +234,18 @@ const Gallery = () => {
                                         : c
                                 )
                             }));
+
+                            // Update comment likes
+                            setCommentLikes(prev => ({
+                                ...prev,
+                                [comment.id]: commentLikesData.count
+                            }));
+
+                            if (commentLikesData.user_liked) {
+                                setUserLikedComments(prev => new Set([...prev, comment.id]));
+                            }
                         } catch (error) {
-                            console.error('Error fetching comment profile:', error);
+                            console.error('Error fetching comment data:', error);
                         }
                     }
                 }
@@ -610,83 +643,7 @@ const Gallery = () => {
     
     const columnImages = createColumns(images, columns);
 
-    const fetchAllData = async (imageId) => {
-        const token = localStorage.getItem('token');
-        if (!token) return;
     
-        try {
-            // First get image details for user_id
-            const imageDetailsResponse = await fetch(`${process.env.REACT_APP_API_URL}/images/${imageId}`, {                
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            
-            if (!imageDetailsResponse.ok) {
-                throw new Error('Failed to fetch image details');
-            }
-            
-            const imageData = await imageDetailsResponse.json();
-            setImageUserDetails(prev => ({
-                ...prev,
-                [imageId]: imageData
-            }));
-    
-            // Fetch likes, comments, and follow status in parallel
-            const [likesResponse, commentsResponse, followStatusResponse] = await Promise.all([
-                fetch(`${process.env.REACT_APP_API_URL}/likes/${imageId}`, {                    
-                    headers: { 'Authorization': `Bearer ${token}` }
-                }),
-                fetch(`${process.env.REACT_APP_API_URL}/fetch_comments?id=${imageId}`, {                    
-                    headers: { 'Authorization': `Bearer ${token}` }
-                }),
-                fetch(`${process.env.REACT_APP_API_URL}/user/${imageData.user_id}/stats`, {                    
-                    headers: { 'Authorization': `Bearer ${token}` }
-                })
-            ]);
-    
-            const [likesData, commentsData, followStatus] = await Promise.all([
-                likesResponse.json(),
-                commentsResponse.json(),
-                followStatusResponse.json()
-            ]);
-    
-            if (followStatusResponse.ok) {
-                setIsFollowing(followStatus.is_following);
-            }
-    
-            // Fetch comment likes for each comment
-            if (commentsData.comments && commentsData.comments.length > 0) {
-                const commentLikesPromises = commentsData.comments.map(comment => 
-                    fetch(`${process.env.REACT_APP_API_URL}/comment_likes/${comment.id}`, {                        
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    }).then(res => res.json())
-                );
-    
-                const commentLikesResults = await Promise.all(commentLikesPromises);
-                
-                const newCommentLikes = {};
-                const userLikedCommentsSet = new Set();
-    
-                commentsData.comments.forEach((comment, index) => {
-                    const likeData = commentLikesResults[index];
-                    newCommentLikes[comment.id] = parseInt(likeData.count);
-                    if (likeData.user_liked) {
-                        userLikedCommentsSet.add(comment.id);
-                    }
-                });
-    
-                setCommentLikes(prev => ({ ...prev, ...newCommentLikes }));
-                setUserLikedComments(userLikedCommentsSet);
-            }
-    
-            setLikes(prev => ({ ...prev, [imageId]: likesData.count }));
-            setComments(prev => ({ ...prev, [imageId]: commentsData.comments || [] }));
-    
-        } catch (error) {
-            console.error('Error fetching data:', error);
-        }
-    };
-    
-
     // Add admin controls
     const handleBulkDelete = async () => {
         if (!isAdmin || selectedImages.size === 0) return;
@@ -1088,7 +1045,7 @@ useEffect(() => {
                                                 <h4 onClick={() => navigate(`/profile/${imageUserDetails[activeImageId]?.user_id}`)}>
                                                     {imageUserDetails[activeImageId]?.username}
                                                 </h4>
-                                                {user && user.id !== parseInt(imageUserDetails[activeImageId]?.user_id) && (
+                                                {user && user.userId !== parseInt(imageUserDetails[activeImageId]?.user_id) && (
                                                     <button 
                                                         className={`gallery-follow-btn ${isFollowing ? 'following' : ''}`}
                                                         onClick={() => handleModalFollowToggle(imageUserDetails[activeImageId]?.user_id, isFollowing)}
