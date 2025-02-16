@@ -161,7 +161,7 @@ const Header = () => {
                                     <span>Following</span>
                                 </NavLink>
                                 {user ? (
-                                    <NavLink to={`/profile/${user.id}`} className="side-nav-link">
+                                    <NavLink to={`/profile/${user.userId}`} className="side-nav-link">
                                         {profilePicElement}
                                         <span>Profile</span>
                                     </NavLink>
@@ -202,7 +202,7 @@ const Header = () => {
                                     <span className="header-username">{user?.username}</span>
                                     {isDropdownOpen && (
                                         <div className="dropdown-menu">
-                                            <NavLink to={`/profile/${user.id}`}>Profile</NavLink>
+                                            <NavLink to={`/profile/${user.userId}`} className="side-nav-link"> Profile </NavLink>
                                             <NavLink to="/upgrade">Upgrade</NavLink>
                                             <NavLink to="/credits">Credits</NavLink>
                                             <NavLink to="/settings">Settings</NavLink>

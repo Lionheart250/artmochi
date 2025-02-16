@@ -917,7 +917,11 @@ const Profile = () => {
     useEffect(() => {
         if (!id) {
             console.log('No ID provided, redirecting...');
-            navigate('/');
+            if (user?.userId) {
+                navigate(`/profile/${user.userId}`);
+            } else {
+                navigate('/');
+            }
             return;
         }
 
@@ -927,7 +931,7 @@ const Profile = () => {
                 await Promise.all([
                     fetchProfileData(),
                     fetchUserStats(),
-                    fetchUserProfile()
+                    fetchUserProfile(id)
                 ]);
             } catch (error) {
                 console.error('Error initializing profile:', error);
@@ -937,7 +941,13 @@ const Profile = () => {
         };
 
         fetchData();
-    }, [id]);
+    }, [id, user]);
+
+    // Add this debug log
+    useEffect(() => {
+        console.log('Current ID from params:', id);
+        console.log('Current user:', user);
+    }, [id, user]);
 
     return (
         <div className="profile-container">
