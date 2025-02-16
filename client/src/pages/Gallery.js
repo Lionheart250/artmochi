@@ -75,6 +75,7 @@ const Gallery = () => {
                     await fetchUserProfile(token);
                 } catch (error) {
                     console.error('Error fetching profile:', error);
+                    // Don't retry here since ProfileContext handles retries
                 }
             }
         };
@@ -137,20 +138,20 @@ const Gallery = () => {
         const token = localStorage.getItem('token');
         
         try {
-            // Fetch image details and user profile in parallel
-            const [imageDetailsResponse, userProfileResponse] = await Promise.all([
-                fetch(`${process.env.REACT_APP_API_URL}/images/${imageId}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                }),
-                fetch(`${process.env.REACT_APP_API_URL}/user_profile/${imageData?.user_id}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                })
-            ]);
+            // First get image details
+            const imageDetailsResponse = await fetch(`${process.env.REACT_APP_API_URL}/images/${imageId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
 
-            const [imageData, userProfileData] = await Promise.all([
-                imageDetailsResponse.json(),
-                userProfileResponse.json()
-            ]);
+            const imageData = await imageDetailsResponse.json();
+
+            // Then fetch user profile using the user_id from imageData
+            const userProfileResponse = await fetch(
+                `${process.env.REACT_APP_API_URL}/user_profile/${imageData.user_id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            const userProfileData = await userProfileResponse.json();
 
             // Update state once with all data
             setImageUserDetails(prev => ({
