@@ -131,35 +131,58 @@ const Gallery = () => {
     }, [location, images, modalOpen]); // Add proper dependencies
 
     // First, optimize the fetchImageDetails function
+    // 1. Add image details cache
+    const imageDetailsCache = useRef(new Map());
+
+    // 2. Optimize fetchImageDetails with caching and parallel requests
     const fetchImageDetails = async (imageId) => {
         if (!imageId || imageDetailsLoading) return;
         
+        // Check cache first
+        if (imageDetailsCache.current.has(imageId)) {
+            setImageUserDetails(prev => ({
+                ...prev,
+                [imageId]: imageDetailsCache.current.get(imageId)
+            }));
+            return;
+        }
+
         setImageDetailsLoading(true);
         const token = localStorage.getItem('token');
         
         try {
-            // First get image details
-            const imageDetailsResponse = await fetch(`${process.env.REACT_APP_API_URL}/images/${imageId}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+            // Fetch image details and user profiles in parallel for efficiency
+            const [imageDetails, userProfiles] = await Promise.all([
+                // Get image details
+                fetch(`${process.env.REACT_APP_API_URL}/images/${imageId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }).then(res => res.json()),
+                
+                // Get user profiles for image and comments
+                fetch(`${process.env.REACT_APP_API_URL}/user_profiles/batch`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        imageId: imageId
+                    })
+                }).then(res => res.json())
+            ]);
+
+            // Cache the results
+            imageDetailsCache.current.set(imageId, {
+                ...imageDetails,
+                userProfiles
             });
 
-            const imageData = await imageDetailsResponse.json();
-
-            // Then fetch user profile using the user_id from imageData
-            const userProfileResponse = await fetch(
-                `${process.env.REACT_APP_API_URL}/user_profile/${imageData.user_id}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            const userProfileData = await userProfileResponse.json();
-
-            // Update state once with all data
+            // Update state with all data at once
             setImageUserDetails(prev => ({
                 ...prev,
                 [imageId]: {
-                    ...imageData,
-                    username: userProfileData.username,
-                    profile_picture: userProfileData.profile_picture
+                    ...imageDetails,
+                    userProfiles
                 }
             }));
 
@@ -383,10 +406,14 @@ const Gallery = () => {
         try {
             setModalImage(image.image_url);
             setActiveImageId(image.id);
-            await fetchImageDetails(image.id); // This will set fresh data
             navigate(`?id=${image.id}`, { replace: true });
+            
+            // Only fetch if we don't have the details
+            if (!imageUserDetails[image.id]?.username) {
+                await fetchImageDetails(image.id);
+            }
         } catch (error) {
-            console.error('Error fetching image details:', error);
+            console.error('Error in openModal:', error);
         }
     };
 
@@ -946,6 +973,52 @@ useEffect(() => {
         }
     }, [activeImageId, imageUserDetails]);
 
+    // 1. Add debouncing to fetchImageDetails
+    const debouncedFetchImageDetails = useCallback(
+        debounce((imageId) => {
+            if (!imageId || imageDetailsLoading) return;
+            fetchImageDetails(imageId);
+        }, 300),
+        [imageDetailsLoading]
+    );
+
+    // 2. Update the useEffect that watches activeImageId
+    useEffect(() => {
+        if (activeImageId && !imageUserDetails[activeImageId]?.username) {
+            debouncedFetchImageDetails(activeImageId);
+        }
+    }, [activeImageId]); // Only re-run when activeImageId changes
+
+    // 3. Update modal render to use cached data
+    const renderUserAvatar = (userId, defaultImage = '/default-avatar.png') => {
+        const userProfile = imageUserDetails[activeImageId]?.userProfiles?.[userId];
+        return (
+            <img 
+                src={userProfile?.profile_picture ? 
+                    getImageUrl(userProfile.profile_picture, 'profile') : 
+                    defaultImage
+                }
+                alt={userProfile?.username || 'Profile'}
+                className="user-avatar"
+                onError={(e) => {
+                    e.target.src = defaultImage;
+                }}
+            />
+        );
+    };
+
+    // 4. Update comment rendering to use cached profiles
+    const renderCommentAvatar = (comment) => {
+        const userProfile = imageUserDetails[activeImageId]?.userProfiles?.[comment.user_id];
+        return (
+            <img 
+                src={getImageUrl(userProfile?.profile_picture, 'profile')}
+                alt={userProfile?.username || comment.username}
+                onError={(e) => e.target.src = '/default-avatar.png'}
+            />
+        );
+    };
+
     return (
         <div className="gallery-page">
             <div className="gallery-container">
@@ -1088,15 +1161,7 @@ useEffect(() => {
                                     </div>
                                     <div className="gallery-modal-info">
                                         <div className="gallery-user-info">
-                                        <img 
-                                            src={getImageUrl(imageUserDetails[activeImageId]?.profile_picture, 'profile') || '/default-avatar.png'}
-                                            alt={imageUserDetails[activeImageId]?.username || 'Profile'}
-                                            className="user-avatar"
-                                            onError={(e) => {
-                                                e.target.src = '/default-avatar.png';
-                                            }}
-                                            onClick={() => navigate(`/profile/${imageUserDetails[activeImageId]?.user_id}`)}
-                                        />
+                                        {renderUserAvatar(imageUserDetails[activeImageId]?.user_id)}
                                             <div className="gallery-user-details">
                                                 <h4 onClick={() => navigate(`/profile/${imageUserDetails[activeImageId]?.user_id}`)}>
                                                     {imageUserDetails[activeImageId]?.username}
@@ -1140,17 +1205,7 @@ useEffect(() => {
                                                 {(comments[activeImageId] || []).map((comment) => (
                                                     <li key={`comment-${comment.id}-${comment.created_at}`} className="gallery-comment-item">
                                                         <div className="gallery-comment-avatar">
-                                                            <img 
-                                                                src={getImageUrl(comment.profile_picture, 'profile')}
-                                                                alt={comment.username}
-                                                                onError={(e) => {
-                                                                    // If comment profile picture isn't loaded, refetch comments
-                                                                    if (!comment.profile_picture) {
-                                                                        fetchImageDetails(activeImageId);
-                                                                    }
-                                                                    e.target.src = '/default-avatar.png';
-                                                                }}
-                                                            />
+                                                            {renderCommentAvatar(comment)}
                                                         </div>
                                                         <div className="gallery-comment-content">
                                                             <div className="gallery-comment-header">

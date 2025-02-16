@@ -1508,6 +1508,35 @@ app.get('/user_profile/:id', authenticateTokenWithAutoRefresh, async (req, res) 
     }
 });
 
+app.post('/user_profiles/batch', authenticateTokenWithAutoRefresh, async (req, res) => {
+    const { imageId } = req.body;
+    try {
+        // Fetch image details to get user IDs
+        const image = await db.query('SELECT user_id FROM images WHERE id = $1', [imageId]);
+        const comments = await db.query('SELECT DISTINCT user_id FROM comments WHERE image_id = $1', [imageId]);
+        
+        // Get unique user IDs
+        const userIds = new Set([image.rows[0].user_id, ...comments.rows.map(c => c.user_id)]);
+        
+        // Fetch all profiles in one query
+        const profiles = await db.query(
+            'SELECT * FROM user_profiles WHERE user_id = ANY($1)',
+            [Array.from(userIds)]
+        );
+
+        // Return as map of userId to profile
+        const profileMap = profiles.rows.reduce((map, profile) => {
+            map[profile.user_id] = profile;
+            return map;
+        }, {});
+
+        res.json(profileMap);
+    } catch (error) {
+        console.error('Error fetching batch profiles:', error);
+        res.status(500).json({ error: 'Failed to fetch profiles' });
+    }
+});
+
 // Endpoint to update user profile
 app.post('/update_profile', authenticateTokenWithAutoRefresh, async (req, res) => {
     console.log('update_profile called, req.user:', req.user); // Debug log
