@@ -49,8 +49,6 @@ const Gallery = () => {
     // Add new state
     const [isFollowing, setIsFollowing] = useState(false);
 
-    // Add new state for image details loading
-    const [imageDetailsLoading, setImageDetailsLoading] = useState(false);
 
     // Add debounce wrapper at top of component
     const debouncedOpenModal = useCallback(
@@ -142,9 +140,7 @@ const Gallery = () => {
 
     // 2. Optimize fetchImageDetails with caching and parallel requests
     const fetchImageDetails = async (imageId) => {
-        if (!imageId || imageDetailsLoading) return;
         
-        setImageDetailsLoading(true);
         const token = localStorage.getItem('token');
         
         try {
@@ -224,9 +220,6 @@ const Gallery = () => {
 
         } catch (error) {
             console.error('Error fetching image details:', error);
-        } finally {
-            setImageDetailsLoading(false);
-            setImageDetailsLoading(false);
         }
     };
 
@@ -394,36 +387,43 @@ const Gallery = () => {
     };
 
     const navigateImage = async (direction) => {
-        if (imageDetailsLoading) return;
-
         const currentIndex = images.findIndex(img => img.id === activeImageId);
         const nextIndex = direction === 1 ? currentIndex + 1 : currentIndex - 1;
     
         if (nextIndex >= 0 && nextIndex < images.length) {
             const nextImage = images[nextIndex];
-            setModalImage(nextImage.image_url);
-            setActiveImageId(nextImage.id);
-            navigate(`?id=${nextImage.id}`, { replace: true });
-            await fetchImageDetails(nextImage.id);
-            }
-        };
+            
+            // Start the fetch first
+            const loadingPromise = fetchImageDetails(nextImage.id);
+            
+            // Update the image state atomically
+            await Promise.all([
+                new Promise(resolve => {
+                    setModalImage(nextImage.image_url);
+                    setActiveImageId(nextImage.id);
+                    navigate(`?id=${nextImage.id}`, { replace: true });
+                    resolve();
+                }),
+                loadingPromise // Wait for fetch to complete
+            ]);
+        }
+    };
 
-        const openModal = async (image) => {
-            if (!image || !image.id) {
-                console.error("Invalid image object:", image);
-                return;
-            }
+    const openModal = async (image) => {
+        // Start the fetch first
+        const loadingPromise = fetchImageDetails(image.id);
         
-            try {
+        // Update the image state atomically
+        await Promise.all([
+            new Promise(resolve => {
                 setModalImage(image.image_url);
                 setActiveImageId(image.id);
                 navigate(`?id=${image.id}`, { replace: true });
-        
-                await fetchImageDetails(image.id);
-            } catch (error) {
-                console.error("Error fetching image details:", error);
-            }
-        };
+                resolve();
+            }),
+            loadingPromise // Wait for fetch to complete
+        ]);
+    };
         
     
     const closeModal = () => {
@@ -686,11 +686,6 @@ const Gallery = () => {
         }
     };
     
-    useEffect(() => {
-        if (activeImageId) {
-            fetchAllData(activeImageId);
-        }
-    }, [activeImageId]);
 
     // Add admin controls
     const handleBulkDelete = async () => {
@@ -914,21 +909,6 @@ useEffect(() => {
         }
     }, [activeImageId, imageUserDetails]);
 
-    // 1. Add debouncing to fetchImageDetails
-    const debouncedFetchImageDetails = useCallback(
-        debounce((imageId) => {
-            if (!imageId || imageDetailsLoading) return;
-            fetchImageDetails(imageId);
-        }, 300),
-        [imageDetailsLoading]
-    );
-
-    // 2. Update the useEffect that watches activeImageId
-    useEffect(() => {
-        if (activeImageId && !imageUserDetails[activeImageId]?.username) {
-            debouncedFetchImageDetails(activeImageId);
-        }
-    }, [activeImageId]); // Only re-run when activeImageId changes
 
     // 3. Update modal render to use cached data
     const renderUserAvatar = (userId) => {
