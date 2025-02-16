@@ -8,10 +8,12 @@ import { ReactComponent as CommentIcon } from '../assets/icons/comment.svg';
 import { ReactComponent as ShareIcon } from '../assets/icons/share.svg';
 import { ReactComponent as BookmarkIcon } from '../assets/icons/bookmark.svg';
 import { useAuth } from '../context/AuthContext';
+import { useProfile } from '../context/ProfileContext';
 import { getImageUrl } from '../utils/imageUtils';
 
 const Gallery = () => {
     const { user } = useAuth();
+    const { fetchUserProfile } = useProfile();
     const [images, setImages] = useState([]);
     const [modalImage, setModalImage] = useState(null);
     const [activeImageId, setActiveImageId] = useState(null);
@@ -63,6 +65,22 @@ const Gallery = () => {
 
     // Add at the top of component
     const currentRequestRef = useRef(null);
+
+    // Add this useEffect for profile fetching
+    useEffect(() => {
+        const loadProfile = async () => {
+            const token = localStorage.getItem('token');
+            if (user && token) {
+                try {
+                    await fetchUserProfile(token);
+                } catch (error) {
+                    console.error('Error fetching profile:', error);
+                }
+            }
+        };
+
+        loadProfile();
+    }, [user, fetchUserProfile]);
 
     useEffect(() => {
         const fetchImagesAndCheckAuth = async () => {

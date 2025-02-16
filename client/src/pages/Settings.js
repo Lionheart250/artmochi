@@ -49,7 +49,23 @@ const Settings = () => {
         console.log('Current user:', user);
     }, [user]);
 
-    // Modify the fetch function to get all user data
+    // Add profile fetching on component mount
+    useEffect(() => {
+        const initializeUserData = async () => {
+            const token = localStorage.getItem('token');
+            if (user) {
+                try {
+                    await fetchUserProfile(token);
+                } catch (error) {
+                    console.error('Error fetching profile:', error);
+                }
+            }
+        };
+
+        initializeUserData();
+    }, [user, fetchUserProfile]);
+
+    // Your existing useEffect for fetchUserData
     useEffect(() => {
         const fetchUserData = async () => {
             const token = localStorage.getItem('token');

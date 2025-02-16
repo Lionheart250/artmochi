@@ -7,10 +7,12 @@ import { ReactComponent as ShareIcon } from '../assets/icons/share.svg';
 import { ReactComponent as BookmarkIcon } from '../assets/icons/bookmark.svg';
 import './Following.css';
 import { useAuth } from '../context/AuthContext';
+import { useProfile } from '../context/ProfileContext';
 import { getImageUrl } from '../utils/imageUtils';
 
 const Following = () => {
     const { user } = useAuth();
+    const { fetchUserProfile } = useProfile(); // Add this line
     const [images, setImages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [imageUserDetails, setImageUserDetails] = useState({});
@@ -190,6 +192,22 @@ const Following = () => {
     useEffect(() => {
         fetchFollowingPosts();
     }, []);
+
+    // Add this useEffect for profile fetching
+    useEffect(() => {
+        const loadProfile = async () => {
+            const token = localStorage.getItem('token');
+            if (user && token) {
+                try {
+                    await fetchUserProfile(token);
+                } catch (error) {
+                    console.error('Error fetching profile:', error);
+                }
+            }
+        };
+
+        loadProfile();
+    }, [user, fetchUserProfile]);
 
     const navigateImage = async (direction) => {
         const currentIndex = images.findIndex(img => img.id === activeImageId);

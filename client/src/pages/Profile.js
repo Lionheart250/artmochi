@@ -664,7 +664,7 @@ const Profile = () => {
     useEffect(() => {
         let isMounted = true;
         
-        const fetchUserProfile = async () => {
+        const fetchProfileData = async () => {
             if (!id) return;
             
             try {
@@ -694,7 +694,7 @@ const Profile = () => {
             }
         };
 
-        fetchUserProfile();
+        fetchProfileData();
         
         return () => {
             isMounted = false;

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, memo } from 'react';
 import { useAuth } from '../context/AuthContext'; // Adjust path to your AuthContext
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
+import { useProfile } from '../context/ProfileContext';
 import './ImageGenerator.css';
 import LoraSelector from '../components/LoraSelector';
 import LoadingSpirals from '../components/LoadingSpirals';
@@ -43,6 +44,7 @@ const aspectRatioMapping = {
 
 const ImageGenerator = () => {
   const { user } = useAuth();
+  const { fetchUserProfile } = useProfile(); // Add this
   const navigate = useNavigate();
   const [prompt, setPrompt] = useState('');
   const [negativePrompt, setNegativePrompt] = useState('');
@@ -64,6 +66,21 @@ const ImageGenerator = () => {
   const [scheduler, setScheduler] = useState("Karras");
   const [showAdvanced, setShowAdvanced] = useState(false); // Add state for advanced section toggle
   const [distilledCfgScale, setDistilledCfgScale] = useState(3.5);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      const token = localStorage.getItem('token');
+      if (user && token) {
+        try {
+          await fetchUserProfile(token);
+        } catch (error) {
+          console.error('Error fetching profile:', error);
+        }
+      }
+    };
+
+    loadProfile();
+  }, [user, fetchUserProfile]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
