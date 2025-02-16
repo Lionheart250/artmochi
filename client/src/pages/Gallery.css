@@ -81,6 +81,8 @@
     animation: galleryScaleIn 0.3s ease-in-out forwards;
 }
 
+
+
 /* Fix modal main layout */
 .gallery-modal-main {
     display: flex;
