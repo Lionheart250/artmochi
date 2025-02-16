@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { jwtDecode } from 'jwt-decode'; // Ensure jwt-decode is installed
 import './Gallery.css'; // Make sure this file exists with proper styles
 import { useNavigate, useLocation } from 'react-router-dom';
-import debounce from 'lodash.debounce'; // Ensure lodash.debounce is installed
 import { ReactComponent as LikeIcon } from '../assets/icons/like.svg';
 import { ReactComponent as CommentIcon } from '../assets/icons/comment.svg';
 import { ReactComponent as ShareIcon } from '../assets/icons/share.svg';
@@ -48,18 +47,6 @@ const Gallery = () => {
 
     // Add new state
     const [isFollowing, setIsFollowing] = useState(false);
-
-
-    // Add debounce wrapper at top of component
-    const debouncedOpenModal = useCallback(
-        debounce((image) => {
-            console.log('Opening modal for image ID:', image.id);
-            setActiveImageId(image.id);
-            setModalOpen(true);
-            fetchImageDetails(image.id); // Only need this one call
-        }, 300),
-        []
-    );
 
     // Add at the top of component
     const currentRequestRef = useRef(null);
@@ -122,17 +109,6 @@ const Gallery = () => {
     
         fetchImagesAndCheckAuth();
     }, []);
-
-    // Modify useEffect that handles URL parameters
-    useEffect(() => {
-        const imageId = new URLSearchParams(location.search).get('id');
-        if (imageId) {
-            const image = images.find(img => img.id === parseInt(imageId));
-            if (image && !modalOpen) {  // Add modalOpen check
-                debouncedOpenModal(image);
-            }
-        }
-    }, [location, images, modalOpen]); // Add proper dependencies
 
     // First, optimize the fetchImageDetails function
     // 1. Add image details cache
@@ -477,7 +453,6 @@ const Gallery = () => {
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (!modalImage) return;
-    
             switch(e.key) {
                 case 'ArrowLeft':
                     navigateImage(-1);
@@ -495,7 +470,7 @@ const Gallery = () => {
     
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [modalImage, activeImageId, navigateImage, closeModal]); 
+    }, [modalImage]);
     
 
     // Add this utility function
@@ -824,36 +799,6 @@ useEffect(() => {
         }
     };
 
-    // Add this at component level
-    const retryFetchDetails = async (imageId) => {
-        console.log('Retrying fetch for image:', imageId);
-        const token = localStorage.getItem('token');
-        if (!token) return;
-    
-        try {
-            // Only fetch user profile data since that's what we're missing
-            const imageData = imageUserDetails[imageId];
-            if (!imageData?.user_id) return;
-    
-            const userProfileResponse = await fetch(`${process.env.REACT_APP_API_URL}/user_profile/${imageData.user_id}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-    
-            const userProfileData = await userProfileResponse.json();
-    
-            setImageUserDetails(prev => ({
-                ...prev,
-                [imageId]: {
-                    ...prev[imageId],
-                    username: userProfileData.username,
-                    profile_picture: userProfileData.profile_picture
-                }
-            }));
-        } catch (error) {
-            console.error('Error retrying fetch:', error);
-        }
-    };
-
     // Add a useEffect to monitor these values instead
     useEffect(() => {
         if (activeImageId && imageUserDetails[activeImageId]) {
@@ -907,7 +852,7 @@ useEffect(() => {
                             <select 
                                 className="gallery-sort" 
                                 value={sortType} 
-                                onChange={(e) => setSortType(e.target.value)}
+                                onChange={(e) => handleSort(e.target.value)}
                             >
                                 <option value="newest">Newest</option>
                                 <option value="mostLiked">Most Liked</option>
