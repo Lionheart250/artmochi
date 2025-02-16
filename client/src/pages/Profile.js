@@ -141,11 +141,6 @@ const Profile = () => {
     }, [modalOpen, modalImage, activeImageId]);
 
     useEffect(() => {
-        // Fetch user bio and posts
-        fetchUserProfile();
-    }, [id]);
-
-    useEffect(() => {
         // Initialize temp values when entering edit mode
         if (isEditing) {
             setTempUsername(username);
@@ -155,54 +150,6 @@ const Profile = () => {
             setMessage(''); // Clear message when opening modal
         }
     }, [isEditing]);
-
-    useEffect(() => {
-        const fetchUserImages = async () => {
-            try {
-                const token = localStorage.getItem('token');
-                const response = await fetch(`${process.env.REACT_APP_API_URL}/user_images/${id}`, {                    
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                
-                const data = await response.json();
-                console.log("Fetched user images data:", data);
-                
-                // Create imageUserDetails and initialize comment likes
-                const details = {};
-                const newCommentLikes = {};
-                const userLikedCommentsSet = new Set();
-
-                data.images.forEach(img => {
-                    details[img.id] = {
-                        username: img.username,
-                        profile_picture: img.profile_picture,
-                        user_id: img.user_id
-                    };
-                    
-                    // Add comment likes data
-                    if (img.comment_likes) {
-                        newCommentLikes[img.id] = img.comment_likes;
-                    }
-                    if (img.user_liked_comments) {
-                        img.user_liked_comments.forEach(commentId => 
-                            userLikedCommentsSet.add(commentId)
-                        );
-                    }
-                });
-
-                setImageUserDetails(details);
-                setImages(data.images);
-                setCommentLikes(newCommentLikes);
-                setUserLikedComments(userLikedCommentsSet);
-            } catch (error) {
-                console.error('Error fetching images:', error);
-            }
-        };
-
-        fetchUserImages();
-    }, [id]); // Add id as dependency to re-fetch when URL changes
 
     const fetchUserProfile = async () => {
         if (!id) return;
@@ -947,6 +894,68 @@ const Profile = () => {
     useEffect(() => {
         console.log('Current ID from params:', id);
         console.log('Current user:', user);
+    }, [id, user]);
+
+    // Consolidate fetch functions into one main function
+    const fetchProfileData = async () => {
+        if (!id) return;
+        
+        try {
+            setIsLoading(true);
+            const token = localStorage.getItem('token');
+
+            // Fetch all data in parallel
+            const [profileResponse, statsResponse, imagesResponse] = await Promise.all([
+                fetch(`${process.env.REACT_APP_API_URL}/user_profile/${id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }),
+                fetch(`${process.env.REACT_APP_API_URL}/user/${id}/stats`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }),
+                fetch(`${process.env.REACT_APP_API_URL}/user_images/${id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+            ]);
+
+            const [profileData, statsData, imagesData] = await Promise.all([
+                profileResponse.json(),
+                statsResponse.json(),
+                imagesResponse.json()
+            ]);
+
+            // Update all state at once
+            setUsername(profileData.username);
+            setBio(profileData.bio || '');
+            setProfilePicture(profileData.profile_picture);
+            
+            setFollowersCount(parseInt(statsData.followers_count) || 0);
+            setFollowingCount(parseInt(statsData.following_count) || 0);
+            setPostsCount(parseInt(statsData.posts_count) || 0);
+            setLikesCount(parseInt(statsData.likes_count) || 0);
+            setIsFollowing(Boolean(statsData.is_following));
+
+            setImages(imagesData.images);
+
+        } catch (error) {
+            console.error('Error fetching profile data:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Single useEffect for initial data fetch
+    useEffect(() => {
+        if (!id) {
+            console.log('No ID provided, redirecting...');
+            if (user?.userId) {
+                navigate(`/profile/${user.userId}`);
+            } else {
+                navigate('/');
+            }
+            return;
+        }
+
+        fetchProfileData();
     }, [id, user]);
 
     return (

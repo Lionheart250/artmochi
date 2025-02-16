@@ -129,30 +129,30 @@ const Gallery = () => {
         }
     }, [location, images, modalOpen]); // Add proper dependencies
 
+    // First, optimize the fetchImageDetails function
     const fetchImageDetails = async (imageId) => {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-
+        if (!imageId || imageDetailsLoading) return;
+        
         setImageDetailsLoading(true);
+        const token = localStorage.getItem('token');
+        
         try {
-            // First get image details and user profile (existing code)
-            const imageDetailsResponse = await fetch(`${process.env.REACT_APP_API_URL}/images/${imageId}`, {
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include'
-            });
+            // Fetch image details and user profile in parallel
+            const [imageDetailsResponse, userProfileResponse] = await Promise.all([
+                fetch(`${process.env.REACT_APP_API_URL}/images/${imageId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }),
+                fetch(`${process.env.REACT_APP_API_URL}/user_profile/${imageData?.user_id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+            ]);
 
-            const imageData = await imageDetailsResponse.json();
-            
-            // Get the user's profile data
-            const userProfileResponse = await fetch(`${process.env.REACT_APP_API_URL}/user_profile/${imageData.user_id}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const [imageData, userProfileData] = await Promise.all([
+                imageDetailsResponse.json(),
+                userProfileResponse.json()
+            ]);
 
-            const userProfileData = await userProfileResponse.json();
-
+            // Update state once with all data
             setImageUserDetails(prev => ({
                 ...prev,
                 [imageId]: {
@@ -161,35 +161,6 @@ const Gallery = () => {
                     profile_picture: userProfileData.profile_picture
                 }
             }));
-
-            // Fetch comments
-            const commentsResponse = await fetch(`${process.env.REACT_APP_API_URL}/fetch_comments?id=${imageId}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (commentsResponse.ok) {
-                const commentsData = await commentsResponse.json();
-                
-                // Fetch profile data for each comment author
-                const commentUserProfiles = await Promise.all(
-                    commentsData.comments.map(comment => 
-                        fetch(`${process.env.REACT_APP_API_URL}/user_profile/${comment.user_id}`, {
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        }).then(res => res.json())
-                    )
-                );
-
-                // Combine comment data with profile data
-                const commentsWithProfiles = commentsData.comments.map((comment, index) => ({
-                    ...comment,
-                    profile_picture: commentUserProfiles[index].profile_picture
-                }));
-
-                setComments(prev => ({
-                    ...prev,
-                    [imageId]: commentsWithProfiles
-                }));
-            }
 
         } catch (error) {
             console.error('Error fetching image details:', error);
@@ -962,6 +933,18 @@ useEffect(() => {
         }
     };
 
+    // Add a useEffect to monitor these values instead
+    useEffect(() => {
+        if (activeImageId && imageUserDetails[activeImageId]) {
+            // Log only when values actually change
+            console.log('Image details updated:', {
+                imageId: activeImageId,
+                userDetails: imageUserDetails[activeImageId],
+                profilePicture: imageUserDetails[activeImageId]?.profile_picture
+            });
+        }
+    }, [activeImageId, imageUserDetails]);
+
     return (
         <div className="gallery-page">
             <div className="gallery-container">
@@ -1105,35 +1088,11 @@ useEffect(() => {
                                     <div className="gallery-modal-info">
                                         <div className="gallery-user-info">
                                         <img 
-                                            src={getImageUrl(imageUserDetails[activeImageId]?.profile_picture, 'profile')}
+                                            src={getImageUrl(imageUserDetails[activeImageId]?.profile_picture, 'profile') || '/default-avatar.png'}
                                             alt={imageUserDetails[activeImageId]?.username || 'Profile'}
                                             className="user-avatar"
-                                            onError={async (e) => {
-                                                // Only try to refetch if we have an activeImageId
-                                                if (!imageUserDetails[activeImageId]) {
-                                                    e.target.src = '/default-avatar.png';
-                                                    return;
-                                                }
-
-                                                // Check if we haven't tried retrying yet
-                                                if (!e.target.dataset.retried) {
-                                                    e.target.dataset.retried = true;
-                                                    e.preventDefault();
-                                                    
-                                                    try {
-                                                        await retryFetchDetails(activeImageId);
-                                                        const newProfilePic = imageUserDetails[activeImageId]?.profile_picture;
-                                                        if (newProfilePic) {
-                                                            e.target.src = getImageUrl(newProfilePic, 'profile');
-                                                        } else {
-                                                            e.target.src = '/default-avatar.png';
-                                                        }
-                                                    } catch (error) {
-                                                        e.target.src = '/default-avatar.png';
-                                                    }
-                                                } else {
-                                                    e.target.src = '/default-avatar.png';
-                                                }
+                                            onError={(e) => {
+                                                e.target.src = '/default-avatar.png';
                                             }}
                                             onClick={() => navigate(`/profile/${imageUserDetails[activeImageId]?.user_id}`)}
                                         />
@@ -1233,9 +1192,6 @@ useEffect(() => {
                                         </div>
                                     </div>
                                 </div>
-                                {/* Add these logs in the Gallery modal render */}
-                                {console.log('Modal user details:', imageUserDetails[activeImageId])}
-                                {console.log('Profile picture URL:', imageUserDetails[activeImageId]?.profile_picture)}
                             </div>
                         </div>
                     )}
