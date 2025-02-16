@@ -11,19 +11,25 @@ export const ProfileProvider = ({ children }) => {
 
     const fetchUserProfile = async (token) => {
         try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/user/profile`, {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/user_profile`, {  // Changed from /user/profile
                 headers: {
-                    'Authorization': `Bearer ${token || localStorage.getItem('token')}`
-                }
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
             });
 
-            if (response.ok) {
-                const data = await response.json();
-                setProfilePicture(data.profilePicture);
-                return data;
+            if (!response.ok) {
+                throw new Error('Failed to fetch profile');
             }
+
+            const data = await response.json();
+            setProfile(data);
+            setProfilePicture(data.profile_picture || null);
+            return data;
         } catch (error) {
-            console.error('Error fetching profile:', error);
+            console.error('Profile fetch error:', error);
+            throw error;
         }
     };
 
