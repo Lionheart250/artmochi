@@ -5,6 +5,7 @@ const ProfileContext = createContext();
 
 export const ProfileProvider = ({ children }) => {
     const [profilePicture, setProfilePicture] = useState('/default-avatar.png');
+    const [profile, setProfile] = useState(null); // Add this line
 
     const updateProfilePicture = async (newPicturePath) => {
         setProfilePicture(newPicturePath);
@@ -12,7 +13,6 @@ export const ProfileProvider = ({ children }) => {
 
     const fetchUserProfile = async (token) => {
         try {
-            // Get userId from the decoded token
             const decoded = jwtDecode(token);
             const userId = decoded.userId;
 
@@ -40,6 +40,7 @@ export const ProfileProvider = ({ children }) => {
 
     return (
         <ProfileContext.Provider value={{ 
+            profile,              // Add this line
             profilePicture, 
             setProfilePicture,
             updateProfilePicture,
