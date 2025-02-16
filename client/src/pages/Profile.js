@@ -781,12 +781,20 @@ const Profile = () => {
     // Add debug logging to fetchUserStats
     const fetchUserStats = async () => {
         const token = localStorage.getItem('token');
-        if (!token || !id) return;
+        if (!token || !id) {
+            console.log('Missing token or id for stats');
+            return;
+        }
     
         try {
             const response = await fetch(`${process.env.REACT_APP_API_URL}/user/${id}/stats`, {                
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch user stats');
+            }
+            
             const stats = await response.json();
             console.log('Stats response:', stats); // Debug log
             
@@ -904,6 +912,32 @@ const Profile = () => {
             await fetchUserStats();
         }
     };
+
+    // Add ID validation
+    useEffect(() => {
+        if (!id) {
+            console.log('No ID provided, redirecting...');
+            navigate('/');
+            return;
+        }
+
+        const fetchData = async () => {
+            try {
+                setIsLoading(true);
+                await Promise.all([
+                    fetchProfileData(),
+                    fetchUserStats(),
+                    fetchUserProfile()
+                ]);
+            } catch (error) {
+                console.error('Error initializing profile:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [id]);
 
     return (
         <div className="profile-container">
