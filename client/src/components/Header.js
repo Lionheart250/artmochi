@@ -14,7 +14,7 @@ import { getImageUrl } from '../utils/imageUtils';
 
 const Header = () => {
     const { user, logout } = useAuth();
-    const { profilePicture } = useProfile();
+    const { profilePicture, fetchUserProfile } = useProfile();
     const navigate = useNavigate();
     const location = useLocation();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -30,38 +30,30 @@ const Header = () => {
         console.log('Current user object:', user);
     }, [user]);
 
-    // Profile picture fetch effect
+    // Replace the existing profile picture fetch effect with this
     useEffect(() => {
-        const fetchProfilePicture = async () => {
+        const loadProfile = async () => {
             const token = localStorage.getItem('token');
-            if (!token || !user?.id) return;
-    
-            try {
-                const response = await fetch(
-                    `${process.env.REACT_APP_API_URL}/user_profile/${user.id}`,                    
-                    {
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        },
-                        credentials: 'include'
-                    }
-                );
-    
-                if (!response.ok) throw new Error('Failed to fetch profile picture');
-
-                const data = await response.json();
-                if (data.profile_picture) {
-                    setHeaderProfilePic(data.profile_picture);
+            if (user && token) {
+                try {
+                    await fetchUserProfile(token);
+                } catch (error) {
+                    console.error('Error fetching profile:', error);
                 }
-            } catch (error) {
-                console.error('Profile picture fetch error:', error);
-                setHeaderProfilePic('/default-avatar.png');
             }
         };
 
-        fetchProfilePicture();
-    }, [user?.id, profilePicture]); // Add profilePicture as dependency
+        loadProfile();
+    }, [user, fetchUserProfile]);
+
+    // Remove the separate fetchProfilePicture effect since we'll use profilePicture from context
+    useEffect(() => {
+        if (profilePicture) {
+            setHeaderProfilePic(profilePicture);
+        } else {
+            setHeaderProfilePic('/default-avatar.png');
+        }
+    }, [profilePicture]);
 
     // Header position effect
     useEffect(() => {
@@ -106,7 +98,7 @@ const Header = () => {
 
     const profilePicElement = (
         <img 
-            src={headerProfilePic || '/default-avatar.png'}
+            src={headerProfilePic ? getImageUrl(headerProfilePic, 'profile') : '/default-avatar.png'}
             alt={user?.username}
             className="header-profile-pic"
             onError={(e) => {
@@ -124,7 +116,7 @@ const Header = () => {
                         .then(res => res.json())
                         .then(data => {
                             if (data.profile_picture) {
-                                setHeaderProfilePic(data.profile_picture);
+                                setHeaderProfilePic(getImageUrl(data.profile_picture, 'profile'));
                             }
                         })
                         .catch(() => {
