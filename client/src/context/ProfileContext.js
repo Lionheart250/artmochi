@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import jwtDecode from 'jwt-decode';
 
 const ProfileContext = createContext();
 
@@ -11,7 +12,11 @@ export const ProfileProvider = ({ children }) => {
 
     const fetchUserProfile = async (token) => {
         try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/user_profile`, {  // Changed from /user/profile
+            // Get userId from the decoded token
+            const decoded = jwtDecode(token);
+            const userId = decoded.userId;
+
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/user_profile/${userId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
