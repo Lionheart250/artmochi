@@ -990,10 +990,10 @@ useEffect(() => {
                                                 <h4 onClick={() => navigate(`/profile/${imageUserDetails[activeImageId]?.user_id}`)}>
                                                     {imageUserDetails[activeImageId]?.username}
                                                 </h4>
-                                                {user && user.userId !== parseInt(imageUserDetails[activeImageId]?.user_id) && (
+                                                {user && imageUserDetails[activeImageId] && user.userId !== parseInt(imageUserDetails[activeImageId].user_id) && (
                                                     <button 
                                                         className={`gallery-follow-btn ${isFollowing ? 'following' : ''}`}
-                                                        onClick={() => handleModalFollowToggle(imageUserDetails[activeImageId]?.user_id, isFollowing)}
+                                                        onClick={() => handleModalFollowToggle(imageUserDetails[activeImageId].user_id)}
                                                     >
                                                         {isFollowing ? 'Following' : 'Follow'}
                                                     </button>
