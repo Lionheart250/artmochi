@@ -37,8 +37,8 @@ const FORGE_URL = 'http://127.0.0.1:7860';
 
 // Add this mapping near your other constants
 const aspectRatioMapping = {
-    'Portrait': '2:3',
-    'Landscape': '3:2',
+    'Portrait': '9:16',
+    'Landscape': '16:9',
     'Square': '1:1'
 };
 
