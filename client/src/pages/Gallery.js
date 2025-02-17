@@ -311,6 +311,9 @@ const Gallery = () => {
                         [activeImageId]: commentsData.comments, // Use the fetched comments
                     }));
                     setCommentInput(''); // Clear the comment input
+
+                    // Fetch image details to update profiles
+                fetchImageDetails(activeImageId);
                 } else {
                     console.error('Error fetching comments:', await commentsResponse.json());
                 }
