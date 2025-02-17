@@ -317,18 +317,29 @@ const fetchImageDetails = async (imageId) => {
             headers: { 
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
-            },
-            credentials: 'include'
+            }
         });
 
         const imageData = await imageDetailsResponse.json();
         
-        // Get the user's profile data
-        const userProfileResponse = await fetch(`${process.env.REACT_APP_API_URL}/user_profile/${imageData.user_id}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+        // Get user profile and follow status in parallel
+        const [userProfileResponse, followStatusResponse] = await Promise.all([
+            fetch(`${process.env.REACT_APP_API_URL}/user_profile/${imageData.user_id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }),
+            fetch(`${process.env.REACT_APP_API_URL}/user/${imageData.user_id}/stats`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+        ]);
 
-        const userProfileData = await userProfileResponse.json();
+        const [userProfileData, followStatus] = await Promise.all([
+            userProfileResponse.json(),
+            followStatusResponse.json()
+        ]);
+
+        if (followStatusResponse.ok) {
+            setIsFollowing(followStatus.is_following);
+        }
 
         setImageUserDetails(prev => ({
             ...prev,
@@ -435,9 +446,8 @@ const fetchImageDetails = async (imageId) => {
     
             if (response.ok) {
                 setIsFollowing(!isFollowing);
-                // Refetch data to update UI
+                // Only fetch image details to update UI
                 fetchImageDetails(activeImageId);
-                fetchAllData(activeImageId);
             }
         } catch (error) {
             console.error('Error toggling follow:', error);
