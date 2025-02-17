@@ -579,6 +579,35 @@ const Gallery = () => {
         }
     };
 
+    const calculateImageSpans = (images) => {
+        return images.map(image => {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    const aspectRatio = img.width / img.height;
+                    let columnSpan = 1;
+                    
+                    // Determine spans based on aspect ratio
+                    if (aspectRatio > 1.7) {
+                        columnSpan = 2; // Very wide images span 2 columns
+                    } else if (aspectRatio < 0.6) {
+                        columnSpan = 1; // Tall images take 1 column
+                    } else {
+                        columnSpan = Math.ceil(aspectRatio); // Others scale proportionally
+                    }
+    
+                    resolve({
+                        ...image,
+                        aspectRatio,
+                        columnSpan,
+                        height: Math.round(250 / aspectRatio) // Assuming 250px base width
+                    });
+                };
+                img.src = image.image_url;
+            });
+        });
+    };
+
     const createColumns = (images, columnCount) => {
         if (!Array.isArray(images) || images.length === 0) {
             return Array(columnCount).fill().map(() => []);
@@ -705,19 +734,34 @@ const Gallery = () => {
         await fetchAllCounts(); // Get ALL counts first
     };
 
+    const getImageOrientation = (image) => {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = function() {
+                let orientation;
+                if (this.width === this.height) {
+                    orientation = 'square';
+                } else if (this.width > this.height) {
+                    orientation = 'landscape';
+                } else {
+                    orientation = 'portrait';
+                }
+                resolve(orientation);
+            };
+            img.src = image.image_url;
+        });
+    };
+
     // Define fetchImagesForPage function
     const fetchImagesForPage = async (pageNum) => {
         if (loading) return;
         setLoading(true);
         
-        // Debug pagination
-        console.log('Fetching page:', pageNum, 'with limit: 20');
-        
         try {
             const token = localStorage.getItem('token');
             const response = await fetch(
-                    `${process.env.REACT_APP_API_URL}/images?page=${pageNum}&limit=20&sortType=${sortType}`,                
-                    {
+                `${process.env.REACT_APP_API_URL}/images?page=${pageNum}&limit=20&sortType=${sortType}`,
+                {
                     headers: {
                         ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
                     }
@@ -725,14 +769,25 @@ const Gallery = () => {
             );
             
             const data = await response.json();
-            console.log(`Received ${data.images.length} images for page ${pageNum}`);
             
-            // Only append new images if we're past page 1
-            setImages(prev => 
-                pageNum === 1 ? data.images : [...prev, ...data.images]
+            // Process images to add orientation
+            const processedImages = await Promise.all(
+                data.images.map(async (image) => ({
+                    ...image,
+                    orientation: await getImageOrientation(image)
+                }))
             );
             
-            setHasMore(data.images.length === 20);
+            // Filter based on selectedCategory if it's portrait or landscape
+            const filteredImages = selectedCategory === 'all' 
+                ? processedImages 
+                : processedImages.filter(img => img.orientation === selectedCategory);
+    
+            setImages(prev => 
+                pageNum === 1 ? filteredImages : [...prev, ...filteredImages]
+            );
+            
+            setHasMore(filteredImages.length === 20);
             fetchingRef.current = false;
         } catch (error) {
             console.error('Error fetching images:', error);
@@ -877,11 +932,16 @@ useEffect(() => {
                             <select 
                                 className="gallery-category" 
                                 value={selectedCategory} 
-                                onChange={(e) => setSelectedCategory(e.target.value)}
+                                onChange={(e) => {
+                                    setSelectedCategory(e.target.value)
+                                    setPage(1); // Reset to first page when changing category
+                                    setImages([]); // Clear existing images
+                                }}
                             >
                                 <option value="all">All Categories</option>
-                                <option value="portraits">Portraits</option>
-                                <option value="landscapes">Landscapes</option>
+                                <option value="portrait">Portrait</option>
+                                <option value="landscape">Landscape</option>
+                                <option value="square">Square</option>
                                 <option value="abstract">Abstract</option>
                                 <option value="anime">Anime</option>
                                 {/* Add more categories as needed */}
