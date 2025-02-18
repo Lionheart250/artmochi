@@ -33,7 +33,7 @@ const Subscription = () => {
                 // Show success message
                 alert('Successfully subscribed to Free tier!');
                 // Optionally redirect to dashboard or profile
-                window.location.href = '/dashboard';
+                window.location.href = '/';
                 return;
             }
 
