@@ -1940,7 +1940,7 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
     let remainingGenerations = -1; // Default for paid tiers
     
     try {
-        // Start transaction
+        // Start transaction immediately
         await client.query('BEGIN');
 
         // Check subscription tier with row lock
@@ -1953,22 +1953,24 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
             [req.user.userId]
         );
 
-        // Handle free tier limits with transaction
+        // Handle free tier limits
         if (subscription.rows[0]?.tier_name.toLowerCase() === 'free') {
             const today = new Date().toISOString().split('T')[0];
-            const imageCount = await client.query(
-                `SELECT COUNT(*) 
-                 FROM images 
-                 WHERE user_id = $1 
-                 AND DATE(created_at) = $2
-                 FOR UPDATE`,
+            
+            // Increment count or insert new record atomically
+            const dailyGenResult = await client.query(
+                `INSERT INTO daily_generations (user_id, date, count)
+                 VALUES ($1, $2, 1)
+                 ON CONFLICT (user_id, date)
+                 DO UPDATE SET count = daily_generations.count + 1
+                 RETURNING count`,
                 [req.user.userId, today]
             );
 
-            const usedToday = parseInt(imageCount.rows[0].count);
-            remainingGenerations = 10 - usedToday; // Calculate remaining before increment
+            const usedToday = parseInt(dailyGenResult.rows[0].count);
+            remainingGenerations = 10 - usedToday;
 
-            if (usedToday >= 10) {
+            if (usedToday > 10) {
                 await client.query('ROLLBACK');
                 return res.status(403).json({
                     error: 'Daily limit reached',
@@ -1978,7 +1980,7 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
             }
         }
 
-        // Rest of your existing code for image generation...
+        // Generate image with Replicate
         const response = await axios({
             method: 'post',
             url: 'https://api.replicate.com/v1/predictions',
@@ -1992,6 +1994,7 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
             }
         });
 
+        // Poll for completion
         let prediction = response.data;
         while (prediction.status !== 'succeeded' && prediction.status !== 'failed') {
             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -2044,11 +2047,6 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
                 req.body.input.height || 1024
             ]
         );
-
-        // Update remaining generations for free tier
-        if (subscription.rows[0]?.tier_name.toLowerCase() === 'free') {
-            remainingGenerations--; // Decrement after successful generation
-        }
 
         // Commit transaction
         await client.query('COMMIT');
