@@ -1,4 +1,9 @@
 // Import required modules
+require('dotenv').config({
+  path: process.env.NODE_ENV === 'production' 
+    ? '.env.production' 
+    : '.env.development'
+});
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config({
     path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development'
@@ -19,7 +24,17 @@ const { uploadToS3 } = require('./src/config/s3');
 const { S3Client, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+let stripe;
+try {
+    if (!process.env.STRIPE_SECRET_KEY) {
+        throw new Error('STRIPE_SECRET_KEY is not set in environment variables');
+    }
+    stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+    console.log('Stripe initialized successfully');
+} catch (error) {
+    console.error('Failed to initialize Stripe:', error);
+    process.exit(1);
+}
 const app = express();
 const port = process.env.PORT || 3000;
 
