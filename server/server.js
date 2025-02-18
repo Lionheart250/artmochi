@@ -1,14 +1,27 @@
-// Import required modules
+// Move dotenv config to the very top before any other code
 require('dotenv').config({
-  path: process.env.NODE_ENV === 'production' 
-    ? '.env.production' 
-    : '.env.development'
+    path: process.env.NODE_ENV === 'production' 
+        ? '.env.production' 
+        : '.env.development'
 });
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config({
-    path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development'
-  });
+
+// Add debug logging for Stripe initialization
+console.log('Environment:', process.env.NODE_ENV);
+console.log('Stripe Key Status:', process.env.STRIPE_SECRET_KEY ? 'Present' : 'Missing');
+
+// Initialize Stripe
+let stripe;
+try {
+    if (!process.env.STRIPE_SECRET_KEY) {
+        throw new Error('STRIPE_SECRET_KEY is not set in environment variables');
+    }
+    stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+    console.log('Stripe initialized successfully');
+} catch (error) {
+    console.error('Failed to initialize Stripe:', error);
+    process.exit(1);
 }
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -24,17 +37,6 @@ const { uploadToS3 } = require('./src/config/s3');
 const { S3Client, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
-let stripe;
-try {
-    if (!process.env.STRIPE_SECRET_KEY) {
-        throw new Error('STRIPE_SECRET_KEY is not set in environment variables');
-    }
-    stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-    console.log('Stripe initialized successfully');
-} catch (error) {
-    console.error('Failed to initialize Stripe:', error);
-    process.exit(1);
-}
 const app = express();
 const port = process.env.PORT || 3000;
 

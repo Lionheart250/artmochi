@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useSubscription } from '../features/subscriptions/store/SubscriptionContext';
+import { subscriptionApi } from '../features/subscriptions/api/subscriptionApi';
+
 import './Subscription.css';
 
 const Subscription = () => {
@@ -15,23 +17,8 @@ const Subscription = () => {
     const handlePlanSelect = async (tierId) => {
         try {
             console.log('Upgrading to tier:', tierId, 'with billing period:', billingPeriod);
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/subscription/create-checkout`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({ 
-                    tierId, 
-                    billingPeriod 
-                })
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to create checkout session');
-            }
+            
+            const data = await subscriptionApi.createCheckoutSession(tierId, billingPeriod);
 
             if (data.url) {
                 window.location.href = data.url;
