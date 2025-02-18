@@ -16,19 +16,36 @@ const Subscription = () => {
 
     const handlePlanSelect = async (tierId) => {
         try {
-            console.log('Upgrading to tier:', tierId, 'with billing period:', billingPeriod);
+            console.log('Starting subscription upgrade process...');
+            console.log('User ID:', localStorage.getItem('userId'));
+            console.log('Tier ID:', tierId);
+            console.log('Billing Period:', billingPeriod);
             
             const data = await subscriptionApi.createCheckoutSession(tierId, billingPeriod);
+            console.log('Checkout session response:', data);
 
-            if (data.url) {
-                window.location.href = data.url;
-            } else {
-                throw new Error('No checkout URL received');
+            if (!data) {
+                throw new Error('No response received from checkout session creation');
             }
+
+            if (!data.url) {
+                console.error('Invalid response data:', data);
+                throw new Error('No checkout URL received from server');
+            }
+
+            // Log before redirect
+            console.log('Redirecting to checkout URL:', data.url);
+            window.location.href = data.url;
         } catch (error) {
-            console.error('Failed to upgrade subscription:', error);
-            // Add visual error feedback
-            alert(error.message || 'Failed to process upgrade. Please try again.');
+            console.error('Detailed upgrade error:', {
+                message: error.message,
+                stack: error.stack,
+                responseData: error.response?.data
+            });
+            
+            // More user-friendly error message
+            const errorMessage = error.response?.data?.error || error.message || 'Failed to process upgrade';
+            alert(`Subscription upgrade failed: ${errorMessage}. Please try again or contact support.`);
         }
     };
 
