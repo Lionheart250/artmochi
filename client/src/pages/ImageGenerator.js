@@ -186,9 +186,15 @@ const handleSubmit = async (e) => {
             throw new Error('You have reached your daily free tier limit. Upgrade for unlimited generations!');
         }
 
-        // Update remaining generations if on free tier
-        if (data.remainingGenerations !== undefined) {
-            setRemainingGenerations(data.remainingGenerations);
+        // Always update remaining generations from response
+        if (currentSubscription?.tier_name === 'Free') {
+            // Calculate remaining generations (10 - used)
+            const remaining = data.remainingGenerations || 0;
+            setRemainingGenerations(remaining);
+            
+            if (remaining === 0) {
+                throw new Error('Daily generation limit reached. Upgrade for unlimited generations!');
+            }
         }
 
         if (data.image) {  // Changed from data.output
@@ -208,6 +214,28 @@ const handleSubmit = async (e) => {
         setLoading(false);
     }
 };
+
+// Add useEffect to fetch initial remaining generations on component mount
+useEffect(() => {
+    const fetchRemainingGenerations = async () => {
+        if (currentSubscription?.tier_name === 'Free') {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${process.env.REACT_APP_API_URL}/api/user/remaining-generations`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await response.json();
+                setRemainingGenerations(data.remaining);
+            } catch (error) {
+                console.error('Failed to fetch remaining generations:', error);
+            }
+        }
+    };
+
+    fetchRemainingGenerations();
+}, [currentSubscription]);
 
 const validUpscalers = [
     "Latent",

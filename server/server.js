@@ -1937,16 +1937,18 @@ app.post('/save_generated_image', authenticateTokenWithAutoRefresh, async (req, 
 
 app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) => {
     try {
-        // First check user's subscription tier
+        // Check subscription tier
         const subscription = await pool.query(
-            `SELECT st.name as tier_name, st.features
+            `SELECT st.name as tier_name
              FROM user_subscriptions us
              JOIN subscription_tiers st ON us.tier_id = st.id
              WHERE us.user_id = $1 AND us.status = 'active'`,
             [req.user.userId]
         );
 
-        // If user is on free tier, check daily limit
+        let remainingGenerations = -1; // Default to unlimited for paid tiers
+
+        // Handle free tier limits
         if (subscription.rows[0]?.tier_name.toLowerCase() === 'free') {
             const today = new Date().toISOString().split('T')[0];
             const imageCount = await pool.query(
@@ -1957,7 +1959,10 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
                 [req.user.userId, today]
             );
 
-            if (parseInt(imageCount.rows[0].count) >= 10) {
+            const usedToday = parseInt(imageCount.rows[0].count);
+            remainingGenerations = 10 - usedToday;
+
+            if (remainingGenerations <= 0) {
                 return res.status(403).json({
                     error: 'Daily limit reached',
                     message: 'Free tier is limited to 10 images per day. Upgrade for unlimited generations!'
@@ -1965,9 +1970,7 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
             }
         }
 
-        // Continue with existing image generation code
-        console.log('Using Replicate token:', process.env.REPLICATE_API_TOKEN);
-        
+        // Generate image with Replicate
         const response = await axios({
             method: 'post',
             url: 'https://api.replicate.com/v1/predictions',
@@ -1981,7 +1984,6 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
             }
         });
 
-        // Rest of your existing image generation code...
         let prediction = response.data;
         while (prediction.status !== 'succeeded' && prediction.status !== 'failed') {
             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -1999,45 +2001,55 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
             throw new Error('Image generation failed');
         }
 
-        if (prediction.output?.[0]) {
-            const imageResponse = await axios({
-                url: prediction.output[0],
-                responseType: 'arraybuffer'
-            });
-
-            const key = `generated/${Date.now()}-${req.user.userId}.webp`;
-            const s3Result = await uploadToS3(
-                imageResponse.data,
-                key,
-                'image/webp'
-            );
-
-            if (!s3Result.success) {
-                throw new Error('Failed to upload to S3');
-            }
-
-            const result = await pool.query(
-                `INSERT INTO images (user_id, image_url, prompt, negative_prompt, steps, width, height) 
-                VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-                [
-                    req.user.userId,
-                    s3Result.url,
-                    req.body.input.prompt,
-                    req.body.input.negative_prompt || '',
-                    req.body.input.num_inference_steps,
-                    req.body.input.width || 1024,
-                    req.body.input.height || 1024
-                ]
-            );
-
-            res.json({
-                image: s3Result.url,
-                imageId: result.rows[0].id
-            });
+        if (!prediction.output?.[0]) {
+            throw new Error('No output image received');
         }
+
+        // Save generated image
+        const imageResponse = await axios({
+            url: prediction.output[0],
+            responseType: 'arraybuffer'
+        });
+
+        const key = `generated/${Date.now()}-${req.user.userId}.webp`;
+        const s3Result = await uploadToS3(
+            imageResponse.data,
+            key,
+            'image/webp'
+        );
+
+        if (!s3Result.success) {
+            throw new Error('Failed to upload to S3');
+        }
+
+        // Save to database
+        const result = await pool.query(
+            `INSERT INTO images (user_id, image_url, prompt, negative_prompt, steps, width, height) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+            [
+                req.user.userId,
+                s3Result.url,
+                req.body.input.prompt,
+                req.body.input.negative_prompt || '',
+                req.body.input.num_inference_steps,
+                req.body.input.width || 1024,
+                req.body.input.height || 1024
+            ]
+        );
+
+        // Return response with remaining generations for free tier
+        res.json({
+            image: s3Result.url,
+            imageId: result.rows[0].id,
+            remainingGenerations: remainingGenerations
+        });
+
     } catch (error) {
         console.error('API error:', error);
-        res.status(500).json({ error: 'Failed to generate image' });
+        res.status(500).json({ 
+            error: 'Failed to generate image',
+            details: error.message 
+        });
     }
 });
 
