@@ -80,56 +80,59 @@ app.options('*', cors(corsOptions));
 app.post('/api/subscription/webhook', 
     express.raw({ type: 'application/json' }), 
     async (req, res) => {
-      const sig = req.headers['stripe-signature'];
-      let event;
-  
-      try {
-          event = stripe.webhooks.constructEvent(
-              req.body,
-              sig,
-              process.env.STRIPE_WEBHOOK_SECRET
-          );
-  
-          console.log('Webhook event type:', event.type);
-  
-          switch (event.type) {
-              case 'checkout.session.completed': {
-                  const session = event.data.object;
-                  console.log('Processing checkout session:', session);
+        const sig = req.headers['stripe-signature'];
+        let event;
 
-                  // Get subscription details from Stripe
-                  const subscription = await stripe.subscriptions.retrieve(session.subscription);
-                  console.log('Retrieved subscription:', subscription);
+        try {
+            console.log('Received webhook with signature:', sig);
+            event = stripe.webhooks.constructEvent(
+                req.body,
+                sig,
+                process.env.STRIPE_WEBHOOK_SECRET
+            );
 
-                  // Insert subscription record with period details
-                  const result = await pool.query(
-                      `INSERT INTO user_subscriptions 
-                      (user_id, tier_id, stripe_subscription_id, stripe_customer_id, status, 
-                       current_period_start, current_period_end, billing_period)
-                      VALUES ($1, $2, $3, $4, $5, to_timestamp($6), to_timestamp($7), $8)
-                      RETURNING *`,
-                      [
-                          session.metadata.userId,
-                          session.metadata.tierId,
-                          subscription.id,
-                          session.customer,
-                          'active',
-                          subscription.current_period_start,
-                          subscription.current_period_end,
-                          subscription.items.data[0].plan.interval
-                      ]
-                  );
-                  console.log('Created subscription record:', result.rows[0]);
-                  break;
-              }
-          }
-  
-          res.json({ received: true });
-      } catch (err) {
-          console.error('Webhook Error:', err.message);
-          return res.status(400).send(`Webhook Error: ${err.message}`);
-      }
-  });
+            console.log('Webhook event type:', event.type);
+
+            switch (event.type) {
+                case 'checkout.session.completed': {
+                    const session = event.data.object;
+                    console.log('Processing checkout session:', session);
+
+                    // Get subscription details from Stripe
+                    const subscription = await stripe.subscriptions.retrieve(session.subscription);
+                    console.log('Retrieved subscription:', subscription);
+
+                    // Insert subscription record with period details
+                    const result = await pool.query(
+                        `INSERT INTO user_subscriptions 
+                        (user_id, tier_id, stripe_subscription_id, stripe_customer_id, status, 
+                         current_period_start, current_period_end, billing_period)
+                        VALUES ($1, $2, $3, $4, $5, to_timestamp($6), to_timestamp($7), $8)
+                        RETURNING *`,
+                        [
+                            session.metadata.userId,
+                            session.metadata.tierId,
+                            subscription.id,
+                            session.customer,
+                            'active',
+                            subscription.current_period_start,
+                            subscription.current_period_end,
+                            subscription.items.data[0].plan.interval
+                        ]
+                    );
+                    console.log('Created subscription record:', result.rows[0]);
+                    break;
+                }
+            }
+
+            res.json({ received: true });
+        } catch (err) {
+            console.error('Webhook Error:', err);
+            console.error('Raw request body:', req.body);
+            return res.status(400).send(`Webhook Error: ${err.message}`);
+        }
+    }
+);
 
 // Add after express initialization
 app.use(express.json({ limit: '50mb' }));
