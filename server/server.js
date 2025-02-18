@@ -1937,6 +1937,7 @@ app.post('/save_generated_image', authenticateTokenWithAutoRefresh, async (req, 
 
 app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) => {
     const client = await pool.connect();
+    let remainingGenerations = -1; // Default for paid tiers
     
     try {
         // Start transaction
@@ -1965,16 +1966,19 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
             );
 
             const usedToday = parseInt(imageCount.rows[0].count);
+            remainingGenerations = 10 - usedToday; // Calculate remaining before increment
+
             if (usedToday >= 10) {
                 await client.query('ROLLBACK');
                 return res.status(403).json({
                     error: 'Daily limit reached',
-                    message: 'Free tier is limited to 10 images per day. Upgrade for unlimited generations!'
+                    message: 'Free tier is limited to 10 images per day. Upgrade for unlimited generations!',
+                    remainingGenerations: 0
                 });
             }
         }
 
-        // Generate image with Replicate
+        // Rest of your existing code for image generation...
         const response = await axios({
             method: 'post',
             url: 'https://api.replicate.com/v1/predictions',
@@ -2040,6 +2044,11 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
                 req.body.input.height || 1024
             ]
         );
+
+        // Update remaining generations for free tier
+        if (subscription.rows[0]?.tier_name.toLowerCase() === 'free') {
+            remainingGenerations--; // Decrement after successful generation
+        }
 
         // Commit transaction
         await client.query('COMMIT');
