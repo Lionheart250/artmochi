@@ -132,6 +132,14 @@ const ImageGenerator = () => {
 // First, modify the handleSubmit function to handle image-to-image:
 const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Check remaining generations before making the request
+    if (currentSubscription?.tier_name === 'Free' && remainingGenerations <= 0) {
+        setError('You have reached your daily limit. Upgrade for unlimited generations!');
+        // Show upgrade modal or redirect
+        return;
+    }
+
     setError(null);
     setLoading(true);
 

@@ -1936,33 +1936,37 @@ app.post('/save_generated_image', authenticateTokenWithAutoRefresh, async (req, 
 });
 
 app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) => {
+    const client = await pool.connect();
+    
     try {
-        // Check subscription tier
-        const subscription = await pool.query(
+        // Start transaction
+        await client.query('BEGIN');
+
+        // Check subscription tier with row lock
+        const subscription = await client.query(
             `SELECT st.name as tier_name
              FROM user_subscriptions us
              JOIN subscription_tiers st ON us.tier_id = st.id
-             WHERE us.user_id = $1 AND us.status = 'active'`,
+             WHERE us.user_id = $1 AND us.status = 'active'
+             FOR UPDATE`,
             [req.user.userId]
         );
 
-        let remainingGenerations = -1; // Default to unlimited for paid tiers
-
-        // Handle free tier limits
+        // Handle free tier limits with transaction
         if (subscription.rows[0]?.tier_name.toLowerCase() === 'free') {
             const today = new Date().toISOString().split('T')[0];
-            const imageCount = await pool.query(
+            const imageCount = await client.query(
                 `SELECT COUNT(*) 
                  FROM images 
                  WHERE user_id = $1 
-                 AND DATE(created_at) = $2`,
+                 AND DATE(created_at) = $2
+                 FOR UPDATE`,
                 [req.user.userId, today]
             );
 
             const usedToday = parseInt(imageCount.rows[0].count);
-            remainingGenerations = 10 - usedToday;
-
-            if (remainingGenerations <= 0) {
+            if (usedToday >= 10) {
+                await client.query('ROLLBACK');
                 return res.status(403).json({
                     error: 'Daily limit reached',
                     message: 'Free tier is limited to 10 images per day. Upgrade for unlimited generations!'
@@ -2022,8 +2026,8 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
             throw new Error('Failed to upload to S3');
         }
 
-        // Save to database
-        const result = await pool.query(
+        // Save to database within same transaction
+        const result = await client.query(
             `INSERT INTO images (user_id, image_url, prompt, negative_prompt, steps, width, height) 
             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
             [
@@ -2037,7 +2041,9 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
             ]
         );
 
-        // Return response with remaining generations for free tier
+        // Commit transaction
+        await client.query('COMMIT');
+
         res.json({
             image: s3Result.url,
             imageId: result.rows[0].id,
@@ -2045,11 +2051,11 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
         });
 
     } catch (error) {
+        await client.query('ROLLBACK');
         console.error('API error:', error);
-        res.status(500).json({ 
-            error: 'Failed to generate image',
-            details: error.message 
-        });
+        res.status(500).json({ error: 'Failed to generate image' });
+    } finally {
+        client.release();
     }
 });
 
