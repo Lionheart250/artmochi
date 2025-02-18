@@ -391,3 +391,98 @@ input::-ms-clear {
     width: 100%;
     padding-right: 40px; /* Make room for the eye icon */
 }
+
+/* Add these styles to your existing Settings.css */
+.subscription-info {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.subscription-info .info-item {
+    margin-bottom: 15px;
+}
+
+.subscription-info label {
+    font-weight: 600;
+    color: #666;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.subscription-info p {
+    color: #333;
+    margin: 0;
+    font-size: 1.1em;
+}
+
+.settings-btn {
+    background-color: #fe2c55;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    margin-top: 15px;
+}
+
+.settings-btn:hover {
+    background-color: #e62a4d;
+}
+
+/* Subscription Section Styles */
+.subscription-info {
+    background-color: #1a1a1a;
+    border: 1px solid #2f2f2f;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 15px;
+}
+
+.subscription-info .info-item {
+    margin-bottom: 20px;
+}
+
+.subscription-info .info-item label {
+    display: block;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 8px;
+}
+
+.subscription-info .info-item p {
+    font-size: 16px;
+    color: #ffffff;
+    margin: 0;
+}
+
+.subscription-info .settings-btn {
+    background-color: #fe2c55;
+    color: #ffffff;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    margin-top: 20px;
+}
+
+.subscription-info .settings-btn:hover {
+    background-color: #ff425f;
+}
+
+/* Status Badge */
+.subscription-info .status {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: capitalize;
+    background-color: rgba(76, 175, 80, 0.1);
+    color: #4CAF50;
+}

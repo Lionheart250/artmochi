@@ -4,8 +4,8 @@ import { useProfile } from '../context/ProfileContext';
 import { getImageUrl } from '../utils/imageUtils';
 import './Settings.css';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { useSubscription } from '../features/subscriptions/store/SubscriptionContext';
 
-// Add these functions above the Settings component
 const validatePassword = (password) => {
     const requirements = {
         minLength: password.length >= 8,
@@ -30,7 +30,8 @@ const validatePassword = (password) => {
 
 const Settings = () => {
     const { user } = useAuth();
-    const { profilePicture, updateProfilePicture } = useProfile();
+    const { profilePicture, setProfilePicture, updateProfilePicture } = useProfile();    
+    const { currentSubscription, fetchSubscription } = useSubscription();
     const [activeSection, setActiveSection] = useState('profile');
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
@@ -44,61 +45,59 @@ const Settings = () => {
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [username, setUsername] = useState('');
+    const [bio, setBio] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        console.log('Current user:', user);
-    }, [user]);
-
-    // Add profile fetching on component mount
-    useEffect(() => {
-        const initializeUserData = async () => {
+    const fetchUserProfile = async () => {
+        if (!user?.userId) return;
+        
+        try {
+            setIsLoading(true);
+            console.log('Starting profile fetch for ID:', user.userId);
             const token = localStorage.getItem('token');
-            if (user) {
-                try {
-                    await fetchUserProfile(token);
-                } catch (error) {
-                    console.error('Error fetching profile:', error);
-                }
+            
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/user_profile/${user.userId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            const data = await response.json();
+            console.log('Profile data received:', data);
+            
+            setUsername(data.username);
+            setBio(data.bio || '');
+            setUserEmail(data.email);
+            
+            if (data.profile_picture) {
+                const profilePicUrl = getImageUrl(data.profile_picture, 'profile');
+                setProfilePicture(profilePicUrl);
+                setTempProfilePicture(profilePicUrl);
+            } else {
+                setProfilePicture('/default-avatar.png');
+                setTempProfilePicture('/default-avatar.png');
             }
-        };
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-        initializeUserData();
-    }, [user, fetchUserProfile]);
-
-    // Your existing useEffect for fetchUserData
     useEffect(() => {
-        const fetchUserData = async () => {
-            const token = localStorage.getItem('token');
-            if (!token || !user?.id) return;
-    
-            try {
-                const response = await fetch(
-                    `${process.env.REACT_APP_API_URL}/user_profile/${user.id}`,                    
-                    {
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        },
-                        credentials: 'include'
-                    }
-                );
-    
-                if (!response.ok) throw new Error('Failed to fetch user data');
+        fetchUserProfile();
+    }, [user?.userId]);
 
-                const data = await response.json();
-                if (data.profile_picture) {
-                    setHeaderProfilePic(data.profile_picture);
-                }
-                if (data.email) {
-                    setUserEmail(data.email);
-                }
-            } catch (error) {
-                console.error('User data fetch error:', error);
-            }
-        };
+    // Add this useEffect to fetch subscription data
+    useEffect(() => {
+        if (user?.userId) {
+            fetchSubscription();
+        }
+    }, [user?.userId]);
 
-        fetchUserData();
-    }, [user?.id, profilePicture]);
+    // Add this inside the Settings component
+    useEffect(() => {
+        console.log('Current subscription state:', currentSubscription);
+    }, [currentSubscription]);
 
     const handleProfilePictureChange = async (e) => {
         const file = e.target.files[0];
@@ -210,6 +209,12 @@ const Settings = () => {
                     Profile
                 </button>
                 <button 
+                    className={`settings-nav-btn ${activeSection === 'subscription' ? 'active' : ''}`}
+                    onClick={() => setActiveSection('subscription')}
+                >
+                    Subscription
+                </button>
+                <button 
                     className={`settings-nav-btn ${activeSection === 'security' ? 'active' : ''}`}
                     onClick={() => setActiveSection('security')}
                 >
@@ -259,6 +264,51 @@ const Settings = () => {
                                 {loading ? 'Saving...' : 'Save Changes'}
                             </button>
                         </div>
+                    </div>
+                )}
+
+                {activeSection === 'subscription' && (
+                    <div className="settings-section">
+                        <h3>Subscription Details</h3>
+                        {isLoading ? (
+                            <div>Loading...</div>
+                        ) : (
+                            <div className="subscription-info">
+                                <div className="info-item">
+                                    <label>Current Plan</label>
+                                    <p>{currentSubscription?.tier_name || 'No active subscription'}</p>
+                                </div>
+                                {currentSubscription && (
+                                    <>
+                                        <div className="info-item">
+                                            <label>Billing Period</label>
+                                            <p>{currentSubscription.billing_period === 'month' ? 'Monthly' : 'Annual'}</p>
+                                        </div>
+                                        <div className="info-item">
+                                            <label>Next Billing Date</label>
+                                            <p>
+                                                {currentSubscription.current_period_end 
+                                                    ? new Date(currentSubscription.current_period_end).toLocaleDateString()
+                                                    : 'N/A'
+                                                }
+                                            </p>
+                                        </div>
+                                        <div className="info-item">
+                                            <label>Status</label>
+                                            <p>{currentSubscription.status}</p>
+                                        </div>
+                                    </>
+                                )}
+                                <div className="settings-actions">
+                                    <button 
+                                        className="settings-btn"
+                                        onClick={() => window.location.href = '/subscription'}
+                                    >
+                                        {currentSubscription ? 'Change Plan' : 'Subscribe'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
 

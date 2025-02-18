@@ -171,7 +171,7 @@ const Header = () => {
                                         <span>Sign In</span>
                                     </NavLink>
                                 )}
-                                <NavLink to="/upgrade" className="side-nav-link">
+                                <NavLink to="/subscription" className="side-nav-link">
                                     <UpgradeIcon className="nav-icon" />
                                     <span>Upgrade</span>
                                 </NavLink>
@@ -203,7 +203,7 @@ const Header = () => {
                                     {isDropdownOpen && (
                                         <div className="dropdown-menu">
                                             <NavLink to={`/profile/${user.userId}`} className="side-nav-link"> Profile </NavLink>
-                                            <NavLink to="/upgrade">Upgrade</NavLink>
+                                            <NavLink to="/subscription">Upgrade</NavLink>
                                             <NavLink to="/credits">Credits</NavLink>
                                             <NavLink to="/settings">Settings</NavLink>
                                             <button onClick={handleLogout} className="logout-btn">Log out</button>

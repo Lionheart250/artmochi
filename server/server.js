@@ -19,6 +19,7 @@ const { uploadToS3 } = require('./src/config/s3');
 const { S3Client, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -58,6 +59,60 @@ const corsOptions = {
 // 1. First, move the CORS setup to the very top of your middleware stack
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
+
+app.post('/api/subscription/webhook', 
+    express.raw({ type: 'application/json' }), 
+    async (req, res) => {
+      const sig = req.headers['stripe-signature'];
+      let event;
+  
+      try {
+          event = stripe.webhooks.constructEvent(
+              req.body,
+              sig,
+              process.env.STRIPE_WEBHOOK_SECRET
+          );
+  
+          console.log('Webhook event type:', event.type);
+  
+          switch (event.type) {
+              case 'checkout.session.completed': {
+                  const session = event.data.object;
+                  console.log('Processing checkout session:', session);
+
+                  // Get subscription details from Stripe
+                  const subscription = await stripe.subscriptions.retrieve(session.subscription);
+                  console.log('Retrieved subscription:', subscription);
+
+                  // Insert subscription record with period details
+                  const result = await pool.query(
+                      `INSERT INTO user_subscriptions 
+                      (user_id, tier_id, stripe_subscription_id, stripe_customer_id, status, 
+                       current_period_start, current_period_end, billing_period)
+                      VALUES ($1, $2, $3, $4, $5, to_timestamp($6), to_timestamp($7), $8)
+                      RETURNING *`,
+                      [
+                          session.metadata.userId,
+                          session.metadata.tierId,
+                          subscription.id,
+                          session.customer,
+                          'active',
+                          subscription.current_period_start,
+                          subscription.current_period_end,
+                          subscription.items.data[0].plan.interval
+                      ]
+                  );
+                  console.log('Created subscription record:', result.rows[0]);
+                  break;
+              }
+          }
+  
+          res.json({ received: true });
+      } catch (err) {
+          console.error('Webhook Error:', err.message);
+          return res.status(400).send(`Webhook Error: ${err.message}`);
+      }
+  });
 
 // Add after express initialization
 app.use(express.json({ limit: '50mb' }));
@@ -2042,6 +2097,87 @@ if (process.env.NODE_ENV !== 'production') {
         });
     });
 }
+
+// Add subscription routes
+app.use('/api/subscription/webhook', express.raw({ type: 'application/json' }));
+
+app.get('/api/subscription/tiers', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM subscription_tiers ORDER BY monthly_price');
+        console.log('Fetched tiers:', result.rows); // Debug log
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Failed to fetch tiers:', error);
+        res.status(500).json({ error: 'Failed to fetch subscription tiers' });
+    }
+});
+
+app.get('/api/subscription/current', authenticateTokenWithAutoRefresh, async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT * FROM user_subscriptions WHERE user_id = $1 AND status = $2',
+            [req.user.userId, 'active']
+        );
+        res.json(result.rows[0] || null);
+    } catch (error) {
+        console.error('Failed to fetch subscription:', error);
+        res.status(500).json({ error: 'Failed to fetch subscription' });
+    }
+});
+
+app.post('/api/subscription/create-checkout', authenticateTokenWithAutoRefresh, async (req, res) => {
+    const { tierId, billingPeriod } = req.body;
+    try {
+        console.log('Creating checkout for:', { tierId, billingPeriod });
+        
+        const tier = await pool.query('SELECT * FROM subscription_tiers WHERE id = $1', [tierId]);
+        
+        if (!tier.rows[0]) {
+            return res.status(404).json({ error: 'Subscription tier not found' });
+        }
+
+        const priceId = billingPeriod === 'monthly' 
+            ? tier.rows[0].stripe_price_id_monthly 
+            : tier.rows[0].stripe_price_id_annual;
+
+        // Make sure we have a valid frontend URL
+        const frontendURL = process.env.FRONTEND_URL || 'http://localhost:3001';
+        
+        console.log('Creating session with:', {
+            priceId,
+            successUrl: `${frontendURL}/subscription?success=true`,
+            cancelUrl: `${frontendURL}/subscription?canceled=true`
+        });
+
+        const session = await stripe.checkout.sessions.create({
+            customer_email: req.user.email,
+            mode: 'subscription',
+            payment_method_types: ['card'],
+            line_items: [{
+                price: priceId,
+                quantity: 1,
+            }],
+            success_url: `${frontendURL}/subscription?success=true`,
+            cancel_url: `${frontendURL}/subscription?canceled=true`,
+            metadata: {
+                userId: req.user.userId,
+                tierId: tierId
+            }
+        });
+
+        console.log('Created checkout session:', session.id);
+        res.json({ url: session.url });
+    } catch (error) {
+        console.error('Checkout session creation failed:', error);
+        res.status(400).json({ 
+            error: 'Failed to create checkout session',
+            details: error.message
+        });
+    }
+});
+
+
+
 
 // Start server
 app.listen(port, () => {
