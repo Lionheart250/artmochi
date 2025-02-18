@@ -6,6 +6,8 @@ import { useProfile } from '../context/ProfileContext';
 import './ImageGenerator.css';
 import LoraSelector from '../components/LoraSelector';
 import LoadingSpirals from '../components/LoadingSpirals';
+// Add useSubscription to your imports
+import { useSubscription } from '../features/subscriptions/store/SubscriptionContext';
 
 // Add constants at top
 const dimensions = {
@@ -46,6 +48,8 @@ const ImageGenerator = () => {
   const { user } = useAuth();
   const { fetchUserProfile } = useProfile(); // Add this
   const navigate = useNavigate();
+  // Add subscription context
+  const { currentSubscription } = useSubscription();
   const [prompt, setPrompt] = useState('');
   const [negativePrompt, setNegativePrompt] = useState('');
   const [cfgScale, setCfgScale] = useState(1);
@@ -66,6 +70,8 @@ const ImageGenerator = () => {
   const [scheduler, setScheduler] = useState("Karras");
   const [showAdvanced, setShowAdvanced] = useState(false); // Add state for advanced section toggle
   const [distilledCfgScale, setDistilledCfgScale] = useState(3.5);
+  // Add remaining generations state
+  const [remainingGenerations, setRemainingGenerations] = useState(null);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -176,6 +182,15 @@ const handleSubmit = async (e) => {
 
         const data = await response.json();
         
+        if (data.error === 'Daily limit reached') {
+            throw new Error('You have reached your daily free tier limit. Upgrade for unlimited generations!');
+        }
+
+        // Update remaining generations if on free tier
+        if (data.remainingGenerations !== undefined) {
+            setRemainingGenerations(data.remainingGenerations);
+        }
+
         if (data.image) {  // Changed from data.output
             setImage(data.image);  // Use data.image instead of data.output[0]
             console.log('Image generated successfully:', data);
@@ -215,6 +230,20 @@ const LoadingText = LoadingSpirals;
 
   return (
     <div className="image-generator">
+        {/* Move banner outside the grid container */}
+        {currentSubscription?.tier_name === 'Free' && (
+            <div className="tier-info-banner">
+                <p>
+                    Free Tier: {remainingGenerations !== null 
+                        ? `${remainingGenerations} generations remaining today` 
+                        : '10 images per day'}
+                </p>
+                <a href="/subscription" className="upgrade-link">
+                    Upgrade for unlimited generations →
+                </a>
+            </div>
+        )}
+        
         <div className="image-generator-container">
             {/* Form Side */}
             <div className="image-generator-form-container">

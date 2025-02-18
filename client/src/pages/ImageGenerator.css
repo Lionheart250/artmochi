@@ -4,6 +4,9 @@
     min-height: 80vh;
     margin-left: 12.5rem;
     padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
 }
 
 .image-generator-container {
@@ -13,6 +16,7 @@
     height: calc(80vh - 508px);
     max-width: 1800px;
     margin: 0 auto;
+    width: 100%;
 }
 
 /* Image Generator Header */
@@ -868,4 +872,33 @@ img {
     width: 100%;
     height: auto;
     display: block;
+}
+
+.tier-info-banner {
+    background-color: rgba(254, 44, 85, 0.1);
+    border: 1px solid #fe2c55;
+    border-radius: 8px;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin: 0;  /* Remove margin */
+}
+
+.tier-info-banner p {
+    margin: 0;
+    color: #fe2c55;
+    font-weight: 500;
+}
+
+.upgrade-link {
+    color: #fe2c55;
+    text-decoration: none;
+    font-weight: 600;
+    transition: opacity 0.2s;
+}
+
+.upgrade-link:hover {
+    opacity: 0.8;
 }

@@ -922,7 +922,6 @@ const FORGE_URL = 'http://127.0.0.1:7860';
 // Generate image
 app.post('/generate_image', authenticateTokenWithAutoRefresh, async (req, res) => {
     try {
-        // ... existing ForgeUI call ...
 
         if (response.data?.images?.[0]) {
             // Upload to S3 instead of storing base64
@@ -1938,7 +1937,35 @@ app.post('/save_generated_image', authenticateTokenWithAutoRefresh, async (req, 
 
 app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) => {
     try {
-        // Log token for debugging
+        // First check user's subscription tier
+        const subscription = await pool.query(
+            `SELECT st.name as tier_name, st.features
+             FROM user_subscriptions us
+             JOIN subscription_tiers st ON us.tier_id = st.id
+             WHERE us.user_id = $1 AND us.status = 'active'`,
+            [req.user.userId]
+        );
+
+        // If user is on free tier, check daily limit
+        if (subscription.rows[0]?.tier_name.toLowerCase() === 'free') {
+            const today = new Date().toISOString().split('T')[0];
+            const imageCount = await pool.query(
+                `SELECT COUNT(*) 
+                 FROM images 
+                 WHERE user_id = $1 
+                 AND DATE(created_at) = $2`,
+                [req.user.userId, today]
+            );
+
+            if (parseInt(imageCount.rows[0].count) >= 10) {
+                return res.status(403).json({
+                    error: 'Daily limit reached',
+                    message: 'Free tier is limited to 10 images per day. Upgrade for unlimited generations!'
+                });
+            }
+        }
+
+        // Continue with existing image generation code
         console.log('Using Replicate token:', process.env.REPLICATE_API_TOKEN);
         
         const response = await axios({
@@ -1954,7 +1981,7 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
             }
         });
 
-        // 2. Poll for completion
+        // Rest of your existing image generation code...
         let prediction = response.data;
         while (prediction.status !== 'succeeded' && prediction.status !== 'failed') {
             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -1972,14 +1999,12 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
             throw new Error('Image generation failed');
         }
 
-        // 3. Download and upload to S3
         if (prediction.output?.[0]) {
             const imageResponse = await axios({
                 url: prediction.output[0],
                 responseType: 'arraybuffer'
             });
 
-            // Upload to S3 instead of converting to base64
             const key = `generated/${Date.now()}-${req.user.userId}.webp`;
             const s3Result = await uploadToS3(
                 imageResponse.data,
@@ -1996,7 +2021,7 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
                 VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
                 [
                     req.user.userId,
-                    s3Result.url,  // Use the URL from the response object
+                    s3Result.url,
                     req.body.input.prompt,
                     req.body.input.negative_prompt || '',
                     req.body.input.num_inference_steps,
@@ -2006,7 +2031,7 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
             );
 
             res.json({
-                image: s3Result.url,  // Use the URL from the response object
+                image: s3Result.url,
                 imageId: result.rows[0].id
             });
         }
