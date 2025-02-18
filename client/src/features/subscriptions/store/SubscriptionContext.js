@@ -89,6 +89,20 @@ export const SubscriptionProvider = ({ children }) => {
         }
     };
 
+    const updateSubscription = (newSubscription) => {
+        setCurrentSubscription(newSubscription);
+    };
+
+    // Add this to handle free tier updates
+    const handleFreeSubscription = (subscription) => {
+        setCurrentSubscription({
+            ...subscription,
+            tier_name: 'Free',
+            status: 'active',
+            billing_period: subscription.billing_period
+        });
+    };
+
     const value = {
         currentSubscription,
         availableTiers,
@@ -97,7 +111,8 @@ export const SubscriptionProvider = ({ children }) => {
         upgradeSubscription,
         cancelSubscription,
         fetchSubscription,
-        setCurrentSubscription
+        setCurrentSubscription: updateSubscription,
+        handleFreeSubscription
     };
 
     return (

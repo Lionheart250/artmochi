@@ -22,30 +22,30 @@ const Subscription = () => {
             console.log('Billing Period:', billingPeriod);
             
             const data = await subscriptionApi.createCheckoutSession(tierId, billingPeriod);
-            console.log('Checkout session response:', data);
+            console.log('Subscription response:', data);
 
-            if (!data) {
-                throw new Error('No response received from checkout session creation');
+            if (data.isFree) {
+                // Handle free tier subscription
+                console.log('Free tier subscription created:', data.subscription);
+                // Update local subscription state
+                setCurrentSubscription(data.subscription);
+                // Show success message
+                alert('Successfully subscribed to Free tier!');
+                // Optionally redirect to dashboard or profile
+                window.location.href = '/dashboard';
+                return;
             }
 
             if (!data.url) {
-                console.error('Invalid response data:', data);
                 throw new Error('No checkout URL received from server');
             }
 
-            // Log before redirect
+            // Handle paid subscriptions
             console.log('Redirecting to checkout URL:', data.url);
             window.location.href = data.url;
         } catch (error) {
-            console.error('Detailed upgrade error:', {
-                message: error.message,
-                stack: error.stack,
-                responseData: error.response?.data
-            });
-            
-            // More user-friendly error message
-            const errorMessage = error.response?.data?.error || error.message || 'Failed to process upgrade';
-            alert(`Subscription upgrade failed: ${errorMessage}. Please try again or contact support.`);
+            console.error('Subscription error:', error);
+            alert('Failed to process subscription. Please try again.');
         }
     };
 

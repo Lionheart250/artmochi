@@ -49,19 +49,13 @@ class SubscriptionApi {
                 body: JSON.stringify({ tierId, billingPeriod })
             });
 
-            // Debug response
+            const data = await response.json();
+
             if (!response.ok) {
-                const text = await response.text();
-                console.error('Server response:', {
-                    status: response.status,
-                    statusText: response.statusText,
-                    url: response.url,
-                    body: text
-                });
-                throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                throw new Error(data.error || 'Failed to create subscription');
             }
 
-            const data = await response.json();
+            // Handle both free and paid subscriptions
             return data;
         } catch (error) {
             console.error('Checkout session error:', error);

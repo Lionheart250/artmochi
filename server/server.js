@@ -2156,6 +2156,25 @@ app.post('/api/subscription/create-checkout', authenticateTokenWithAutoRefresh, 
             return res.status(404).json({ error: 'Subscription tier not found' });
         }
 
+        // If it's the free tier, directly create subscription without Stripe checkout
+        if (tier.rows[0].name.toLowerCase() === 'free') {
+            const result = await pool.query(
+                `INSERT INTO user_subscriptions 
+                (user_id, tier_id, status, billing_period, 
+                 current_period_start, current_period_end)
+                VALUES ($1, $2, $3, $4, NOW(), NOW() + INTERVAL '100 years')
+                RETURNING *`,
+                [req.user.userId, tierId, 'active', billingPeriod]
+            );
+
+            return res.json({ 
+                success: true, 
+                subscription: result.rows[0],
+                isFree: true
+            });
+        }
+
+        // For paid tiers, continue with Stripe checkout
         const priceId = billingPeriod === 'monthly' 
             ? tier.rows[0].stripe_price_id_monthly 
             : tier.rows[0].stripe_price_id_annual;
@@ -2188,9 +2207,9 @@ app.post('/api/subscription/create-checkout', authenticateTokenWithAutoRefresh, 
         console.log('Created checkout session:', session.id);
         res.json({ url: session.url });
     } catch (error) {
-        console.error('Checkout session creation failed:', error);
+        console.error('Subscription creation failed:', error);
         res.status(400).json({ 
-            error: 'Failed to create checkout session',
+            error: 'Failed to create subscription',
             details: error.message
         });
     }
