@@ -1,6 +1,8 @@
 class SubscriptionApi {
     constructor() {
-        this.baseUrl = `${process.env.REACT_APP_API_URL}/subscription`;
+        console.log('Current API URL:', process.env.REACT_APP_API_URL);
+        // Add /api prefix to match your server routes
+        this.baseUrl = `${process.env.REACT_APP_API_URL}/api/subscription`;
     }
 
     async getCurrentSubscription() {
@@ -30,28 +32,36 @@ class SubscriptionApi {
 
     async createCheckoutSession(tierId, billingPeriod) {
         try {
-            console.log('Making checkout session request:', {
-                url: `${this.baseUrl}/create-checkout`,
-                tierId,
-                billingPeriod
-            });
+            const url = `${this.baseUrl}/create-checkout`;
+            console.log('Making checkout request to:', url);
 
-            const response = await fetch(`${this.baseUrl}/create-checkout`, {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ tierId, billingPeriod })
             });
 
-            const data = await response.json();
-
+            // Debug response
             if (!response.ok) {
-                console.error('Checkout session creation failed:', data);
-                throw new Error(data.error || 'Failed to create checkout session');
+                const text = await response.text();
+                console.error('Server response:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    url: response.url,
+                    body: text
+                });
+                throw new Error(`Server error: ${response.status} ${response.statusText}`);
             }
 
+            const data = await response.json();
             return data;
         } catch (error) {
             console.error('Checkout session error:', error);
