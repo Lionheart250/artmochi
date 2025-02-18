@@ -1,7 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 
-const SubscriptionContext = createContext(null);
+export const SubscriptionContext = createContext({
+    currentSubscription: null,
+    setCurrentSubscription: () => {},
+    availableTiers: [],
+    isLoading: true
+});
 
 export const SubscriptionProvider = ({ children }) => {
     const { user } = useAuth();

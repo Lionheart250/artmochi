@@ -9,7 +9,8 @@ const Subscription = () => {
         currentSubscription, 
         availableTiers, 
         isLoading, 
-        upgradeSubscription 
+        upgradeSubscription,
+        setCurrentSubscription // Add this
     } = useSubscription();
     
     const [billingPeriod, setBillingPeriod] = useState('monthly');
