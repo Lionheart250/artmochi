@@ -133,16 +133,19 @@ const ImageGenerator = () => {
 const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Check if user has any subscription
     if (!currentSubscription) {
         setError('Please subscribe to start generating images');
         return;
     }
 
-    // Check remaining generations for free tier
-    if (currentSubscription?.tier_name === 'Free' && remainingGenerations <= 0) {
-        setError('You have reached your daily limit. Upgrade for unlimited generations!');
-        return;
+    // Update remaining generations immediately for free tier
+    if (currentSubscription?.tier_name === 'Free') {
+        if (remainingGenerations <= 0) {
+            setError('You have reached your daily limit. Upgrade for unlimited generations!');
+            return;
+        }
+        // Decrement locally immediately
+        setRemainingGenerations(prev => Math.max(0, prev - 1));
     }
 
     setError(null);
@@ -196,18 +199,16 @@ const handleSubmit = async (e) => {
         const data = await response.json();
         
         if (data.error === 'Daily limit reached') {
+            // Revert the local count if the server rejected
+            if (currentSubscription?.tier_name === 'Free') {
+                setRemainingGenerations(prev => prev + 1);
+            }
             throw new Error('You have reached your daily free tier limit. Upgrade for unlimited generations!');
         }
 
-        // Always update remaining generations from response
-        if (currentSubscription?.tier_name === 'Free') {
-            // Calculate remaining generations (10 - used)
-            const remaining = data.remainingGenerations || 0;
-            setRemainingGenerations(remaining);
-            
-            if (remaining === 0) {
-                throw new Error('Daily generation limit reached. Upgrade for unlimited generations!');
-            }
+        // Update with server's count to stay in sync
+        if (currentSubscription?.tier_name === 'Free' && data.remainingGenerations !== undefined) {
+            setRemainingGenerations(data.remainingGenerations);
         }
 
         if (data.image) {  // Changed from data.output
