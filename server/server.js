@@ -96,31 +96,68 @@ app.post('/api/subscription/webhook',
             switch (event.type) {
                 case 'checkout.session.completed': {
                     const session = event.data.object;
-                    console.log('Processing checkout session:', session);
+                    const client = await pool.connect();
+                    try {
+                        await client.query('BEGIN');
 
-                    // Get subscription details from Stripe
-                    const subscription = await stripe.subscriptions.retrieve(session.subscription);
-                    console.log('Retrieved subscription:', subscription);
+                        // Just mark as inactive without ended_at
+                        await client.query(
+                            `UPDATE user_subscriptions 
+                             SET status = 'inactive'
+                             WHERE user_id = $1 
+                             AND status = 'active'`,
+                            [session.metadata.userId]
+                        );
 
-                    // Insert subscription record with period details
-                    const result = await pool.query(
-                        `INSERT INTO user_subscriptions 
-                        (user_id, tier_id, stripe_subscription_id, stripe_customer_id, status, 
-                         current_period_start, current_period_end, billing_period)
-                        VALUES ($1, $2, $3, $4, $5, to_timestamp($6), to_timestamp($7), $8)
-                        RETURNING *`,
-                        [
-                            session.metadata.userId,
-                            session.metadata.tierId,
-                            subscription.id,
-                            session.customer,
-                            'active',
-                            subscription.current_period_start,
-                            subscription.current_period_end,
-                            subscription.items.data[0].plan.interval
-                        ]
-                    );
-                    console.log('Created subscription record:', result.rows[0]);
+                        const subscription = await stripe.subscriptions.retrieve(session.subscription);
+                        
+                        // Deactivate existing subscriptions
+                        await client.query(
+                            `UPDATE user_subscriptions 
+                             SET status = 'inactive', 
+                                 ended_at = NOW() 
+                             WHERE user_id = $1 
+                             AND status = 'active'`,
+                            [session.metadata.userId]
+                        );
+
+                        // Insert new subscription with correct billing period
+                        const result = await client.query(
+                            `INSERT INTO user_subscriptions 
+                             (user_id, tier_id, stripe_subscription_id, 
+                              stripe_customer_id, status, billing_period,
+                              current_period_start, current_period_end)
+                             VALUES ($1, $2, $3, $4, $5, $6, 
+                                     to_timestamp($7), to_timestamp($8))
+                             RETURNING *`,
+                            [
+                                session.metadata.userId,
+                                session.metadata.tierId,
+                                subscription.id,
+                                session.customer,
+                                'active',
+                                session.metadata.billingPeriod, // Use the billing period from metadata
+                                subscription.current_period_start,
+                                subscription.current_period_end
+                            ]
+                        );
+
+                        // Reset daily generations for the new subscription
+                        await client.query(
+                            `DELETE FROM daily_generations 
+                             WHERE user_id = $1 
+                             AND date = CURRENT_DATE`,
+                            [session.metadata.userId]
+                        );
+
+                        await client.query('COMMIT');
+                        console.log('Created new subscription record:', result.rows[0]);
+                    } catch (error) {
+                        await client.query('ROLLBACK');
+                        throw error;
+                    } finally {
+                        client.release();
+                    }
                     break;
                 }
             }
@@ -128,7 +165,6 @@ app.post('/api/subscription/webhook',
             res.json({ received: true });
         } catch (err) {
             console.error('Webhook Error:', err);
-            console.error('Raw request body:', req.body);
             return res.status(400).send(`Webhook Error: ${err.message}`);
         }
     }
@@ -1970,9 +2006,10 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
             // First check current count before incrementing
             const currentCount = await client.query(
                 `SELECT count FROM daily_generations 
-                 WHERE user_id = $1 AND date = $2
+                 WHERE user_id = $1 
+                 AND date = CURRENT_DATE AT TIME ZONE 'UTC'
                  FOR UPDATE`,
-                [req.user.userId, today]
+                [req.user.userId]
             );
 
             const usedToday = parseInt(currentCount.rows[0]?.count || 0);
@@ -2206,10 +2243,23 @@ app.get('/api/subscription/tiers', async (req, res) => {
 app.get('/api/subscription/current', authenticateTokenWithAutoRefresh, async (req, res) => {
     try {
         const result = await pool.query(
-            'SELECT * FROM user_subscriptions WHERE user_id = $1 AND status = $2',
-            [req.user.userId, 'active']
+            `SELECT us.*, st.name as tier_name, st.features
+             FROM user_subscriptions us
+             JOIN subscription_tiers st ON us.tier_id = st.id
+             WHERE us.user_id = $1 AND us.status = 'active'
+             ORDER BY us.created_at DESC
+             LIMIT 1`,
+            [req.user.userId]
         );
-        res.json(result.rows[0] || null);
+
+        if (!result.rows.length) {
+            return res.json(null);
+        }
+
+        const subscription = result.rows[0];
+        console.log('Current subscription:', subscription);
+
+        res.json(subscription);
     } catch (error) {
         console.error('Failed to fetch subscription:', error);
         res.status(500).json({ error: 'Failed to fetch subscription' });
@@ -2218,22 +2268,42 @@ app.get('/api/subscription/current', authenticateTokenWithAutoRefresh, async (re
 
 app.post('/api/subscription/create-checkout', authenticateTokenWithAutoRefresh, async (req, res) => {
     const { tierId, billingPeriod } = req.body;
+    const client = await pool.connect();
+
     try {
+        await client.query('BEGIN');
         console.log('Creating checkout for:', { tierId, billingPeriod });
         
-        const tier = await pool.query('SELECT * FROM subscription_tiers WHERE id = $1', [tierId]);
+        // Get tier details
+        const tier = await client.query(`
+            SELECT id, name, 
+                   stripe_price_id_monthly, 
+                   stripe_price_id_annual,
+                   monthly_price, annual_price
+            FROM subscription_tiers 
+            WHERE id = $1
+            FOR UPDATE`, 
+            [tierId]
+        );
         
         if (!tier.rows[0]) {
+            await client.query('ROLLBACK');
             return res.status(404).json({ error: 'Subscription tier not found' });
         }
 
-        // If it's the free tier, directly create subscription without Stripe checkout
+        // Just mark existing subscriptions as inactive
+        await client.query(
+            `UPDATE user_subscriptions 
+             SET status = 'inactive'
+             WHERE user_id = $1 
+             AND status = 'active'`,
+            [req.user.userId]
+        );
+
+        // If it's the free tier, handle without Stripe
         if (tier.rows[0].name.toLowerCase() === 'free') {
-            const client = await pool.connect();
             try {
-                await client.query('BEGIN');
-        
-                // Create the subscription
+                // Create free subscription with correct billing period
                 const result = await client.query(
                     `INSERT INTO user_subscriptions 
                     (user_id, tier_id, status, billing_period, 
@@ -2242,18 +2312,17 @@ app.post('/api/subscription/create-checkout', authenticateTokenWithAutoRefresh, 
                     RETURNING *`,
                     [req.user.userId, tierId, 'active', billingPeriod]
                 );
-        
-                // Initialize daily_generations record
-                const today = new Date().toISOString().split('T')[0];
+
+                // Reset daily_generations
                 await client.query(
                     `INSERT INTO daily_generations (user_id, date, count)
-                     VALUES ($1, $2, 0)
-                     ON CONFLICT (user_id, date) DO NOTHING`,
-                    [req.user.userId, today]
+                     VALUES ($1, CURRENT_DATE, 0)
+                     ON CONFLICT (user_id, date) 
+                     DO UPDATE SET count = 0`,
+                    [req.user.userId]
                 );
-        
+
                 await client.query('COMMIT');
-        
                 return res.json({ 
                     success: true, 
                     subscription: result.rows[0],
@@ -2262,23 +2331,26 @@ app.post('/api/subscription/create-checkout', authenticateTokenWithAutoRefresh, 
             } catch (error) {
                 await client.query('ROLLBACK');
                 throw error;
-            } finally {
-                client.release();
             }
         }
 
-        // For paid tiers, continue with Stripe checkout
-        const priceId = billingPeriod === 'monthly' 
-            ? tier.rows[0].stripe_price_id_monthly 
-            : tier.rows[0].stripe_price_id_annual;
+        // For paid tiers, ensure we use the correct price ID based on billing period
+        const priceId = billingPeriod === 'annual' 
+            ? tier.rows[0].stripe_price_id_annual 
+            : tier.rows[0].stripe_price_id_monthly;
 
-        // Make sure we have a valid frontend URL
+        if (!priceId) {
+            await client.query('ROLLBACK');
+            throw new Error(`No Stripe price ID found for ${billingPeriod} billing period`);
+        }
+
         const frontendURL = process.env.FRONTEND_URL || 'http://localhost:3001';
         
-        console.log('Creating session with:', {
+        console.log('Creating Stripe session with:', {
             priceId,
-            successUrl: `${frontendURL}/subscription?success=true`,
-            cancelUrl: `${frontendURL}/subscription?canceled=true`
+            billingPeriod,
+            tierName: tier.rows[0].name,
+            price: billingPeriod === 'annual' ? tier.rows[0].annual_price : tier.rows[0].monthly_price
         });
 
         const session = await stripe.checkout.sessions.create({
@@ -2293,18 +2365,23 @@ app.post('/api/subscription/create-checkout', authenticateTokenWithAutoRefresh, 
             cancel_url: `${frontendURL}/subscription?canceled=true`,
             metadata: {
                 userId: req.user.userId,
-                tierId: tierId
+                tierId: tierId,
+                billingPeriod: billingPeriod // Add billing period to metadata
             }
         });
 
+        await client.query('COMMIT');
         console.log('Created checkout session:', session.id);
         res.json({ url: session.url });
     } catch (error) {
+        await client.query('ROLLBACK');
         console.error('Subscription creation failed:', error);
         res.status(400).json({ 
             error: 'Failed to create subscription',
             details: error.message
         });
+    } finally {
+        client.release();
     }
 });
 
@@ -2330,8 +2407,9 @@ app.get('/api/user/remaining-generations', authenticateTokenWithAutoRefresh, asy
         const today = new Date().toISOString().split('T')[0];
         const currentCount = await client.query(
             `SELECT count FROM daily_generations 
-             WHERE user_id = $1 AND date = $2`,
-            [req.user.userId, today]
+             WHERE user_id = $1 
+             AND date = CURRENT_DATE AT TIME ZONE 'UTC'`,
+            [req.user.userId]
         );
 
         const usedToday = parseInt(currentCount.rows[0]?.count || 0);
