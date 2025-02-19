@@ -2304,6 +2304,44 @@ app.post('/api/subscription/create-checkout', authenticateTokenWithAutoRefresh, 
     }
 });
 
+app.get('/api/user/remaining-generations', authenticateTokenWithAutoRefresh, async (req, res) => {
+    const client = await pool.connect();
+    
+    try {
+        // Get user's subscription tier
+        const subscription = await client.query(
+            `SELECT st.name as tier_name
+             FROM user_subscriptions us
+             JOIN subscription_tiers st ON us.tier_id = st.id
+             WHERE us.user_id = $1 AND us.status = 'active'`,
+            [req.user.userId]
+        );
+
+        // If not on free tier, return -1 to indicate unlimited
+        if (!subscription.rows[0] || subscription.rows[0].tier_name.toLowerCase() !== 'free') {
+            return res.json({ remaining: -1 });
+        }
+
+        // Get today's usage for free tier
+        const today = new Date().toISOString().split('T')[0];
+        const currentCount = await client.query(
+            `SELECT count FROM daily_generations 
+             WHERE user_id = $1 AND date = $2`,
+            [req.user.userId, today]
+        );
+
+        const usedToday = parseInt(currentCount.rows[0]?.count || 0);
+        const remaining = Math.max(0, 10 - usedToday);
+
+        res.json({ remaining });
+    } catch (error) {
+        console.error('Error fetching remaining generations:', error);
+        res.status(500).json({ error: 'Failed to fetch remaining generations' });
+    } finally {
+        client.release();
+    }
+});
+
 
 
 
