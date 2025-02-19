@@ -1937,7 +1937,8 @@ app.post('/save_generated_image', authenticateTokenWithAutoRefresh, async (req, 
 
 app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) => {
     const client = await pool.connect();
-    let remainingGenerations = -1; // Default for paid tiers
+    let remainingGenerations = -1;
+    let isLastGeneration = false;
     
     try {
         await client.query('BEGIN');
@@ -1994,6 +1995,8 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
                 [req.user.userId, today]
             );
 
+            // Check if this will be the last allowed generation
+            isLastGeneration = usedToday === 9;
             remainingGenerations = 9 - usedToday;
         }
 
@@ -2071,7 +2074,8 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
         res.json({
             image: s3Result.url,
             imageId: result.rows[0].id,
-            remainingGenerations: remainingGenerations
+            remainingGenerations,
+            isLastGeneration
         });
 
     } catch (error) {
