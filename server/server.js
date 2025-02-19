@@ -1940,7 +1940,6 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
     let remainingGenerations = -1; // Default for paid tiers
     
     try {
-        // Start transaction immediately
         await client.query('BEGIN');
 
         // Check subscription tier with row lock
@@ -1953,24 +1952,31 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
             [req.user.userId]
         );
 
+        // If no subscription at all, return error
+        if (!subscription.rows.length) {
+            await client.query('ROLLBACK');
+            return res.status(403).json({
+                error: 'No active subscription',
+                message: 'Please subscribe to generate images',
+                remainingGenerations: 0
+            });
+        }
+
         // Handle free tier limits
         if (subscription.rows[0]?.tier_name.toLowerCase() === 'free') {
             const today = new Date().toISOString().split('T')[0];
             
-            // Increment count or insert new record atomically
-            const dailyGenResult = await client.query(
-                `INSERT INTO daily_generations (user_id, date, count)
-                 VALUES ($1, $2, 1)
-                 ON CONFLICT (user_id, date)
-                 DO UPDATE SET count = daily_generations.count + 1
-                 RETURNING count`,
+            // First check current count before incrementing
+            const currentCount = await client.query(
+                `SELECT count FROM daily_generations 
+                 WHERE user_id = $1 AND date = $2
+                 FOR UPDATE`,
                 [req.user.userId, today]
             );
 
-            const usedToday = parseInt(dailyGenResult.rows[0].count);
-            remainingGenerations = 10 - usedToday;
+            const usedToday = parseInt(currentCount.rows[0]?.count || 0);
 
-            if (usedToday > 10) {
+            if (usedToday >= 10) {
                 await client.query('ROLLBACK');
                 return res.status(403).json({
                     error: 'Daily limit reached',
@@ -1978,6 +1984,17 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
                     remainingGenerations: 0
                 });
             }
+
+            // Increment or create new record
+            await client.query(
+                `INSERT INTO daily_generations (user_id, date, count)
+                 VALUES ($1, $2, 1)
+                 ON CONFLICT (user_id, date)
+                 DO UPDATE SET count = daily_generations.count + 1`,
+                [req.user.userId, today]
+            );
+
+            remainingGenerations = 9 - usedToday;
         }
 
         // Generate image with Replicate

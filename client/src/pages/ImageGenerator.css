@@ -902,3 +902,14 @@ img {
 .upgrade-link:hover {
     opacity: 0.8;
 }
+
+.tier-info-banner.warning {
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+    color: #856404;
+}
+
+.tier-info-banner.warning .upgrade-link {
+    color: #856404;
+    font-weight: 600;
+}

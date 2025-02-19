@@ -133,10 +133,15 @@ const ImageGenerator = () => {
 const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Check remaining generations before making the request
+    // Check if user has any subscription
+    if (!currentSubscription) {
+        setError('Please subscribe to start generating images');
+        return;
+    }
+
+    // Check remaining generations for free tier
     if (currentSubscription?.tier_name === 'Free' && remainingGenerations <= 0) {
         setError('You have reached your daily limit. Upgrade for unlimited generations!');
-        // Show upgrade modal or redirect
         return;
     }
 
@@ -266,8 +271,14 @@ const LoadingText = LoadingSpirals;
 
   return (
     <div className="image-generator">
-        {/* Move banner outside the grid container */}
-        {currentSubscription?.tier_name === 'Free' && (
+        {!currentSubscription ? (
+            <div className="tier-info-banner warning">
+                <p>You need a subscription to generate images</p>
+                <a href="/subscription" className="upgrade-link">
+                    Subscribe Now →
+                </a>
+            </div>
+        ) : currentSubscription?.tier_name === 'Free' && (
             <div className="tier-info-banner">
                 <p>
                     Free Tier: {remainingGenerations !== null 
