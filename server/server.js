@@ -160,6 +160,56 @@ app.post('/api/subscription/webhook',
                     }
                     break;
                 }
+                case 'customer.subscription.deleted':
+                case 'customer.subscription.updated': {
+                    const subscription = event.data.object;
+                    const client = await pool.connect();
+                    
+                    try {
+                        await client.query('BEGIN');
+                
+                        // Get user ID from metadata
+                        const userSubscription = await client.query(
+                            `SELECT user_id FROM user_subscriptions 
+                             WHERE stripe_subscription_id = $1`,
+                            [subscription.id]
+                        );
+                
+                        if (!userSubscription.rows.length) {
+                            throw new Error('Subscription not found');
+                        }
+                
+                        const userId = userSubscription.rows[0].user_id;
+                
+                        // Deactivate current subscription
+                        await client.query(
+                            `UPDATE user_subscriptions 
+                             SET status = 'inactive'
+                             WHERE user_id = $1 AND status = 'active'`,
+                            [userId]
+                        );
+                
+                        // Ensure user falls back to free tier
+                        await ensureFreeTierFallback(client, userId);
+                
+                        // Reset daily_generations for the new free tier
+                        await client.query(
+                            `INSERT INTO daily_generations (user_id, date, count)
+                             VALUES ($1, CURRENT_DATE, 0)
+                             ON CONFLICT (user_id, date) 
+                             DO UPDATE SET count = 0`,
+                            [userId]
+                        );
+                
+                        await client.query('COMMIT');
+                    } catch (error) {
+                        await client.query('ROLLBACK');
+                        throw error;
+                    } finally {
+                        client.release();
+                    }
+                    break;
+                }
             }
 
             res.json({ received: true });
@@ -508,6 +558,31 @@ app.post('/signup', async (req, res) => {
         // Send verification email
         await sendVerificationEmail(email, verificationToken);
         
+        // Get free tier ID
+        const freeTier = await client.query(
+            `SELECT id FROM subscription_tiers WHERE name = 'Free'`
+        );
+
+        if (!freeTier.rows.length) {
+            throw new Error('Free tier not found');
+        }
+
+        // Create initial free subscription
+        await client.query(
+            `INSERT INTO user_subscriptions 
+            (user_id, tier_id, status, billing_period, 
+             current_period_start, current_period_end)
+            VALUES ($1, $2, 'active', 'monthly', NOW(), NOW() + INTERVAL '100 years')`,
+            [result.rows[0].id, freeTier.rows[0].id]
+        );
+
+        // Initialize daily_generations
+        await client.query(
+            `INSERT INTO daily_generations (user_id, date, count)
+             VALUES ($1, CURRENT_DATE, 0)`,
+            [result.rows[0].id]
+        );
+
         await client.query('COMMIT');
 
         res.status(201).json({
@@ -2425,6 +2500,47 @@ app.get('/api/user/remaining-generations', authenticateTokenWithAutoRefresh, asy
 });
 
 
+// Add this helper function
+const ensureFreeTierFallback = async (client, userId) => {
+    try {
+        // Get the free tier ID
+        const freeTier = await client.query(
+            `SELECT id FROM subscription_tiers WHERE name = 'Free'`
+        );
+
+        if (!freeTier.rows.length) {
+            throw new Error('Free tier not found in subscription_tiers');
+        }
+
+        // Check if user has any active subscription
+        const activeSubscription = await client.query(
+            `SELECT id FROM user_subscriptions 
+             WHERE user_id = $1 AND status = 'active'`,
+            [userId]
+        );
+
+        // If no active subscription, create free tier subscription
+        if (!activeSubscription.rows.length) {
+            await client.query(
+                `INSERT INTO user_subscriptions 
+                (user_id, tier_id, status, billing_period, 
+                 current_period_start, current_period_end)
+                VALUES ($1, $2, 'active', 'monthly', NOW(), NOW() + INTERVAL '100 years')`,
+                [userId, freeTier.rows[0].id]
+            );
+
+            // Initialize daily_generations with 0 count
+            await client.query(
+                `INSERT INTO daily_generations (user_id, date, count)
+                 VALUES ($1, CURRENT_DATE, 0)
+                 ON CONFLICT (user_id, date) DO NOTHING`,
+                [userId]
+            );
+        }
+    } catch (error) {
+        throw error;
+    }
+};
 
 
 // Start server

@@ -14,8 +14,10 @@ const Subscription = () => {
     } = useSubscription();
     
     const [billingPeriod, setBillingPeriod] = useState('monthly');
+    const [selectedTierId, setSelectedTierId] = useState(null);
 
     const handlePlanSelect = async (tierId) => {
+        setSelectedTierId(tierId);
         try {
             console.log('Starting subscription upgrade process...');
             console.log('User ID:', localStorage.getItem('userId'));
@@ -45,9 +47,15 @@ const Subscription = () => {
             console.log('Redirecting to checkout URL:', data.url);
             window.location.href = data.url;
         } catch (error) {
+            setSelectedTierId(null); // Reset on error
             console.error('Subscription error:', error);
             alert('Failed to process subscription. Please try again.');
         }
+    };
+
+    const handleBillingPeriodChange = (period) => {
+        setBillingPeriod(period);
+        setSelectedTierId(null); // Clear selection when switching billing period
     };
 
     if (isLoading) {
@@ -59,38 +67,66 @@ const Subscription = () => {
             <div className="content-area">
                 <div className="plans-header">
                     <h2>Choose Your Plan</h2>
-                    <div className="billing-toggle">
-                        <button 
-                            className={billingPeriod === 'monthly' ? 'active' : ''}
-                            onClick={() => setBillingPeriod('monthly')}
-                        >
-                            Monthly
-                        </button>
-                        <button 
-                            className={billingPeriod === 'annual' ? 'active' : ''}
-                            onClick={() => setBillingPeriod('annual')}
-                        >
-                            Annually
-                            <span className="save-badge">Save 20%</span>
-                        </button>
-                    </div>
+                    {/* Only show billing toggle if there are paid plans available */}
+                    {availableTiers.some(tier => tier.monthly_price > 0) && (
+                        <div className="billing-toggle-container">
+                            <div className="billing-toggle">
+                                <button 
+                                    className={billingPeriod === 'monthly' ? 'active' : ''}
+                                    onClick={() => handleBillingPeriodChange('monthly')}
+                                >
+                                    Monthly Billing
+                                </button>
+                                <button 
+                                    className={billingPeriod === 'annual' ? 'active' : ''}
+                                    onClick={() => handleBillingPeriodChange('annual')}
+                                >
+                                    Annual Billing
+                                    <span className="save-badge">Save 20%</span>
+                                </button>
+                            </div>
+                            <div className="billing-hint">
+                                Click to switch between monthly and annual billing options
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <div className="plans-grid">
                     {availableTiers.map((tier) => (
                         <div 
                             key={tier.id} 
-                            className={`plan-card ${currentSubscription?.tierId === tier.id ? 'current' : ''}`}
+                            className={`plan-card ${
+                                currentSubscription?.tier_name === tier.name 
+                                    ? 'current' 
+                                    : selectedTierId === tier.id 
+                                        ? 'selected' 
+                                        : ''
+                            }`}
+                            onClick={() => {
+                                if (currentSubscription?.tier_name !== tier.name) {
+                                    setSelectedTierId(tier.id);
+                                }
+                            }}
                         >
                             <div className="plan-header">
                                 <h3>{tier.name}</h3>
                                 <div className="plan-price">
-                                    <span className="amount">
-                                        ${billingPeriod === 'monthly' ? 
-                                            Number(tier.monthly_price).toFixed(2) : 
-                                            Number(tier.annual_price).toFixed(2)}
-                                    </span>
-                                    <span className="period">/{billingPeriod === 'monthly' ? 'month' : 'year'}</span>
+                                    {tier.name.toLowerCase() === 'free' ? (
+                                        <>
+                                            <span className="amount">$0</span>
+                                            <span className="period">/month</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="amount">
+                                                ${billingPeriod === 'monthly' ? 
+                                                    Number(tier.monthly_price).toFixed(2) : 
+                                                    Number(tier.annual_price).toFixed(2)}
+                                            </span>
+                                            <span className="period">/{billingPeriod === 'monthly' ? 'month' : 'year'}</span>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                             
@@ -105,11 +141,20 @@ const Subscription = () => {
                             </ul>
 
                             <button 
-                                className={`plan-button ${currentSubscription?.tierId === tier.id ? 'current' : ''}`}
+                                className={`plan-button ${currentSubscription?.tier_name === tier.name ? 'current' : ''}`}
                                 onClick={() => handlePlanSelect(tier.id)}
-                                disabled={currentSubscription?.tierId === tier.id}
+                                disabled={currentSubscription?.tier_name === tier.name}
                             >
-                                {currentSubscription?.tierId === tier.id ? 'Current Plan' : 'Upgrade'}
+                                {currentSubscription?.tier_name === tier.name ? (
+                                    <>
+                                        <span>Current Plan</span>
+                                        <span className="billing-info">
+                                            {currentSubscription.billing_period === 'monthly' ? 'Monthly' : 'Annual'} billing
+                                        </span>
+                                    </>
+                                ) : (
+                                    `${currentSubscription?.tier_name === 'Free' ? 'Upgrade to' : 'Switch to'} ${tier.name}`
+                                )}
                             </button>
                         </div>
                     ))}

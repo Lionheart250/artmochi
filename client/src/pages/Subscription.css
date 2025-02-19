@@ -23,35 +23,50 @@
 
 .billing-toggle {
     display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 30px;
+    background: #f5f5f5;
+    padding: 4px;
+    border-radius: 30px;
+    margin: 20px auto;
+    width: fit-content;
+    gap: 8px;
 }
 
 .billing-toggle button {
     padding: 12px 24px;
-    border-radius: 20px;
-    border: 1px solid var(--border-color);
-    background: var(--background-color);
-    color: var(--text-color);
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
-    font-size: 1rem;
+    position: relative;
+    background: transparent;
+    color: #666;
 }
 
 .billing-toggle button.active {
-    background: var(--primary-color);
+    background: #fe2c55;
     color: white;
-    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(254, 44, 85, 0.3);
+}
+
+.billing-toggle button:hover:not(.active) {
+    background: rgba(254, 44, 85, 0.1);
+    color: #fe2c55;
 }
 
 .save-badge {
-    margin-left: 8px;
-    padding: 2px 6px;
+    position: absolute;
+    top: -10px;
+    right: -10px;
     background: #2ecc71;
-    border-radius: 12px;
-    font-size: 0.8rem;
     color: white;
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: bold;
+    transform: rotate(12deg);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .plans-grid {
@@ -61,21 +76,75 @@
     padding: 20px 0;
 }
 
+/* Base plan card styles */
 .plan-card {
+    transition: all 0.3s ease;
+    position: relative;
+    cursor: pointer;
+    border: 2px solid transparent;
     background: var(--card-background);
     border-radius: 12px;
     padding: 30px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+/* Current plan styles */
+.plan-card.current {
+    border: 2px solid #fe2c55;
+    transform: scale(1.02);
+    box-shadow: 0 4px 20px rgba(254, 44, 85, 0.15);
+    cursor: default;
+}
+
+/* Selected (but not current) plan styles */
+.plan-card.selected:not(.current) {
+    border: 2px solid #4CAF50;
+    background: rgba(76, 175, 80, 0.05);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(76, 175, 80, 0.2);
+}
+
+/* Hover effect for non-current plans */
+.plan-card:hover:not(.current):not(.selected) {
+    transform: translateY(-5px);
+    border-color: #4CAF50;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Plan card hover and active states */
 .plan-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
 }
 
-.plan-card.current {
-    border: 2px solid var(--primary-color);
+/* Add a "Current Plan" badge */
+.plan-card.current::before {
+    content: 'Current Plan';
+    position: absolute;
+    top: -12px;
+    right: -12px;
+    background: #fe2c55;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Add a "Selected" badge for the selected plan */
+.plan-card.selected:not(.current)::before {
+    content: 'Click to Switch';
+    position: absolute;
+    top: -12px;
+    right: -12px;
+    background: #4CAF50;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .plan-header {
@@ -116,6 +185,7 @@
     color: var(--text-color);
 }
 
+/* Button styles */
 .plan-button {
     width: 100%;
     padding: 14px;
@@ -134,9 +204,41 @@
     background: var(--primary-color-hover);
 }
 
+.plan-button:not(.current) {
+    background: #fe2c55;
+    color: white;
+    transition: all 0.2s ease;
+}
+
+/* Selected plan button */
+.plan-card.selected:not(.current) .plan-button {
+    background: #4CAF50;
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+/* Current plan button */
 .plan-button.current {
-    background: var(--background-secondary);
+    background: #2c3e50;
+    color: white;
     cursor: default;
+}
+
+.plan-button:not(.current):hover {
+    background: #e61e4d;
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(254, 44, 85, 0.3);
+}
+
+.plan-button.current {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    background-color: #2c3e50;
+    cursor: default;
+    color: white;
 }
 
 .subscription-loading {
@@ -144,6 +246,25 @@
     padding: 40px;
     font-size: 1.2rem;
     color: var(--text-secondary);
+}
+
+.billing-info {
+    display: block;
+    font-size: 0.8rem;
+    opacity: 0.8;
+    margin-top: 4px;
+}
+
+.billing-toggle-container {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.billing-hint {
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 8px;
+    font-style: italic;
 }
 
 @media (max-width: 768px) {
