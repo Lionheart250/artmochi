@@ -2208,20 +2208,42 @@ app.post('/api/subscription/create-checkout', authenticateTokenWithAutoRefresh, 
 
         // If it's the free tier, directly create subscription without Stripe checkout
         if (tier.rows[0].name.toLowerCase() === 'free') {
-            const result = await pool.query(
-                `INSERT INTO user_subscriptions 
-                (user_id, tier_id, status, billing_period, 
-                 current_period_start, current_period_end)
-                VALUES ($1, $2, $3, $4, NOW(), NOW() + INTERVAL '100 years')
-                RETURNING *`,
-                [req.user.userId, tierId, 'active', billingPeriod]
-            );
-
-            return res.json({ 
-                success: true, 
-                subscription: result.rows[0],
-                isFree: true
-            });
+            const client = await pool.connect();
+            try {
+                await client.query('BEGIN');
+        
+                // Create the subscription
+                const result = await client.query(
+                    `INSERT INTO user_subscriptions 
+                    (user_id, tier_id, status, billing_period, 
+                     current_period_start, current_period_end)
+                    VALUES ($1, $2, $3, $4, NOW(), NOW() + INTERVAL '100 years')
+                    RETURNING *`,
+                    [req.user.userId, tierId, 'active', billingPeriod]
+                );
+        
+                // Initialize daily_generations record
+                const today = new Date().toISOString().split('T')[0];
+                await client.query(
+                    `INSERT INTO daily_generations (user_id, date, count)
+                     VALUES ($1, $2, 0)
+                     ON CONFLICT (user_id, date) DO NOTHING`,
+                    [req.user.userId, today]
+                );
+        
+                await client.query('COMMIT');
+        
+                return res.json({ 
+                    success: true, 
+                    subscription: result.rows[0],
+                    isFree: true
+                });
+            } catch (error) {
+                await client.query('ROLLBACK');
+                throw error;
+            } finally {
+                client.release();
+            }
         }
 
         // For paid tiers, continue with Stripe checkout
