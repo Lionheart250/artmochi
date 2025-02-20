@@ -175,10 +175,10 @@ const Header = () => {
                                     <UpgradeIcon className="nav-icon" />
                                     <span>Upgrade</span>
                                 </NavLink>
-                                <NavLink to="/credits" className="side-nav-link">
+                                {/*<NavLink to="/credits" className="side-nav-link">
                                     <CreditsIcon className="nav-icon" />
                                     <span>Credits</span>
-                                </NavLink>
+                                </NavLink> */}
                                 <NavLink to="/settings" className="side-nav-link">
                                     <SettingsIcon className="nav-icon" />
                                     <span>Settings</span>
@@ -204,7 +204,7 @@ const Header = () => {
                                         <div className="dropdown-menu">
                                             <NavLink to={`/profile/${user.userId}`} className="side-nav-link"> Profile </NavLink>
                                             <NavLink to="/subscription">Upgrade</NavLink>
-                                            <NavLink to="/credits">Credits</NavLink>
+                                           {/*} <NavLink to="/credits">Credits</NavLink> */}
                                             <NavLink to="/settings">Settings</NavLink>
                                             <button onClick={handleLogout} className="logout-btn">Log out</button>
                                         </div>
