@@ -269,10 +269,84 @@
 
 @media (max-width: 768px) {
     .subscription-page {
-        padding-left: 0;
+        padding-left: 60px; /* Account for collapsed side nav */
+        padding-bottom: 60px; /* Space for bottom nav */
+    }
+
+    .subscription-page .content-area {
+        padding: 20px 16px;
+    }
+
+    .plans-header h2 {
+        font-size: 2rem;
+        margin-bottom: 16px;
     }
 
     .plans-grid {
         grid-template-columns: 1fr;
+        gap: 16px;
+        padding: 10px;
+    }
+
+
+}
+
+@media (max-width: 480px) {
+    .subscription-page {
+        padding-left: 0; /* Remove side padding when nav moves to bottom */
+    }
+
+    .plans-header h2 {
+        font-size: 1.75rem;
+    }
+
+    .plan-card {
+        padding: 20px;
+        margin: 0 8px;
+    }
+
+    .plan-header h3 {
+        font-size: 1.5rem;
+    }
+
+    .plan-price .amount {
+        font-size: 2rem;
+    }
+
+    .plan-price .period {
+        font-size: 0.9rem;
+    }
+
+    .plan-features {
+        margin: 16px 0;
+    }
+
+    .plan-features li {
+        padding: 8px 0;
+        font-size: 0.9rem;
+    }
+
+    .plan-button {
+        padding: 12px;
+        font-size: 0.9rem;
+        margin-top: 16px;
+    }
+
+    .save-badge {
+        font-size: 0.65rem;
+        padding: 3px 6px;
+    }
+
+    .plan-card.current::before,
+    .plan-card.selected:not(.current)::before {
+        font-size: 0.7rem;
+        padding: 3px 8px;
+        top: -10px;
+        right: -8px;
+    }
+
+    .billing-hint {
+        font-size: 0.8rem;
+        margin: 6px 8px 0;
     }
 }

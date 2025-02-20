@@ -1,6 +1,10 @@
 .profile-container {
-    max-width: 1100px;
-    margin: auto;
+    max-width: 1300px;
+    margin-top: auto;
+    margin-bottom: auto;
+    margin-right: auto;
+    margin-left: 15rem;
+
     padding: 32px 24px;
     background-color: #000000;
     color: #ffffff;
@@ -854,4 +858,139 @@ textarea.profile-edit-input {
 
 .stat-item {
     cursor: pointer;
+}
+
+/* Update existing responsive styles */
+@media screen and (max-width: 1024px) {
+    .profile-container {
+        padding: 24px 16px;
+        margin-top: auto;
+        margin-bottom: auto;
+        margin-right: auto;
+        margin-left: 60px; /* Account for collapsed side nav */
+        width: 90%;
+    }
+
+    .profile-header {
+        gap: 24px;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .profile-info {
+        align-items: center;
+    }
+
+    .profile-edit-btn {
+        align-self: center;
+    }
+
+    .profile-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns for tablet */
+        gap: 8px;
+        padding: 0 10px;
+    }
+
+    .profile-stats {
+        justify-content: center;
+    }
+
+    /* Modal adjustments for tablet */
+    .profile-modal-main {
+        flex-direction: column;
+    }
+
+    .profile-modal-image-container {
+        height: 50vh;
+    }
+
+    .profile-modal-info {
+        height: 50vh;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .profile-container {
+        padding: 16px 8px;
+        margin-top: auto;
+        margin-bottom: auto;
+        margin-right: auto;
+        margin-left: 78px;
+        width: 80%;
+    }
+
+    .profile-picture-section {
+        width: 150px;
+        height: 150px;
+    }
+
+    .profile-edit-picture,
+    .profile-profile-picture {
+        width: 150px;
+        height: 150px;
+    }
+
+    .profile-username {
+        font-size: 24px;
+    }
+
+    .profile-bio {
+        font-size: 14px;
+        line-height: 20px;
+    }
+
+    .profile-grid {
+        grid-template-columns: 1fr; /* Single column for mobile */
+        gap: 4px;
+        padding: 0 4px;
+    }
+
+    .stat-item {
+        font-size: 14px;
+    }
+
+    .stat-number {
+        font-size: 16px;
+    }
+
+    .stat-label {
+        font-size: 14px;
+    }
+
+    /* Modal adjustments for mobile */
+    .profile-modal-content {
+        height: 100vh;
+        border-radius: 0;
+    }
+
+    .profile-modal-image-container {
+        height: 40vh;
+    }
+
+    .profile-modal-info {
+        height: 60vh;
+    }
+
+    .profile-modal-nav-left,
+    .profile-modal-nav-right {
+        font-size: 1.5rem;
+    }
+
+    /* Followers/Following modal adjustments */
+    .modal-content {
+        width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+
+    .user-list-item {
+        padding: 8px 12px;
+    }
+
+    .user-info img {
+        width: 36px;
+        height: 36px;
+    }
 }

@@ -2,8 +2,9 @@
     display: flex;
     gap: 2rem;
     padding: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
+    margin-left: 13rem;
+    margin-top: 5rem;
+    max-width: 1800px;
     background: #1f1f1f;
     border-radius: 8px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
@@ -132,17 +133,115 @@
     border-radius: 8px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .settings-container {
         flex-direction: column;
+        padding: 1rem;
+        margin-left: 4.5rem;
+        margin-top: 5rem;
+        border-radius: 0;
+        gap: 1rem;
     }
 
     .settings-sidebar {
         width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.5rem;
     }
 
     .settings-nav-btn {
-        text-align: center;
+        flex: 1;
+        min-width: calc(50% - 0.5rem);
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    .settings-content {
+        padding: 1rem;
+    }
+
+    .settings-profile-container {
+        width: 200px;
+        height: 200px;
+    }
+
+    .settings-form {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .settings-container {
+        padding: 0.5rem;
+        margin-left: 4.5rem;
+        margin-top: 5rem;
+    }
+
+    .settings-nav-btn {
+        min-width: 100%;
+        padding: 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    .settings-content {
+        padding: 0.75rem;
+    }
+
+    .settings-profile-container {
+        width: 150px;
+        height: 150px;
+    }
+
+    .form-group input {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .settings-form button {
+        padding: 10px;
+        font-size: 0.9rem;
+    }
+
+    .subscription-info {
+        padding: 12px;
+    }
+
+    .subscription-info .info-item {
+        margin-bottom: 12px;
+    }
+
+    .subscription-info .info-item label {
+        font-size: 0.85rem;
+    }
+
+    .subscription-info .info-item p {
+        font-size: 0.9rem;
+    }
+
+    .subscription-info .settings-btn {
+        padding: 10px 16px;
+        font-size: 0.85rem;
+        width: 100%;
+    }
+
+    .settings-message {
+        padding: 8px;
+        font-size: 0.85rem;
+    }
+
+    .password-requirements {
+        font-size: 0.75rem;
+    }
+
+    .password-requirements li {
+        font-size: 0.75rem;
+        margin-bottom: 0.2rem;
+    }
+
+    .current-email {
+        padding: 0.75rem;
+        font-size: 0.9rem;
     }
 }
 

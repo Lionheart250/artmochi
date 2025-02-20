@@ -824,4 +824,71 @@ header {
     }
 }
 
+/* Media queries for top header only */
+@media screen and (max-width: 1024px) {
+    .top-header .logo {
+        font-size: 12px;
+    }
+
+    .top-header .nav-links {
+        gap: 8px;
+    }
+
+    .top-header .nav-links a {
+        padding: 0px 0px;
+        font-size: 14px;
+        height: 32px;
+    }
+
+    .top-header .header-auth-buttons {
+        gap: 8px;
+    }
+
+    .top-header .auth-link {
+        padding: 0px 0px;
+        min-width: 60px;
+        font-size: 14px;
+    }
+
+    .top-header .header-profile-pic {
+        width: 48px;
+        height: 48px;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .top-header .logo {
+        font-size: 16px;
+    }
+
+    .top-header .nav-links {
+        gap: 2px;
+    }
+
+    .top-header .nav-links a {
+        padding: 4px;
+        font-size: 12px;
+        height: 28px;
+    }
+
+    .top-header .auth-link {
+        padding: 4px;
+        min-width: 40px;
+        font-size: 12px;
+    }
+
+    .top-header .header-username {
+        display: none;
+    }
+
+    .top-header .header-profile-pic {
+        width: 48px;
+        height: 48px;
+    }
+
+    .top-header .header-container {
+        padding: 0 4px;
+    }
+}
+
 
