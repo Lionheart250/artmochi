@@ -442,6 +442,7 @@
 /* Shared styles for all select elements */
 .gallery-sort,
 .gallery-time-range,
+.gallery-aspect-ratio,
 .gallery-category {
     padding: 8px 16px;
     border: 1px solid #2f2f2f;
@@ -532,4 +533,25 @@
     .gallery-category {
         width: 100%;
     }
+}
+
+/* New styles */
+.gallery-image-metadata {
+    margin: 10px 0;
+    padding: 10px;
+    background: rgba(0,0,0,0.05);
+    border-radius: 8px;
+}
+
+.gallery-image-category {
+    display: inline-block;
+    padding: 4px 8px;
+    background: #fe2c55;
+    color: white;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.gallery-category option {
+    padding: 4px;
 }

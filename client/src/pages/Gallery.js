@@ -32,6 +32,7 @@ const Gallery = () => {
     const [sortType, setSortType] = useState('newest');
     const [timeRange, setTimeRange] = useState('week');
     const [selectedCategory, setSelectedCategory] = useState('all');
+    const [selectedAspectRatio, setSelectedAspectRatio] = useState('all'); // Add this
     const [userLikedComments, setUserLikedComments] = useState(new Set());
     const [selectionMode, setSelectionMode] = useState(false);
     const [selectedImages, setSelectedImages] = useState(new Set());
@@ -648,9 +649,6 @@ const Gallery = () => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
     
-    const columnImages = createColumns(images, columns);
-
-    
     // Add admin controls
     const handleBulkDelete = async () => {
         if (!isAdmin || selectedImages.size === 0) return;
@@ -734,7 +732,7 @@ const Gallery = () => {
         await fetchAllCounts(); // Get ALL counts first
     };
 
-    const getImageOrientation = (image) => {
+    const getImageOrientation = async (image) => {
         return new Promise((resolve) => {
             const img = new Image();
             img.onload = function() {
@@ -746,7 +744,12 @@ const Gallery = () => {
                 } else {
                     orientation = 'portrait';
                 }
-                resolve(orientation);
+                
+                // Combine orientation with content category
+                resolve({
+                    aspectRatio: orientation,
+                    contentCategory: image.category || 'other' // Use the category from DB
+                });
             };
             img.src = image.image_url;
         });
@@ -759,8 +762,17 @@ const Gallery = () => {
         
         try {
             const token = localStorage.getItem('token');
+            const params = new URLSearchParams({
+                page: pageNum,
+                limit: 20,
+                sortType: sortType,
+                category: selectedCategory
+            });
+
+            console.log('Fetching images with params:', Object.fromEntries(params));
+
             const response = await fetch(
-                `${process.env.REACT_APP_API_URL}/images?page=${pageNum}&limit=20&sortType=${sortType}`,
+                `${process.env.REACT_APP_API_URL}/images?${params}`,
                 {
                     headers: {
                         ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
@@ -768,21 +780,16 @@ const Gallery = () => {
                 }
             );
             
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const data = await response.json();
+            const newImages = data?.images || [];
             
-            // Process images to add orientation
-            const processedImages = await Promise.all(
-                data.images.map(async (image) => ({
-                    ...image,
-                    orientation: await getImageOrientation(image)
-                }))
-            );
+            // Filter images by aspect ratio client-side
+            const filteredImages = await filterByAspectRatio(newImages, selectedAspectRatio);
             
-            // Filter based on selectedCategory if it's portrait or landscape
-            const filteredImages = selectedCategory === 'all' 
-                ? processedImages 
-                : processedImages.filter(img => img.orientation === selectedCategory);
-    
             setImages(prev => 
                 pageNum === 1 ? filteredImages : [...prev, ...filteredImages]
             );
@@ -791,9 +798,32 @@ const Gallery = () => {
             fetchingRef.current = false;
         } catch (error) {
             console.error('Error fetching images:', error);
+            setError('Failed to load images');
+            setImages(prev => pageNum === 1 ? [] : prev); // Keep existing images if not first page
         } finally {
             setLoading(false);
         }
+    };
+
+    // Add function to filter images by aspect ratio
+    const filterByAspectRatio = async (images, selectedAspectRatio) => {
+        if (selectedAspectRatio === 'all') return images;
+    
+        const imagesWithSpans = await Promise.all(calculateImageSpans(images));
+        
+        return imagesWithSpans.filter(image => {
+            const ratio = image.aspectRatio;
+            switch (selectedAspectRatio) {
+                case 'landscape':
+                    return ratio > 1.2;
+                case 'portrait':
+                    return ratio < 0.8;
+                case 'square':
+                    return ratio >= 0.8 && ratio <= 1.2;
+                default:
+                    return true;
+            }
+        });
     };
 
 // Add effect to fetch counts on mount
@@ -803,7 +833,7 @@ useEffect(() => {
 
     useEffect(() => {
         fetchImagesForPage(page);
-    }, [page, sortType, timeRange, selectedCategory]);
+    }, [page, sortType, timeRange, selectedCategory, selectedAspectRatio]);
     
 
     // Use single useEffect for infinite scroll
@@ -869,6 +899,41 @@ useEffect(() => {
         }
     }, [activeImageId, imageUserDetails]);
 
+    // In Gallery.js, add new state
+    const [availableCategories, setAvailableCategories] = useState([]);
+
+    // Add function to fetch categories
+const fetchCategories = async () => {
+    try {
+        console.log('Fetching categories...');
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/categories`);
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Raw categories data:', data);
+            setAvailableCategories(data);
+            
+            // Log the state after update
+            setTimeout(() => {
+                console.log('Available categories state:', availableCategories);
+            }, 0);
+        } else {
+            console.error('Failed to fetch categories:', response.status);
+        }
+    } catch (error) {
+        console.error('Error fetching categories:', error);
+    }
+};
+
+// Update the useEffect to fetch categories on mount and when navigating back to Gallery
+useEffect(() => {
+    console.log('Gallery component mounted');
+    fetchCategories();
+    
+    // Refresh categories periodically or after navigation
+    const interval = setInterval(fetchCategories, 30000); // Every 30 seconds
+    
+    return () => clearInterval(interval);
+}, []); // Empty dependency array since we only need it on mount/revisit
 
     // 3. Update modal render to use cached data
     const renderUserAvatar = (userId) => {
@@ -901,9 +966,27 @@ useEffect(() => {
         );
     };
 
+    // Add function to organize images into columns
+    const organizeIntoColumns = useCallback((imageList) => {
+        const columns = [[], [], [], []]; // 4 columns
+        imageList.forEach((image, index) => {
+            columns[index % 4].push(image);
+        });
+        return columns;
+    }, []);
+
+    // Update useEffect to set columnImages when images change
+    useEffect(() => {
+        setColumnImages(organizeIntoColumns(images));
+    }, [images, organizeIntoColumns]);
+
+    const [columnImages, setColumnImages] = useState([]); // Add this state
+    const [error, setError] = useState(null);
+
     return (
         <div className="gallery-page">
             <div className="gallery-container">
+                {error && <div className="error-message">{error}</div>}
                 <>
                     <div className="gallery-controls">
                         <div className="gallery-filter-controls">
@@ -930,6 +1013,21 @@ useEffect(() => {
                             </select>
                             
                             <select 
+                                className="gallery-aspect-ratio" 
+                                value={selectedAspectRatio} 
+                                onChange={(e) => {
+                                    setSelectedAspectRatio(e.target.value);
+                                    setPage(1);
+                                    setImages([]);
+                                }}
+                            >
+                                <option value="all">All Orientations</option>
+                                <option value="landscape">Landscape</option>
+                                <option value="portrait">Portrait</option>
+                                <option value="square">Square</option>
+                            </select>
+
+                            <select 
                                 className="gallery-category" 
                                 value={selectedCategory} 
                                 onChange={(e) => {
@@ -939,12 +1037,11 @@ useEffect(() => {
                                 }}
                             >
                                 <option value="all">All Categories</option>
-                                <option value="portrait">Portrait</option>
-                                <option value="landscape">Landscape</option>
-                                <option value="square">Square</option>
-                                <option value="abstract">Abstract</option>
-                                <option value="anime">Anime</option>
-                                {/* Add more categories as needed */}
+                                {availableCategories.map(cat => (
+                                    <option key={cat.category} value={cat.category}>
+                                        {cat.category.charAt(0).toUpperCase() + cat.category.slice(1)} ({cat.count})
+                                    </option>
+                                ))}
                             </select>
                         </div>
 
@@ -981,7 +1078,7 @@ useEffect(() => {
                     </div>
                     <h2 className="gallery-heading"></h2>
                     <div className="gallery-grid" ref={gridRef}>
-                        {columnImages.map((col, colIndex) => (
+                        {createColumns(images, columns).map((col, colIndex) => (
                             <div key={colIndex} className="gallery-column">
                                 {col.map((image) => (
                                     <div key={image.id} className="gallery-item">
@@ -1084,6 +1181,15 @@ useEffect(() => {
                                             <button className="gallery-action-btn">
                                                 <BookmarkIcon />
                                             </button>
+                                        </div>
+                                        <div className="gallery-image-metadata">
+                                            <span className="gallery-image-category">
+                                                Category: {
+                                                    images.find(img => img.id === activeImageId)?.category
+                                                    ?.charAt(0).toUpperCase() + 
+                                                    images.find(img => img.id === activeImageId)?.category?.slice(1)
+                                                }
+                                            </span>
                                         </div>
                                         {/* Existing comments section */}
                                         <div className="gallery-comments-section">

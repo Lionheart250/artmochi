@@ -30,7 +30,7 @@ const Home = () => {
                     Welcome to <span className="highlight">ArtMochi</span>
                 </h1>
                 <p className="home-subtitle">
-                    Create beautiful anime-style images with the power of AI
+                    Create beautiful images with the power of AI
                 </p>
                 <div className="home-cta">
                     <Link to="/imagegenerator" className="home-button primary">
