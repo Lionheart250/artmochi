@@ -37,11 +37,11 @@ const { uploadToS3 } = require('./src/config/s3');
 const { S3Client, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+const { categorizeImage } = require('./services/imageService');
 const app = express();
 const port = process.env.PORT || 3000;
 
 const s3Client = new S3Client({
-    region: process.env.AWS_REGION,
     credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
@@ -267,6 +267,62 @@ const sendVerificationEmail = async (email, token) => {
     };
 
     await transporter.sendMail(mailOptions);
+};
+
+const ensureCategory = async (client, categoryName) => {
+    try {
+        // First try to get the existing category
+        const existingCategory = await client.query(
+            'SELECT id FROM categories WHERE name = $1',
+            [categoryName.toLowerCase()]
+        );
+
+        if (existingCategory.rows.length > 0) {
+            return existingCategory.rows[0].id;
+        }
+
+        // Updated category types
+        let categoryType = 'other';
+        const typeMapping = {
+            portrait: 'people',
+            woman: 'people',
+            man: 'people',
+            anime: 'anime',
+            digital_art: 'art_style',
+            painting: 'art_style',
+            illustration: 'art_style',
+            animal: 'subject',
+            food: 'subject',
+            armor: 'subject',
+            weapon: 'subject',
+            outdoors: 'environment',
+            architecture: 'environment',
+            cityscape: 'environment',
+            space: 'environment',
+            indoor: 'environment',
+            scifi: 'style',
+            fantasy: 'style',
+            abstract: 'style',
+            dark: 'style',
+            colorful: 'style',
+            minimalist: 'style'
+        };
+
+        categoryType = typeMapping[categoryName.toLowerCase()] || 'other';
+
+        // Create new category with type
+        const newCategory = await client.query(
+            `INSERT INTO categories (name, type, created_at) 
+             VALUES ($1, $2, NOW()) 
+             RETURNING id`,
+            [categoryName.toLowerCase(), categoryType]
+        );
+
+        return newCategory.rows[0].id;
+    } catch (error) {
+        console.error('Error in ensureCategory:', error);
+        throw error;
+    }
 };
 
 // Add before your routes
@@ -846,8 +902,45 @@ app.post('/logout', (req, res) => {
 // 2. Add corsOptions to all your routes that handle images
 app.get('/images', cors(corsOptions), optionalAuthenticateToken, async (req, res) => {
     try {
-        const { sortType = 'newest', page = 1, limit = 20 } = req.query;
+        const { 
+            aspectRatio = 'all',
+            category = 'all',
+            sortType = 'newest', 
+            page = 1, 
+            limit = 20
+        } = req.query;
         const offset = (page - 1) * limit;
+
+        let whereClause = [];
+        let params = [];
+        let paramIndex = 1; // Start from 1
+
+        if (aspectRatio !== 'all') {
+            whereClause.push(`i.aspect_ratio = $${paramIndex}`);
+            params.push(aspectRatio);
+            paramIndex++;
+        }
+
+        if (category !== 'all') {
+            whereClause.push(`
+                EXISTS (
+                    SELECT 1 FROM image_categories ic
+                    JOIN categories c ON ic.category_id = c.id
+                    WHERE ic.image_id = i.id 
+                    AND LOWER(c.name) = LOWER($${paramIndex})
+                )
+            `);
+            params.push(category);
+            paramIndex++;
+        }
+
+        const whereString = whereClause.length > 0 
+            ? 'WHERE ' + whereClause.join(' AND ')
+            : '';
+
+        // Add sortType to params
+        params.push(sortType);
+        const sortParam = paramIndex;
 
         const orderQuery = `
             SELECT i.id
@@ -866,17 +959,18 @@ app.get('/images', cors(corsOptions), optionalAuthenticateToken, async (req, res
                 FROM comments
                 GROUP BY image_id
             ) c ON c.image_id = i.id
+            ${whereString}
             ORDER BY 
                 CASE 
-                    WHEN $1 = 'mostLiked' THEN (SELECT COUNT(*) FROM likes WHERE image_id = i.id)
-                    WHEN $1 = 'mostCommented' THEN (SELECT COUNT(*) FROM comments WHERE image_id = i.id)
-                    WHEN $1 = 'trending' THEN 
+                    WHEN $${sortParam} = 'mostLiked' THEN (SELECT COUNT(*) FROM likes WHERE image_id = i.id)
+                    WHEN $${sortParam} = 'mostCommented' THEN (SELECT COUNT(*) FROM comments WHERE image_id = i.id)
+                    WHEN $${sortParam} = 'trending' THEN 
                         (COALESCE(recent_likes, 0) * 2 + COALESCE(recent_comments, 0) * 3) * 
                         (1 + (1000000 / (EXTRACT(epoch FROM NOW() - i.created_at) + 1)))
                     ELSE extract(epoch from i.created_at)::bigint
                 END DESC`;
 
-        const sortedIds = (await pool.query(orderQuery, [sortType])).rows.map(row => row.id);
+        const sortedIds = (await pool.query(orderQuery, params)).rows.map(row => row.id);
         const totalImages = sortedIds.length;
 
         if (offset >= totalImages) {
@@ -889,19 +983,27 @@ app.get('/images', cors(corsOptions), optionalAuthenticateToken, async (req, res
 
         const pageIds = sortedIds.slice(offset, Math.min(offset + limit, totalImages));
 
+        // Add userId param for user_has_liked check
+        const userId = req.user?.userId || null;
+        params = [userId, pageIds, limit];
+
         const result = await pool.query(`
             SELECT i.*, 
                    u.username,
                    u.profile_picture,
+                   array_agg(DISTINCT c.name) as categories,
                    (SELECT COUNT(*) FROM likes WHERE image_id = i.id) as like_count,
                    (SELECT COUNT(*) FROM comments WHERE image_id = i.id) as comment_count,
                    EXISTS(SELECT 1 FROM likes WHERE image_id = i.id AND user_id = $1) as user_has_liked
             FROM images i
             LEFT JOIN users u ON i.user_id = u.id
+            LEFT JOIN image_categories ic ON i.id = ic.image_id
+            LEFT JOIN categories c ON ic.category_id = c.id
             WHERE i.id = ANY($2)
+            GROUP BY i.id, u.username, u.profile_picture
             ORDER BY array_position($2::int[], i.id)
             LIMIT $3`,
-            [req.user?.userId || null, pageIds, limit]
+            params
         );
 
         res.json({
@@ -909,6 +1011,7 @@ app.get('/images', cors(corsOptions), optionalAuthenticateToken, async (req, res
             hasMore: offset + result.rows.length < totalImages,
             total: totalImages
         });
+
     } catch (error) {
         console.error('Error:', error);
         res.status(500).json({ error: 'Database error' });
@@ -973,6 +1076,27 @@ app.post('/images', cors(corsOptions), optionalAuthenticateToken, async (req, re
         res.status(500).json({ error: 'Database error' });
     }
 });
+
+app.get('/categories', cors(corsOptions), async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT c.name as category, 
+                   c.type,
+                   COUNT(ic.image_id) as count
+            FROM categories c
+            LEFT JOIN image_categories ic ON c.id = ic.category_id
+            GROUP BY c.id, c.name, c.type
+            ORDER BY count DESC, category ASC
+        `);
+        
+        console.log('Categories fetched:', result.rows);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching categories:', error);
+        res.status(500).json({ error: 'Failed to fetch categories' });
+    }
+});
+
 // Fetch single image
 app.get('/images/:id', authenticateTokenWithAutoRefresh, async (req, res) => {
     const imageId = parseInt(req.params.id);
@@ -2165,29 +2289,44 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
             throw new Error('Failed to upload to S3');
         }
 
-        // Save to database within same transaction
-        const result = await client.query(
-            `INSERT INTO images (user_id, image_url, prompt, negative_prompt, steps, width, height) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-            [
-                req.user.userId,
-                s3Result.url,
-                req.body.input.prompt,
-                req.body.input.negative_prompt || '',
-                req.body.input.num_inference_steps,
-                req.body.input.width || 1024,
-                req.body.input.height || 1024
-            ]
-        );
+        // Get both content categories and aspect ratio
+        const { categories, aspectRatio } = await categorizeImage(s3Result.url);
 
-        // Commit transaction
+        // Insert the image first
+        const imageResult = await client.query(`
+            INSERT INTO images (
+                user_id, image_url, prompt, negative_prompt, 
+                steps, aspect_ratio, created_at
+            ) VALUES ($1, $2, $3, $4, $5, $6, NOW())
+            RETURNING id
+        `, [
+            req.user.userId,
+            s3Result.url,
+            req.body.input.prompt,
+            req.body.input.negative_prompt || '',
+            req.body.input.num_inference_steps,
+            aspectRatio
+        ]);
+
+        // Insert categories with confidence scores
+        for (const { category, confidence } of categories) {
+            // Ensure category exists and get its ID
+            const categoryId = await ensureCategory(client, category);
+            
+            // Insert into image_categories with the valid category_id
+            await client.query(`
+                INSERT INTO image_categories (image_id, category_id, confidence)
+                VALUES ($1, $2, $3)
+            `, [imageResult.rows[0].id, categoryId, confidence]);
+        }
+
         await client.query('COMMIT');
 
         res.json({
             image: s3Result.url,
-            imageId: result.rows[0].id,
-            remainingGenerations,
-            isLastGeneration
+            categories: categories,
+            aspectRatio: aspectRatio,
+            remainingGenerations: remainingGenerations
         });
 
     } catch (error) {
@@ -2547,4 +2686,83 @@ const ensureFreeTierFallback = async (client, userId) => {
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
   });
+
+app.get('/api/images', cors(corsOptions), optionalAuthenticateToken, async (req, res) => {
+    try {
+        const { 
+            sortType = 'newest',
+            categories = [], // Can be array of categories
+            aspectRatio = 'all',
+            page = 1, 
+            limit = 20 
+        } = req.query;
+
+        const offset = (page - 1) * limit;
+        let whereConditions = [];
+        let params = [sortType];
+        let paramIndex = 2;
+
+        if (aspectRatio !== 'all') {
+            whereConditions.push(`i.aspect_ratio = $${paramIndex}`);
+            params.push(aspectRatio);
+            paramIndex++;
+        }
+
+        if (categories.length > 0) {
+            whereConditions.push(`
+                EXISTS (
+                    SELECT 1 FROM image_categories ic
+                    JOIN categories c ON ic.category_id = c.id
+                    WHERE ic.image_id = i.id 
+                    AND c.name = ANY($${paramIndex})
+                )
+            `);
+            params.push(categories);
+            paramIndex++;
+        }
+
+        const whereClause = whereConditions.length > 0 
+            ? 'WHERE ' + whereConditions.join(' AND ')
+            : '';
+
+        const query = `
+            SELECT DISTINCT i.*, 
+                   u.username,
+                   u.profile_picture,
+                   array_agg(DISTINCT c.name) as categories,
+                   array_agg(DISTINCT ic.confidence) as category_confidences,
+                   COUNT(DISTINCT l.id) as like_count,
+                   COUNT(DISTINCT cm.id) as comment_count,
+                   EXISTS(SELECT 1 FROM likes WHERE image_id = i.id AND user_id = $1) as user_has_liked
+            FROM images i
+            LEFT JOIN users u ON i.user_id = u.id
+            LEFT JOIN image_categories ic ON i.id = ic.image_id
+            LEFT JOIN categories c ON ic.category_id = c.id
+            LEFT JOIN likes l ON i.id = l.image_id
+            LEFT JOIN comments cm ON i.id = cm.image_id
+            ${whereClause}
+            GROUP BY i.id, u.username, u.profile_picture
+            ORDER BY 
+                CASE 
+                    WHEN $1 = 'mostLiked' THEN COUNT(DISTINCT l.id)
+                    WHEN $1 = 'mostCommented' THEN COUNT(DISTINCT cm.id)
+                    ELSE i.created_at
+                END DESC
+            LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+        `;
+
+        params.push(limit, offset);
+        
+        const result = await pool.query(query, params);
+
+        res.json({
+            images: result.rows,
+            hasMore: result.rows.length === limit
+        });
+
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
 
