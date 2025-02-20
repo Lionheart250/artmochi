@@ -996,6 +996,7 @@ img {
     .tier-info-banner {
         flex-direction: column;
         text-align: center;
+        width: 95%;
         gap: 8px;
         padding: 8px;
     }
