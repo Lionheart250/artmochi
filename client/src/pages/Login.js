@@ -11,6 +11,8 @@ const Login = () => {
     const { login } = useAuth(); // Access login function from AuthContext
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [isUnverified, setIsUnverified] = useState(false);
 
     const fetchProfilePicture = async (token) => {
         try {
@@ -35,6 +37,8 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
+        setIsUnverified(false);
 
         const payload = { email, password };
 
@@ -46,26 +50,53 @@ const Login = () => {
             });
 
             const data = await response.json();
+
+            if (response.status === 403 && data.requiresVerification) {
+                setIsUnverified(true);
+                setError('Please verify your email to login');
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Login failed');
+            }
+
+            // Store token and userId
+            const { token, refreshToken } = data; // Assuming the response also includes a refresh token
+            localStorage.setItem('token', token); // Save the token for future use
+
+            // Decode token to get userId
+            const decodedToken = jwtDecode(token);
+            localStorage.setItem('userId', decodedToken.userId); // Save userId to localStorage
+            
+            // Call the login function to update the user context
+            login(token, refreshToken); // Add refresh token if available
+
+            await fetchProfilePicture(token);
+
+            navigate('/'); // Redirect to home page
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
+    const handleResendVerification = async () => {
+        try {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/resend-verification`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+
+            const data = await response.json();
+
             if (response.ok) {
-                // Store token and userId
-                const { token, refreshToken } = data; // Assuming the response also includes a refresh token
-                localStorage.setItem('token', token); // Save the token for future use
-
-                // Decode token to get userId
-                const decodedToken = jwtDecode(token);
-                localStorage.setItem('userId', decodedToken.userId); // Save userId to localStorage
-                
-                // Call the login function to update the user context
-                login(token, refreshToken); // Add refresh token if available
-
-                await fetchProfilePicture(token);
-
-                navigate('/'); // Redirect to home page
+                navigate('/verification-sent', { state: { email } });
             } else {
-                alert(data.error || 'An error occurred.');
+                setError(data.error || 'Failed to resend verification email');
             }
         } catch (err) {
-            alert('Failed to connect to the server.');
+            setError('Failed to resend verification email');
         }
     };
 
@@ -97,6 +128,20 @@ const Login = () => {
                         onChange={(e) => setPassword(e.target.value)}
                     />
                 </div>
+                {error && (
+                    <div className="error-message">
+                        {error}
+                        {isUnverified && (
+                            <button 
+                                type="button"
+                                onClick={handleResendVerification}
+                                className="resend-verification-btn"
+                            >
+                                Resend Verification Email
+                            </button>
+                        )}
+                    </div>
+                )}
                 <button type="submit" className="login-submit-btn">Log In</button>
             </form>
             <div className="signup-link">

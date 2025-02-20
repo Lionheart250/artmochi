@@ -129,3 +129,27 @@ input[type="password"]:focus {
         font-size: 0.9rem;
     }
 }
+
+.resend-verification-btn {
+    background: none;
+    border: none;
+    color: #fe2c55;
+    text-decoration: underline;
+    cursor: pointer;
+    margin-top: 8px;
+    padding: 4px 8px;
+    font-size: 14px;
+}
+
+.resend-verification-btn:hover {
+    color: #d91442;
+}
+
+.error-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: #fe2c55;
+    margin: 8px 0;
+}

@@ -45,3 +45,51 @@
     display: block;
 }
 
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .following-container {
+        padding: 12px;
+        margin-left: 65px; /* Account for side nav */
+        margin-bottom: 60px; /* Space for bottom nav */
+        width: calc(100% - 85px);
+    }
+
+    .following-grid {
+        grid-template-columns: 1fr; /* Changed to single column */
+        gap: 12px;
+        margin-top: 12px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .following-container {
+        padding: 8px;
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .following-grid {
+        grid-template-columns: 1fr; /* Changed to single column */
+        gap: 12px;
+    }
+
+    .following-item {
+        border-radius: 6px;
+        max-width: 100%; /* Ensure full width */
+    }
+
+    .following-user-info {
+        padding: 8px;
+        gap: 8px;
+    }
+
+    .following-user-avatar {
+        width: 24px;
+        height: 24px;
+    }
+
+    .following-username {
+        font-size: 12px;
+    }
+}
+
