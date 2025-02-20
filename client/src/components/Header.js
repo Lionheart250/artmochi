@@ -57,7 +57,7 @@ const Header = () => {
 
     // Header position effect
     useEffect(() => {
-        const topHeaderPages = ['/, Profile'];
+        const topHeaderPages = ['/'];
         const shouldBeTop = topHeaderPages.includes(location.pathname);
         setHeaderPosition(shouldBeTop ? 'top' : 'side');
     }, [location.pathname]);
