@@ -185,3 +185,93 @@ button:hover {
     background: rgba(255, 0, 80, 0.5);
     cursor: not-allowed;
 }
+
+/* Add responsive styles */
+@media screen and (max-width: 768px) {
+    .lora-grid {
+        grid-template-columns: 1fr; /* Single column on mobile */
+        gap: 0.5rem;
+    }
+
+    .lora-item {
+        padding: 0.35rem;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .lora-label {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .lora-weight {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .lora-popup {
+        width: 95%;
+        padding: 1rem;
+        max-height: 90vh;
+    }
+
+    .lora-popup-header h3 {
+        font-size: 1.2rem;
+    }
+
+    .preset-buttons {
+        gap: 4px;
+    }
+
+    .lora-popup .preset-button {
+        padding: 6px 12px;
+        font-size: 0.9rem;
+    }
+
+    .lora-popup .lora-action-btn {
+        padding: 6px 12px;
+        font-size: 0.9rem;
+        margin: 3px;
+    }
+
+    .section-header h3 {
+        font-size: 1.1rem;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .lora-selector {
+        padding: 0.5rem;
+        margin: 0.5rem 0;
+    }
+
+    .lora-item {
+        font-size: 0.9rem;
+    }
+
+    .lora-popup {
+        padding: 0.75rem;
+    }
+
+    .preset-buttons {
+        justify-content: center;
+    }
+
+    .lora-popup .preset-button,
+    .lora-popup .lora-action-btn {
+        padding: 4px 8px;
+        font-size: 0.8rem;
+        min-width: calc(50% - 8px); /* Two buttons per row */
+    }
+
+    .weight-value {
+        font-size: 0.8em;
+        min-width: 2.5em;
+    }
+
+    input[type="range"] {
+        width: 100%;
+    }
+}

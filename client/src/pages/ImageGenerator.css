@@ -1,8 +1,8 @@
 /* Main Container */
 .image-generator {
-    width: calc(100% - 18rem);
+    width: calc(100% - 12.5rem); /* Account for side header width of 12.5rem */
     min-height: 80vh;
-    margin-left: 12.5rem;
+    margin-left: 12.5rem; /* Match side header width */
     padding: 24px;
     display: flex;
     flex-direction: column;
@@ -912,4 +912,118 @@ img {
 .tier-info-banner.warning .upgrade-link {
     color: #856404;
     font-weight: 600;
+}
+
+/* Keep existing styles and add these media queries */
+
+@media screen and (max-width: 1024px) {
+    .image-generator {
+        width: calc(100% - 60px); /* Account for collapsed side nav */
+        margin-left: 60px;
+        padding: 16px;
+    }
+
+    .image-generator-container {
+        gap: 16px;
+        
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .image-generator {
+        width: 100%;
+        margin-left: 70px;
+        width: 80%;
+        margin-bottom: 60px; /* Space for bottom nav */
+        padding: 12px;
+    }
+
+    .image-generator-container {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        height: auto;
+        padding-bottom: 60px; /* Add padding to prevent content from being hidden by bottom nav */
+    }
+
+    .image-generator-form-container,
+    .image-generator-preview-container {
+        min-height: 400px;
+        
+    }
+    .image-generator-preview-container { 
+        width: 85%;
+        margin-top: 40px;
+    }
+
+    .image-generator-preview {
+        min-height: 300px;
+    }
+
+    /* Adjust control layouts */
+    .image-generator-aspect-buttons,
+    .image-generator-creative-buttons,
+    .image-generator-upscale-buttons {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .image-generator-creative-btn,
+    .image-generator-upscale-btn,
+    .image-generator-aspect-btn {
+        min-width: calc(33.33% - 8px);
+        padding: 8px;
+        font-size: 12px;
+    }
+
+    /* Stack form sections */
+    .form-section {
+        padding: 12px;
+    }
+
+    .controls-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    /* Make text inputs smaller */
+    .image-generator-input,
+    .image-generator-textarea {
+        padding: 8px;
+        font-size: 14px;
+    }
+
+    /* Adjust banner for small screens */
+    .tier-info-banner {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+        padding: 8px;
+    }
+}
+
+/* For very small screens */
+@media screen and (max-width: 480px) {
+    .image-generator {
+        padding: 8px;
+    }
+
+    .image-generator-heading {
+        font-size: 20px;
+        margin-bottom: 16px;
+    }
+
+    .image-generator-creative-btn,
+    .image-generator-upscale-btn,
+    .image-generator-aspect-btn {
+        min-width: calc(50% - 4px);
+        font-size: 11px;
+    }
+
+    .form-section {
+        padding: 8px;
+    }
+
+    .image-generator-preview {
+        min-height: 250px;
+    }
 }

@@ -116,3 +116,69 @@
 .side-footer a:hover {
     color: #fe2c55;
 }
+
+/* Add responsive styles */
+@media screen and (max-width: 768px) {
+    .footer {
+        padding: 5px 0;
+    }
+
+    .footer-content {
+        padding: 0 12px;
+    }
+
+    .footer-brand h3 {
+        font-size: 16px;
+        margin: 0 0 4px 0;
+    }
+
+    .footer-brand p {
+        font-size: 12px;
+    }
+
+    .footer-links {
+        gap: 12px;
+    }
+
+    .footer-links a {
+        font-size: 12px;
+    }
+
+    .footer-copyright {
+        font-size: 10px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .footer {
+        padding: 3px 0;
+    }
+
+    .footer-content {
+        padding: 0 8px;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .footer-brand {
+        text-align: center;
+    }
+
+    .footer-brand h3 {
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .footer-brand p {
+        display: none; /* Hide description on very small screens */
+    }
+
+    .footer-links {
+        gap: 8px;
+    }
+
+    .footer-links a {
+        font-size: 10px;
+    }
+}
