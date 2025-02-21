@@ -1062,7 +1062,7 @@ const Profile = () => {
             {/* Keep existing grid */}
             {activeTab === 'posts' && (
                 <div className="profile-grid">
-                    {images.map((image) => (
+                    {images && images.map((image) => (  // Added null check with &&
                         <div 
                             key={image.id} 
                             className="profile-item"
@@ -1079,7 +1079,7 @@ const Profile = () => {
                     {isLoadingLikes ? (
                         <div className="loading-spinner">Loading...</div>
                     ) : (
-                        likedImages.map((image) => (
+                        likedImages && likedImages.map((image) => (  // Added null check with &&
                             <div 
                                 key={image.id} 
                                 className="profile-item"
