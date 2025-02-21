@@ -44,6 +44,64 @@ const aspectRatioMapping = {
     'Square': '1:1'
 };
 
+// Add this function at the top of your component
+const startProgressSimulation = (setProgressPercentage, setGenerationStage) => {
+    const duration = 45000; // 45 seconds
+    const startTime = Date.now();
+    let animationFrameId = null;
+    let shouldAccelerate = false;
+    let currentProgress = 0;
+    
+    const updateProgress = () => {
+        const elapsed = Date.now() - startTime;
+        
+        if (shouldAccelerate) {
+            // Smooth acceleration to 99%
+            currentProgress += (99 - currentProgress) * 0.3;
+        } else {
+            // Normal progress
+            currentProgress = Math.min((elapsed / duration) * 99, 99);
+        }
+        
+        // Ensure progress stays within bounds
+        currentProgress = Math.min(Math.max(currentProgress, 0), 99);
+        
+        setProgressPercentage(Math.floor(currentProgress));
+        
+        // Update generation stage based on progress
+        if (currentProgress < 25) {
+            setGenerationStage('Preparing model...');
+        } else if (currentProgress < 50) {
+            setGenerationStage('Processing prompt...');
+        } else if (currentProgress < 75) {
+            setGenerationStage('Generating image...');
+        } else {
+            setGenerationStage('Adding final details...');
+        }
+
+        if (currentProgress < 99) {
+            animationFrameId = requestAnimationFrame(updateProgress);
+        }
+    };
+
+    // Function to accelerate progress
+    const accelerateProgress = () => {
+        shouldAccelerate = true;
+    };
+
+    animationFrameId = requestAnimationFrame(updateProgress);
+
+    // Return control object
+    return {
+        stop: () => {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+        },
+        accelerate: accelerateProgress
+    };
+};
+
 const ImageGenerator = () => {
   const { user } = useAuth();
   const { fetchUserProfile } = useProfile(); // Add this
@@ -72,6 +130,9 @@ const ImageGenerator = () => {
   const [distilledCfgScale, setDistilledCfgScale] = useState(3.5);
   // Add remaining generations state
   const [remainingGenerations, setRemainingGenerations] = useState(null);
+  // Add these state variables at the top with your other useState declarations
+  const [generationStage, setGenerationStage] = useState('');
+  const [progressPercentage, setProgressPercentage] = useState(0);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -132,26 +193,29 @@ const ImageGenerator = () => {
 // First, modify the handleSubmit function to handle image-to-image:
 const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!currentSubscription) {
-        setError('Please subscribe to start generating images');
-        return;
-    }
-
-    // Update remaining generations immediately for free tier
-    if (currentSubscription?.tier_name === 'Free') {
-        if (remainingGenerations <= 0) {
-            setError('You have reached your daily limit. Upgrade for unlimited generations!');
-            return;
-        }
-        // Decrement locally immediately
-        setRemainingGenerations(prev => Math.max(0, prev - 1));
-    }
-
     setError(null);
     setLoading(true);
+    setProgressPercentage(0);
+    
+    // Start the progress simulation and keep the control reference
+    const progressControl = startProgressSimulation(setProgressPercentage, setGenerationStage);
 
     try {
+        if (!currentSubscription) {
+            setError('Please subscribe to start generating images');
+            return;
+        }
+
+        // Update remaining generations immediately for free tier
+        if (currentSubscription?.tier_name === 'Free') {
+            if (remainingGenerations <= 0) {
+                setError('You have reached your daily limit. Upgrade for unlimited generations!');
+                return;
+            }
+            // Decrement locally immediately
+            setRemainingGenerations(prev => Math.max(0, prev - 1));
+        }
+
         const token = localStorage.getItem('token');
         const formData = new FormData();
         
@@ -198,6 +262,16 @@ const handleSubmit = async (e) => {
 
         const data = await response.json();
         
+        // When image is ready but progress isn't at 99%, accelerate it
+        if (data.image) {
+            progressControl.accelerate(); // Accelerate to 99%
+            // Wait for progress to catch up
+            await new Promise(resolve => setTimeout(resolve, 600));
+            setProgressPercentage(100);
+            setGenerationStage('Complete!');
+            setImage(data.image);
+        }
+
         if (data.error === 'Daily limit reached') {
             // Revert the local count if the server rejected
             if (currentSubscription?.tier_name === 'Free') {
@@ -208,10 +282,12 @@ const handleSubmit = async (e) => {
 
         // Update with server's count to stay in sync
         if (currentSubscription?.tier_name === 'Free' && data.remainingGenerations !== undefined) {
-            setRemainingGenerations(data.remainingGenerations);
+            setRemainingGenerations(data.remaining);
         }
 
         if (data.image) {  // Changed from data.output
+            setProgressPercentage(100);
+            setGenerationStage('Complete!');
             setImage(data.image);  // Use data.image instead of data.output[0]
             console.log('Image generated successfully:', data);
         } else if (data.error) {
@@ -222,6 +298,7 @@ const handleSubmit = async (e) => {
         }
 
     } catch (error) {
+        progressControl.stop();
         console.error('Error:', error);
         setError(error.message || 'Failed to generate image');
     } finally {
@@ -268,7 +345,7 @@ const validUpscalers = [
     "SwinIR 4x"
 ];
 
-const LoadingText = LoadingSpirals;
+//const LoadingText = LoadingSpirals;
 
   return (
     <div className="image-generator">
@@ -480,7 +557,21 @@ const LoadingText = LoadingSpirals;
                     <div className="preview-content">
                         {loading ? (
                             <div className="loading-container">
-                                <LoadingText />
+                               {/* <LoadingText /> */}
+                                <div className="generation-progress">
+                                    <div className="progress-bar">
+                                        <div 
+                                            className="progress-fill"
+                                            style={{ width: `${progressPercentage}%` }}
+                                        />
+                                    </div>
+                                    <div className="progress-text">
+                                        {generationStage}
+                                        <span className="progress-percentage">
+                                            {progressPercentage}%
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         ) : error ? (
                             <div className="error-message">{error}</div>
