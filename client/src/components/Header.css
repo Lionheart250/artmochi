@@ -722,6 +722,7 @@ header {
         border-radius: 50%;
         object-fit: cover;
     }
+
 }
 
 
@@ -888,6 +889,38 @@ header {
 
     .top-header .header-container {
         padding: 0 4px;
+    }
+}
+
+/* Existing dropdown menu styles */
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: #1a1a1a;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    min-width: 200px;
+    z-index: 1000;
+}
+
+/* Add responsive styles */
+@media screen and (max-width: 1024px) {
+    .dropdown-menu {
+        min-width: 120px;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .dropdown-menu {
+        min-width: 120px;
+        margin-right: 0px; /* Adjust position slightly */
+    }
+
+    .dropdown-menu a,
+    .dropdown-menu button {
+        padding: 8px 12px;
+        font-size: 14px;
     }
 }
 
