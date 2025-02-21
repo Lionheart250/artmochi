@@ -46,7 +46,7 @@ const aspectRatioMapping = {
 
 // Add this function at the top of your component
 const startProgressSimulation = (setProgressPercentage, setGenerationStage) => {
-    const duration = 45000; // 45 seconds
+    const duration = 60000; // 60 seconds
     const startTime = Date.now();
     let animationFrameId = null;
     let shouldAccelerate = false;
