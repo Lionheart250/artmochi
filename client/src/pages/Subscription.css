@@ -267,8 +267,9 @@
     font-style: italic;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .subscription-page {
+        margin-left: 65px;
         padding-left: 60px; /* Account for collapsed side nav */
         padding-bottom: 60px; /* Space for bottom nav */
     }
@@ -291,9 +292,10 @@
 
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
     .subscription-page {
         padding-left: 0; /* Remove side padding when nav moves to bottom */
+        margin-left: 65px;
     }
 
     .plans-header h2 {
