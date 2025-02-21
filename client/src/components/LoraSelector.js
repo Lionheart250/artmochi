@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './LoraSelector.css';
 
-const stylizedLoras = [
+const artisticLoras = [
     {
         id: 'gothic-lines',
         name: '🗡️ Shadow Weaver',
@@ -74,9 +74,6 @@ const stylizedLoras = [
         defaultWeight: 1.0,
         url: 'https://civitai.com/api/download/models/1089413?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
     },
-];
-
-const artStyleLoras = [
     {
         id: 'midjourney-style',
         name: '🎨 Dream Vision',
@@ -203,8 +200,7 @@ const realisticLoras = [
 ];
 
 const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
-    const [stylizedExpanded, setStylizedExpanded] = useState(true);
-    const [artStyleExpanded, setArtStyleExpanded] = useState(true);
+    const [artisticExpanded, setArtisticExpanded] = useState(true);
     const [realisticExpanded, setRealisticExpanded] = useState(true);
     
     if (!isOpen) return null;
@@ -236,8 +232,7 @@ const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
     };
 
     const handleRandom = () => {
-        // Combine all Lora arrays
-        const allLoras = [...stylizedLoras, ...artStyleLoras, ...realisticLoras];
+        const allLoras = [...artisticLoras, ...realisticLoras];
         const shuffled = [...allLoras].sort(() => 0.5 - Math.random());
         const randomLoras = shuffled.slice(0, 4).reduce((acc, lora, index) => {
             let weight;
@@ -295,17 +290,26 @@ const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
         <div className="lora-overlay" onClick={onClose}>
             <div className="lora-popup" onClick={e => e.stopPropagation()}>
                 <div className="lora-popup-header">
-                    <h3>✨ Magic Potion Mixer ✨</h3>
+                    <h3>✨ Style Presets ✨</h3>
                     <div className="lora-actions">
-                        <button type="button" onClick={handleRemoveAll} className="lora-action-btn">Remove All</button>
-                        <button type="button" onClick={handleRandom} className="lora-action-btn">Random Mix</button>
+                        <button type="button" onClick={handleRandom} className="lora-action-btn primary">
+                            🎲 Random Mix
+                        </button>
+                        <button type="button" onClick={handleRemoveAll} className="lora-action-btn">
+                            Clear All
+                        </button>
                         <button type="button" className="close-button" onClick={onClose}>×</button>
                     </div>
                 </div>
 
-                {renderLoraSection(stylizedLoras, stylizedExpanded, setStylizedExpanded, "Anime & Fantasy", "🎨")}
-                {renderLoraSection(artStyleLoras, artStyleExpanded, setArtStyleExpanded, "Art Styles", "🖌️")}
-                {renderLoraSection(realisticLoras, realisticExpanded, setRealisticExpanded, "Realistic", "📷")}
+                <div className="lora-content">
+                    <div className="lora-column">
+                        {renderLoraSection(artisticLoras, artisticExpanded, setArtisticExpanded, "Artistic & Anime", "🎨")}
+                    </div>
+                    <div className="lora-column">
+                        {renderLoraSection(realisticLoras, realisticExpanded, setRealisticExpanded, "Realistic & Photo", "📷")}
+                    </div>
+                </div>
             </div>
         </div>
     );

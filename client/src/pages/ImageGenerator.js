@@ -347,6 +347,31 @@ const validUpscalers = [
 
 //const LoadingText = LoadingSpirals;
 
+useEffect(() => {
+    const mainContainer = document.querySelector('.image-generator-container');
+    
+    if (isLoraOpen && mainContainer) {
+        const scrollY = window.scrollY;
+        mainContainer.style.position = 'fixed';
+        mainContainer.style.top = `-${scrollY}px`;
+        mainContainer.style.width = '100%';
+    } else if (mainContainer) {
+        const scrollY = mainContainer.style.top;
+        mainContainer.style.position = '';
+        mainContainer.style.top = '';
+        mainContainer.style.width = '';
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+    }
+
+    return () => {
+        if (mainContainer) {
+            mainContainer.style.position = '';
+            mainContainer.style.top = '';
+            mainContainer.style.width = '';
+        }
+    };
+}, [isLoraOpen]);
+
   return (
     <div className="image-generator">
         {!currentSubscription ? (
@@ -405,7 +430,10 @@ const validUpscalers = [
                             className={`lora-settings-button ${Object.keys(selectedLoras).length > 0 ? 'active' : ''}`}
                             onClick={() => setIsLoraOpen(true)}
                         >
-                           ✨ Magic Potion Mixer ✨
+                            ✨ Click Here to Add Presets & Styles ✨
+                            <span className="lora-settings-subtext">
+                                Important: Choose your art style before generating!
+                            </span>
                         </button>
                         
                         <LoraSelector 
