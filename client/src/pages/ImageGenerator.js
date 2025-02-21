@@ -328,7 +328,7 @@ const LoadingText = LoadingSpirals;
                             className={`lora-settings-button ${Object.keys(selectedLoras).length > 0 ? 'active' : ''}`}
                             onClick={() => setIsLoraOpen(true)}
                         >
-                           ✨ Magic Potion ✨
+                           ✨ Magic Potion Mixer ✨
                         </button>
                         
                         <LoraSelector 
