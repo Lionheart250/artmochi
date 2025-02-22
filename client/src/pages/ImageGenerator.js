@@ -45,8 +45,15 @@ const aspectRatioMapping = {
 };
 
 // Add this function at the top of your component
-const startProgressSimulation = (setProgressPercentage, setGenerationStage) => {
-    const duration = 60000; // 60 seconds
+const startProgressSimulation = (setProgressPercentage, setGenerationStage, steps) => {
+    // Base duration for 20 steps
+    const baseDuration = 60000; // 60 seconds base
+    
+    // Add 1500ms (1.5s) for each step over 20
+    const extraSteps = Math.max(0, steps - 20);
+    const extraDuration = extraSteps * 1500;
+    const duration = baseDuration + extraDuration;
+    
     const startTime = Date.now();
     let animationFrameId = null;
     let shouldAccelerate = false;
@@ -133,6 +140,10 @@ const ImageGenerator = () => {
   // Add these state variables at the top with your other useState declarations
   const [generationStage, setGenerationStage] = useState('');
   const [progressPercentage, setProgressPercentage] = useState(0);
+  // Add state for upscaling
+  const [isUpscaling, setIsUpscaling] = useState(false);
+  // Add this state near your other states
+  const [mode, setMode] = useState('generate'); // 'generate' or 'upscale'
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -190,15 +201,12 @@ const ImageGenerator = () => {
     });
 };
 
-// First, modify the handleSubmit function to handle image-to-image:
+// Update handleSubmit to handle both modes:
 const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
     setProgressPercentage(0);
-    
-    // Start the progress simulation and keep the control reference
-    const progressControl = startProgressSimulation(setProgressPercentage, setGenerationStage);
 
     try {
         if (!currentSubscription) {
@@ -217,92 +225,165 @@ const handleSubmit = async (e) => {
         }
 
         const token = localStorage.getItem('token');
-        const formData = new FormData();
-        
-        // Base parameters
-        const params = {
-            version: "2389224e115448d9a77c07d7d45672b3f0aa45acacf1c5bcf51857ac295e3aec",
-            input: {
-                prompt: prompt,
-                negative_prompt: negativePrompt,
-                hf_loras: Object.keys(selectedLoras),
-                lora_scales: Object.values(selectedLoras),
-                num_outputs: 1,
-                aspect_ratio: aspectRatioMapping[aspectRatio],
-                output_format: "png",
-                guidance_scale: distilledCfgScale,
-                output_quality: 80,
-                prompt_strength: 0.8,
-                num_inference_steps: steps,
-                disable_safety_checker: true  // Add this line
-            }
-        };
 
-        // Add image-to-image parameters if initImage exists
-        if (isImageToImage && initImage) {
-            // Convert image file to base64
+        if (mode === 'upscale') {
+            // Handle upscaling
+            if (!initImage) {
+                throw new Error('Please select an image to upscale');
+            }
+
+            const progressControl = startProgressSimulation(setProgressPercentage, setGenerationStage, 20);
+
             const base64Image = await new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onloadend = () => resolve(reader.result);
                 reader.readAsDataURL(initImage);
             });
 
-            params.input.image = base64Image;
-            params.input.strength = denoisingStrength;
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/upscale`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ image: base64Image })
+            });
+
+            const data = await response.json();
+
+            if (data.error === 'Daily limit reached') {
+                if (currentSubscription?.tier_name === 'Free') {
+                    setRemainingGenerations(prev => prev + 1);
+                }
+                throw new Error('You have reached your daily free tier limit. Upgrade for unlimited generations!');
+            }
+
+            // Update with server's count to stay in sync
+            if (currentSubscription?.tier_name === 'Free' && data.remainingGenerations !== undefined) {
+                setRemainingGenerations(data.remainingGenerations);
+            }
+
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            progressControl.accelerate();
+            await new Promise(resolve => setTimeout(resolve, 600));
+            setProgressPercentage(100);
+            setGenerationStage('Complete!');
+            setImage(data.upscaledImage);
+
+        } else {
+            // Handle image generation
+            if (!prompt.trim()) {
+                throw new Error('Please enter a prompt');
+            }
+
+            const progressControl = startProgressSimulation(setProgressPercentage, setGenerationStage, steps);
+
+            const params = {
+                version: "2389224e115448d9a77c07d7d45672b3f0aa45acacf1c5bcf51857ac295e3aec",
+                input: {
+                    prompt: prompt + ' ' + buildLoraString(),
+                    negative_prompt: negativePrompt,
+                    hf_loras: Object.keys(selectedLoras),
+                    lora_scales: Object.values(selectedLoras),
+                    num_outputs: 1,
+                    aspect_ratio: aspectRatioMapping[aspectRatio],
+                    output_format: "png",
+                    guidance_scale: distilledCfgScale,
+                    output_quality: 80,
+                    prompt_strength: 0.8,
+                    num_inference_steps: steps,
+                    disable_safety_checker: true
+                }
+            };
+
+            if (isImageToImage && initImage) {
+                const base64Image = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(initImage);
+                });
+
+                params.input.image = base64Image;
+                params.input.strength = denoisingStrength;
+            }
+
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/replicate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(params)
+            });
+
+            const data = await response.json();
+
+            if (data.error === 'Daily limit reached') {
+                if (currentSubscription?.tier_name === 'Free') {
+                    setRemainingGenerations(prev => prev + 1);
+                }
+                throw new Error('You have reached your daily free tier limit. Upgrade for unlimited generations!');
+            }
+
+            if (currentSubscription?.tier_name === 'Free' && data.remainingGenerations !== undefined) {
+                setRemainingGenerations(data.remainingGenerations);
+            }
+
+            if (data.image) {
+                progressControl.accelerate();
+                await new Promise(resolve => setTimeout(resolve, 600));
+                setProgressPercentage(100);
+                setGenerationStage('Complete!');
+                setImage(data.image);
+            } else if (data.error) {
+                throw new Error(data.error);
+            } else {
+                console.error('Unexpected response:', data);
+                throw new Error('No image in response');
+            }
         }
 
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/replicate`, {
+    } catch (error) {
+        console.error('Error:', error);
+        setError(error.message || 'Failed to generate image');
+    } finally {
+        setLoading(false);
+    }
+};
+
+// Add upscale handler
+const handleUpscale = async () => {
+    if (!image) return;
+    
+    setIsUpscaling(true);
+    setError(null);
+
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/upscale`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify(params)
+            body: JSON.stringify({ image })
         });
 
         const data = await response.json();
-        
-        // When image is ready but progress isn't at 99%, accelerate it
-        if (data.image) {
-            progressControl.accelerate(); // Accelerate to 99%
-            // Wait for progress to catch up
-            await new Promise(resolve => setTimeout(resolve, 600));
-            setProgressPercentage(100);
-            setGenerationStage('Complete!');
-            setImage(data.image);
-        }
 
-        if (data.error === 'Daily limit reached') {
-            // Revert the local count if the server rejected
-            if (currentSubscription?.tier_name === 'Free') {
-                setRemainingGenerations(prev => prev + 1);
-            }
-            throw new Error('You have reached your daily free tier limit. Upgrade for unlimited generations!');
-        }
-
-        // Update with server's count to stay in sync
-        if (currentSubscription?.tier_name === 'Free' && data.remainingGenerations !== undefined) {
-            setRemainingGenerations(data.remaining);
-        }
-
-        if (data.image) {  // Changed from data.output
-            setProgressPercentage(100);
-            setGenerationStage('Complete!');
-            setImage(data.image);  // Use data.image instead of data.output[0]
-            console.log('Image generated successfully:', data);
-        } else if (data.error) {
+        if (data.error) {
             throw new Error(data.error);
-        } else {
-            console.error('Unexpected response:', data);
-            throw new Error('No image in response');
         }
 
+        setImage(data.upscaledImage);
     } catch (error) {
-        progressControl.stop();
-        console.error('Error:', error);
-        setError(error.message || 'Failed to generate image');
+        console.error('Upscaling error:', error);
+        setError('Failed to upscale image: ' + error.message);
     } finally {
-        setLoading(false);
+        setIsUpscaling(false);
     }
 };
 
@@ -407,8 +488,9 @@ useEffect(() => {
                                 id="prompt"
                                 value={prompt}
                                 onChange={(e) => setPrompt(e.target.value)}
-                                required 
-                                className="image-generator-input"
+                                required={mode === 'generate'}
+                                disabled={mode === 'upscale'}
+                                className={`image-generator-input ${mode === 'upscale' ? 'disabled' : ''}`}
                             />
                         </div>
                         
@@ -427,8 +509,9 @@ useEffect(() => {
                         </div>
                         <button 
                             type="button"
-                            className={`lora-settings-button ${Object.keys(selectedLoras).length > 0 ? 'active' : ''}`}
+                            className={`lora-settings-button ${Object.keys(selectedLoras).length > 0 ? 'active' : ''} ${mode === 'upscale' ? 'disabled' : ''}`}
                             onClick={() => setIsLoraOpen(true)}
+                            disabled={mode === 'upscale'}
                         >
                             ✨ Click Here to Add Presets & Styles ✨
                             <span className="lora-settings-subtext">
@@ -442,13 +525,14 @@ useEffect(() => {
                             isOpen={isLoraOpen}
                             onClose={() => setIsLoraOpen(false)}
                         />
-                        <div className="image-generator-creative-section">
+                        <div className={`image-generator-creative-section ${mode === 'upscale' ? 'disabled' : ''}`}>
                             <label className="image-generator-label">Creative Control</label>
                             <div className="image-generator-creative-buttons">
                                 <button
                                     type="button"
                                     className={`image-generator-creative-btn ${distilledCfgScale === 2 ? 'selected' : ''}`}
                                     onClick={() => setDistilledCfgScale(2)}
+                                    disabled={mode === 'upscale'}
                                 >
                                     Very Creative
                                 </button>
@@ -456,6 +540,7 @@ useEffect(() => {
                                     type="button"
                                     className={`image-generator-creative-btn ${distilledCfgScale === 3.5 ? 'selected' : ''}`}
                                     onClick={() => setDistilledCfgScale(3.5)}
+                                    disabled={mode === 'upscale'}
                                 >
                                     Creative
                                 </button>
@@ -463,6 +548,7 @@ useEffect(() => {
                                     type="button"
                                     className={`image-generator-creative-btn ${distilledCfgScale === 5 ? 'selected' : ''}`}
                                     onClick={() => setDistilledCfgScale(5)}
+                                    disabled={mode === 'upscale'}
                                 >
                                     Subtle
                                 </button>
@@ -470,18 +556,20 @@ useEffect(() => {
                                     type="button"
                                     className={`image-generator-creative-btn ${distilledCfgScale === 7 ? 'selected' : ''}`}
                                     onClick={() => setDistilledCfgScale(7)}
+                                    disabled={mode === 'upscale'}
                                 >
                                     Strict
                                 </button>
                             </div>
                         </div>
-                        <div className="image-generator-aspect-section">
+                        <div className={`image-generator-aspect-section ${mode === 'upscale' ? 'disabled' : ''}`}>
                             <label className="image-generator-label">Aspect Ratio</label>
                             <div className="image-generator-aspect-buttons">
                                 <button
                                     type="button"
                                     className={`image-generator-aspect-btn ${aspectRatio === 'Portrait' ? 'selected' : ''}`}
                                     onClick={() => setAspectRatio('Portrait')}
+                                    disabled={mode === 'upscale'}
                                 >
                                     Portrait
                                 </button>
@@ -489,6 +577,7 @@ useEffect(() => {
                                     type="button"
                                     className={`image-generator-aspect-btn ${aspectRatio === 'Landscape' ? 'selected' : ''}`}
                                     onClick={() => setAspectRatio('Landscape')}
+                                    disabled={mode === 'upscale'}
                                 >
                                     Landscape
                                 </button>
@@ -496,13 +585,30 @@ useEffect(() => {
                                     type="button"
                                     className={`image-generator-aspect-btn ${aspectRatio === 'Square' ? 'selected' : ''}`}
                                     onClick={() => setAspectRatio('Square')}
+                                    disabled={mode === 'upscale'}
                                 >
                                     Square
                                 </button>
                             </div>
                         </div>
                         <div className="image-generator-form-group">
-                            <label className="image-generator-label">Initial Image:</label>
+                            <label className="image-generator-label">Image Input:</label>
+                            <div className="mode-selector">
+                                <button 
+                                    type="button"
+                                    className={`mode-btn ${mode === 'generate' ? 'selected' : ''}`}
+                                    onClick={() => setMode('generate')}
+                                >
+                                    Generate New
+                                </button>
+                                <button 
+                                    type="button"
+                                    className={`mode-btn ${mode === 'upscale' ? 'selected' : ''}`}
+                                    onClick={() => setMode('upscale')}
+                                >
+                                    Upscale Existing
+                                </button>
+                            </div>
                             <div className="image-upload-container">
                                 <input
                                     type="file"
@@ -511,7 +617,7 @@ useEffect(() => {
                                         const file = e.target.files[0];
                                         if (file) {
                                             setInitImage(file);
-                                            setIsImageToImage(true);
+                                            setIsImageToImage(mode === 'generate');
                                         }
                                     }}
                                     className="image-generator-input"
@@ -540,7 +646,8 @@ useEffect(() => {
                             )}
                         </div>
 
-                        {isImageToImage && (
+                        {/* Show image-to-image controls only in generate mode */}
+                        {mode === 'generate' && isImageToImage && (
                             <div className="image-generator-form-group">
                                 <label className="image-generator-label">
                                     Denoising Strength: {denoisingStrength}
@@ -556,7 +663,7 @@ useEffect(() => {
                                 />
                             </div>
                         )}
-                        <div className="control-group">
+                        <div className={`control-group ${mode === 'upscale' ? 'disabled' : ''}`}>
                             <label>Steps: {steps}</label>
                             <input 
                                 type="range"
@@ -565,14 +672,17 @@ useEffect(() => {
                                 value={steps}
                                 onChange={(e) => setSteps(parseInt(e.target.value))}
                                 className="slider"
+                                disabled={mode === 'upscale'}
                             />
                         </div>
+                        {/* Update the submit button to show correct action */}
                         <button
                             type="submit"
-                            disabled={loading}
+                            disabled={loading || (mode === 'upscale' && !initImage)}
                             className="generate-button"
                         >
-                                {loading ? 'Generating...' : 'Generate Image'}
+                            {loading ? (mode === 'upscale' ? 'Upscaling...' : 'Generating...') 
+                            : (mode === 'upscale' ? 'Upscale Image' : 'Generate Image')}
                         </button>
                     </form>
                 </div>
@@ -604,7 +714,18 @@ useEffect(() => {
                         ) : error ? (
                             <div className="error-message">{error}</div>
                         ) : image ? (
-                            <img src={image} alt="Generated" className="generated-image" />
+                            <div className="generated-image-container">
+                                <img src={image} alt="Generated" className="generated-image" />
+                                <div className="image-actions">
+                                    <button
+                                        onClick={handleUpscale}
+                                        disabled={isUpscaling}
+                                        className="upscale-button"
+                                    >
+                                        {isUpscaling ? 'Upscaling...' : '🔍 Upscale Complete'}
+                                    </button>
+                                </div>
+                            </div>
                         ) : (
                             <div className="empty-preview">Your image will appear here</div>
                         )}

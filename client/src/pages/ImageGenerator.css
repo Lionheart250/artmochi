@@ -1116,3 +1116,63 @@ img {
     color: #fe2c55;
     font-size: 20px; /* Added larger font size */
 }
+
+.mode-selector {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.mode-btn {
+    flex: 1;
+    padding: 8px 16px;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    background: #2a2a2a;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mode-btn.selected {
+    background: #fe2c55;
+    border-color: #fe2c55;
+}
+
+.mode-btn:hover:not(.selected) {
+    background: #3a3a3a;
+}
+
+.disabled {
+    opacity: 0.2;
+    pointer-events: none;
+    user-select: none;
+}
+
+.image-generator-input.disabled {
+    background-color: #f5f5f5;
+    border-color: #ddd;
+    color: #999;
+}
+
+.image-generator-form-group.disabled label {
+    color: #999;
+}
+
+.lora-settings-button.disabled {
+    background-color: #f5f5f5;
+    border-color: #ddd;
+    cursor: not-allowed;
+}
+
+.control-group.disabled input[type="range"] {
+    opacity: 0.5;
+}
+
+.image-generator-creative-section.disabled button,
+.image-generator-aspect-section.disabled button {
+    background-color: #f5f5f5;
+    border-color: #ddd;
+    color: #999;
+    cursor: not-allowed;
+}

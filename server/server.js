@@ -2681,88 +2681,196 @@ const ensureFreeTierFallback = async (client, userId) => {
     }
 };
 
+app.post('/api/upscale', authenticateTokenWithAutoRefresh, async (req, res) => {
+    const client = await pool.connect();
+    let remainingGenerations = -1;
+    
+    try {
+        await client.query('BEGIN');
+
+        // Check subscription tier with row lock
+        const subscription = await client.query(
+            `SELECT st.name as tier_name
+             FROM user_subscriptions us
+             JOIN subscription_tiers st ON us.tier_id = st.id
+             WHERE us.user_id = $1 AND us.status = 'active'
+             FOR UPDATE`,
+            [req.user.userId]
+        );
+
+        if (!subscription.rows.length) {
+            await client.query('ROLLBACK');
+            return res.status(403).json({
+                error: 'No active subscription',
+                message: 'Please subscribe to upscale images'
+            });
+        }
+
+        // Handle free tier limits
+        if (subscription.rows[0]?.tier_name.toLowerCase() === 'free') {
+            const today = new Date().toISOString().split('T')[0];
+            
+            const currentCount = await client.query(
+                `SELECT count FROM daily_generations 
+                 WHERE user_id = $1 
+                 AND date = CURRENT_DATE AT TIME ZONE 'UTC'
+                 FOR UPDATE`,
+                [req.user.userId]
+            );
+
+            const usedToday = parseInt(currentCount.rows[0]?.count || 0);
+
+            if (usedToday >= 10) {
+                await client.query('ROLLBACK');
+                return res.status(403).json({
+                    error: 'Daily limit reached',
+                    message: 'Free tier is limited to 10 operations per day. Upgrade for unlimited usage!',
+                    remainingGenerations: 0
+                });
+            }
+
+            await client.query(
+                `INSERT INTO daily_generations (user_id, date, count)
+                 VALUES ($1, $2, 1)
+                 ON CONFLICT (user_id, date)
+                 DO UPDATE SET count = daily_generations.count + 1`,
+                [req.user.userId, today]
+            );
+
+            remainingGenerations = 9 - usedToday;
+        }
+
+        // Handle base64 image upload to S3 first
+        let imageUrl = req.body.image;
+        if (req.body.image.startsWith('data:')) {
+            const base64Data = req.body.image.split(',')[1];
+            const imageBuffer = Buffer.from(base64Data, 'base64');
+            
+            const tempKey = `original/${Date.now()}-${req.user.userId}.webp`;
+            const tempUpload = await uploadToS3(
+                imageBuffer,
+                tempKey,
+                'image/webp'
+            );
+
+            if (!tempUpload.success) {
+                throw new Error('Failed to upload original image');
+            }
+
+            imageUrl = tempUpload.url;
+        }
+
+        // Now use the S3 URL for categorization
+        const originalCategories = await categorizeImage(imageUrl);
+
+        // Use the S3 URL for Replicate
+        const response = await axios({
+            method: 'post',
+            url: 'https://api.replicate.com/v1/predictions',
+            headers: {
+                'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`,
+                'Content-Type': 'application/json'
+            },
+            data: {
+                version: "d0ee3d708c9b911f122a4ad90046c5d26a0293b99476d697f6bb7f2e251ce2d4",
+                input: {
+                    image: imageUrl,
+                    "upscale": 8
+                }
+            }
+        });
+
+        // Poll for completion
+        let prediction = response.data;
+        while (prediction.status !== 'succeeded' && prediction.status !== 'failed') {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const pollResponse = await axios({
+                method: 'get',
+                url: `https://api.replicate.com/v1/predictions/${prediction.id}`,
+                headers: {
+                    'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`
+                }
+            });
+            prediction = pollResponse.data;
+        }
+
+        if (prediction.status === 'failed') {
+            throw new Error('Upscaling failed');
+        }
+
+        // Save upscaled image
+        const imageResponse = await axios({
+            url: prediction.output,
+            responseType: 'arraybuffer'
+        });
+
+        const key = `upscaled/${Date.now()}-${req.user.userId}.webp`;
+        const s3Result = await uploadToS3(
+            imageResponse.data,
+            key,
+            'image/webp'
+        );
+
+        if (!s3Result.success) {
+            throw new Error('Failed to upload to S3');
+        }
+
+        // Find original image if it exists
+        const originalImage = await client.query(
+            `SELECT id FROM images WHERE image_url = $1`,
+            [req.body.image]
+        );
+
+        // Insert upscaled version using original categories
+        const imageResult = await client.query(`
+            INSERT INTO images (
+                user_id, 
+                image_url, 
+                aspect_ratio,
+                is_upscaled,
+                original_image_id,
+                upscale_version,
+                created_at
+            ) VALUES ($1, $2, $3, true, $4, $5, NOW())
+            RETURNING id
+        `, [
+            req.user.userId,
+            s3Result.url,
+            originalCategories.aspectRatio,
+            originalImage.rows[0]?.id || null,
+            'real-esrgan-8x'  // Changed to reflect 8x upscaling
+        ]);
+
+        // Insert categories from original image
+        for (const { category, confidence } of originalCategories.categories) {
+            const categoryId = await ensureCategory(client, category);
+            await client.query(`
+                INSERT INTO image_categories (image_id, category_id, confidence)
+                VALUES ($1, $2, $3)
+            `, [imageResult.rows[0].id, categoryId, confidence]);
+        }
+
+        await client.query('COMMIT');
+
+        res.json({
+            upscaledImage: s3Result.url,
+            categories: originalCategories.categories,
+            aspectRatio: originalCategories.aspectRatio,
+            remainingGenerations
+        });
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Upscaling error:', error);
+        res.status(500).json({ error: 'Failed to upscale image' });
+    } finally {
+        client.release();
+    }
+});
+
 
 // Start server
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
   });
-
-app.get('/api/images', cors(corsOptions), optionalAuthenticateToken, async (req, res) => {
-    try {
-        const { 
-            sortType = 'newest',
-            categories = [], // Can be array of categories
-            aspectRatio = 'all',
-            page = 1, 
-            limit = 20 
-        } = req.query;
-
-        const offset = (page - 1) * limit;
-        let whereConditions = [];
-        let params = [sortType];
-        let paramIndex = 2;
-
-        if (aspectRatio !== 'all') {
-            whereConditions.push(`i.aspect_ratio = $${paramIndex}`);
-            params.push(aspectRatio);
-            paramIndex++;
-        }
-
-        if (categories.length > 0) {
-            whereConditions.push(`
-                EXISTS (
-                    SELECT 1 FROM image_categories ic
-                    JOIN categories c ON ic.category_id = c.id
-                    WHERE ic.image_id = i.id 
-                    AND c.name = ANY($${paramIndex})
-                )
-            `);
-            params.push(categories);
-            paramIndex++;
-        }
-
-        const whereClause = whereConditions.length > 0 
-            ? 'WHERE ' + whereConditions.join(' AND ')
-            : '';
-
-        const query = `
-            SELECT DISTINCT i.*, 
-                   u.username,
-                   u.profile_picture,
-                   array_agg(DISTINCT c.name) as categories,
-                   array_agg(DISTINCT ic.confidence) as category_confidences,
-                   COUNT(DISTINCT l.id) as like_count,
-                   COUNT(DISTINCT cm.id) as comment_count,
-                   EXISTS(SELECT 1 FROM likes WHERE image_id = i.id AND user_id = $1) as user_has_liked
-            FROM images i
-            LEFT JOIN users u ON i.user_id = u.id
-            LEFT JOIN image_categories ic ON i.id = ic.image_id
-            LEFT JOIN categories c ON ic.category_id = c.id
-            LEFT JOIN likes l ON i.id = l.image_id
-            LEFT JOIN comments cm ON i.id = cm.image_id
-            ${whereClause}
-            GROUP BY i.id, u.username, u.profile_picture
-            ORDER BY 
-                CASE 
-                    WHEN $1 = 'mostLiked' THEN COUNT(DISTINCT l.id)
-                    WHEN $1 = 'mostCommented' THEN COUNT(DISTINCT cm.id)
-                    ELSE i.created_at
-                END DESC
-            LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
-        `;
-
-        params.push(limit, offset);
-        
-        const result = await pool.query(query, params);
-
-        res.json({
-            images: result.rows,
-            hasMore: result.rows.length === limit
-        });
-
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ error: 'Database error' });
-    }
-});
 
