@@ -515,6 +515,44 @@ useEffect(() => {
     };
 }, [isLoraOpen]);
 
+useEffect(() => {
+    const loadEditData = async () => {
+        const editDataString = localStorage.getItem('editImageData');
+        if (!editDataString) return;
+
+        try {
+            const editData = JSON.parse(editDataString);
+            
+            // Create a simple fetch to get the image as a blob
+            const response = await fetch(editData.url, {
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                }
+            });
+            
+            if (!response.ok) throw new Error('Failed to load image');
+            
+            const blob = await response.blob();
+            const file = new File([blob], 'image.webp', { type: 'image/webp' });
+
+            // Set all states at once
+            setMode(editData.mode);
+            setPrompt(editData.prompt || '');
+            setInitImage(file);
+            setIsImageToImage(editData.isImageToImage);
+
+            // Clean up
+            localStorage.removeItem('editImageData');
+        } catch (error) {
+            console.error('Error loading edit data:', error);
+            setError('Failed to load image for editing');
+        }
+    };
+
+    loadEditData();
+}, []); // Run once on component mount
+
   return (
     <div className="image-generator">
         {!currentSubscription ? (

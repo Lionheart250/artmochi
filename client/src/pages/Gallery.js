@@ -985,15 +985,24 @@ useEffect(() => {
 
     // Add these functions after your existing state declarations
     const handleImageEdit = (type, image) => {
-        // Store the image and its details in localStorage
-        localStorage.setItem('editImage', JSON.stringify({
-            url: image.image_url,
-            prompt: image.prompt,
-            type: type // 'upscale' or 'remix' or 'remixAndUpscale'
-        }));
-        
-        // Navigate to ImageGenerator
-        navigate('/imagegenerator');
+        try {
+            const imageData = {
+                url: image.image_url,
+                prompt: image.prompt,
+                mode: type === 'upscale' ? 'upscale' : 'generate',
+                isImageToImage: type === 'remix'
+            };
+
+            // Close the modal before navigating
+            closeModal();
+            
+            // Store data and navigate
+            localStorage.setItem('editImageData', JSON.stringify(imageData));
+            navigate('/imagegenerator');
+        } catch (error) {
+            console.error('Error preparing image for edit:', error);
+            setError('Failed to prepare image for editing');
+        }
     };
 
     return (
@@ -1205,12 +1214,6 @@ useEffect(() => {
                                                 className="gallery-action-btn"
                                             >
                                                 🎨 Remix
-                                            </button>
-                                            <button 
-                                                onClick={() => handleImageEdit('remixAndUpscale', images.find(img => img.id === activeImageId))}
-                                                className="gallery-action-btn"
-                                            >
-                                                ✨ Remix & Upscale
                                             </button>
                                         </div>
                                         <div className="gallery-image-metadata">
