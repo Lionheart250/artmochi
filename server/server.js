@@ -2173,12 +2173,10 @@ app.post('/save_generated_image', authenticateTokenWithAutoRefresh, async (req, 
 app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) => {
     const client = await pool.connect();
     let remainingGenerations = -1;
-    let isLastGeneration = false;
     
     try {
         await client.query('BEGIN');
 
-        // Check subscription tier with row lock
         const subscription = await client.query(
             `SELECT st.name as tier_name
              FROM user_subscriptions us
@@ -2188,7 +2186,6 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
             [req.user.userId]
         );
 
-        // If no subscription at all, return error
         if (!subscription.rows.length) {
             await client.query('ROLLBACK');
             return res.status(403).json({
@@ -2198,11 +2195,7 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
             });
         }
 
-        // Handle free tier limits
         if (subscription.rows[0]?.tier_name.toLowerCase() === 'free') {
-            const today = new Date().toISOString().split('T')[0];
-            
-            // First check current count before incrementing
             const currentCount = await client.query(
                 `SELECT count FROM daily_generations 
                  WHERE user_id = $1 
@@ -2217,26 +2210,22 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
                 await client.query('ROLLBACK');
                 return res.status(403).json({
                     error: 'Daily limit reached',
-                    message: 'Free tier is limited to 10 images per day. Upgrade for unlimited generations!',
+                    message: 'Free tier is limited to 10 operations per day.',
                     remainingGenerations: 0
                 });
             }
 
-            // Increment or create new record
             await client.query(
                 `INSERT INTO daily_generations (user_id, date, count)
-                 VALUES ($1, $2, 1)
+                 VALUES ($1, CURRENT_DATE, 1)
                  ON CONFLICT (user_id, date)
                  DO UPDATE SET count = daily_generations.count + 1`,
-                [req.user.userId, today]
+                [req.user.userId]
             );
 
-            // Check if this will be the last allowed generation
-            isLastGeneration = usedToday === 9;
             remainingGenerations = 9 - usedToday;
         }
 
-        // Generate image with Replicate
         const response = await axios({
             method: 'post',
             url: 'https://api.replicate.com/v1/predictions',
@@ -2250,7 +2239,6 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
             }
         });
 
-        // Poll for completion
         let prediction = response.data;
         while (prediction.status !== 'succeeded' && prediction.status !== 'failed') {
             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -2268,11 +2256,6 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
             throw new Error('Image generation failed');
         }
 
-        if (!prediction.output?.[0]) {
-            throw new Error('No output image received');
-        }
-
-        // Save generated image
         const imageResponse = await axios({
             url: prediction.output[0],
             responseType: 'arraybuffer'
@@ -2289,35 +2272,32 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
             throw new Error('Failed to upload to S3');
         }
 
-        // Get both content categories and aspect ratio
         const { categories, aspectRatio } = await categorizeImage(s3Result.url);
 
-        // Insert the image first
-        const imageResult = await client.query(`
-            INSERT INTO images (
-                user_id, image_url, prompt, negative_prompt, 
-                steps, aspect_ratio, created_at
-            ) VALUES ($1, $2, $3, $4, $5, $6, NOW())
-            RETURNING id
-        `, [
-            req.user.userId,
-            s3Result.url,
-            req.body.input.prompt,
-            req.body.input.negative_prompt || '',
-            req.body.input.num_inference_steps,
-            aspectRatio
-        ]);
+        // Only save to database if not auto-upscaling
+        if (!req.body.autoUpscale) {
+            const imageResult = await client.query(`
+                INSERT INTO images (
+                    user_id, image_url, prompt, negative_prompt, 
+                    steps, aspect_ratio, created_at
+                ) VALUES ($1, $2, $3, $4, $5, $6, NOW())
+                RETURNING id
+            `, [
+                req.user.userId,
+                s3Result.url,
+                req.body.input.prompt,
+                req.body.input.negative_prompt || '',
+                req.body.input.num_inference_steps || 30,
+                aspectRatio
+            ]);
 
-        // Insert categories with confidence scores
-        for (const { category, confidence } of categories) {
-            // Ensure category exists and get its ID
-            const categoryId = await ensureCategory(client, category);
-            
-            // Insert into image_categories with the valid category_id
-            await client.query(`
-                INSERT INTO image_categories (image_id, category_id, confidence)
-                VALUES ($1, $2, $3)
-            `, [imageResult.rows[0].id, categoryId, confidence]);
+            for (const { category, confidence } of categories) {
+                const categoryId = await ensureCategory(client, category);
+                await client.query(`
+                    INSERT INTO image_categories (image_id, category_id, confidence)
+                    VALUES ($1, $2, $3)
+                `, [imageResult.rows[0].id, categoryId, confidence]);
+            }
         }
 
         await client.query('COMMIT');
@@ -2333,6 +2313,186 @@ app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) =>
         await client.query('ROLLBACK');
         console.error('API error:', error);
         res.status(500).json({ error: 'Failed to generate image' });
+    } finally {
+        client.release();
+    }
+});
+
+app.post('/api/upscale', authenticateTokenWithAutoRefresh, async (req, res) => {
+    const client = await pool.connect();
+    let remainingGenerations = -1;
+    
+    try {
+        await client.query('BEGIN');
+
+        const subscription = await client.query(
+            `SELECT st.name as tier_name
+             FROM user_subscriptions us
+             JOIN subscription_tiers st ON us.tier_id = st.id
+             WHERE us.user_id = $1 AND us.status = 'active'
+             FOR UPDATE`,
+            [req.user.userId]
+        );
+
+        if (!subscription.rows.length) {
+            await client.query('ROLLBACK');
+            return res.status(403).json({
+                error: 'No active subscription',
+                message: 'Please subscribe to upscale images'
+            });
+        }
+
+        if (subscription.rows[0]?.tier_name.toLowerCase() === 'free') {
+            const today = new Date().toISOString().split('T')[0];
+            
+            const currentCount = await client.query(
+                `SELECT count FROM daily_generations 
+                 WHERE user_id = $1 
+                 AND date = CURRENT_DATE AT TIME ZONE 'UTC'
+                 FOR UPDATE`,
+                [req.user.userId]
+            );
+
+            const usedToday = parseInt(currentCount.rows[0]?.count || 0);
+
+            if (usedToday >= 10) {
+                await client.query('ROLLBACK');
+                return res.status(403).json({
+                    error: 'Daily limit reached',
+                    message: 'Free tier is limited to 10 operations per day. Upgrade for unlimited usage!',
+                    remainingGenerations: 0
+                });
+            }
+
+            await client.query(
+                `INSERT INTO daily_generations (user_id, date, count)
+                 VALUES ($1, $2, 1)
+                 ON CONFLICT (user_id, date)
+                 DO UPDATE SET count = daily_generations.count + 1`,
+                [req.user.userId, today]
+            );
+
+            remainingGenerations = 9 - usedToday;
+        }
+
+        let imageUrl = req.body.image;
+        if (req.body.image.startsWith('data:')) {
+            const base64Data = req.body.image.split(',')[1];
+            const imageBuffer = Buffer.from(base64Data, 'base64');
+            
+            const tempKey = `original/${Date.now()}-${req.user.userId}.webp`;
+            const tempUpload = await uploadToS3(
+                imageBuffer,
+                tempKey,
+                'image/webp'
+            );
+
+            if (!tempUpload.success) {
+                throw new Error('Failed to upload original image');
+            }
+
+            imageUrl = tempUpload.url;
+        }
+
+        const originalCategories = await categorizeImage(imageUrl);
+
+        const response = await axios({
+            method: 'post',
+            url: 'https://api.replicate.com/v1/predictions',
+            headers: {
+                'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`,
+                'Content-Type': 'application/json'
+            },
+            data: {
+                version: "d0ee3d708c9b911f122a4ad90046c5d26a0293b99476d697f6bb7f2e251ce2d4",
+                input: {
+                    image: imageUrl,
+                    "upscale": 8
+                }
+            }
+        });
+
+        let prediction = response.data;
+        while (prediction.status !== 'succeeded' && prediction.status !== 'failed') {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const pollResponse = await axios({
+                method: 'get',
+                url: `https://api.replicate.com/v1/predictions/${prediction.id}`,
+                headers: {
+                    'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`
+                }
+            });
+            prediction = pollResponse.data;
+        }
+
+        if (prediction.status === 'failed') {
+            throw new Error('Upscaling failed');
+        }
+
+        const imageResponse = await axios({
+            url: prediction.output,
+            responseType: 'arraybuffer'
+        });
+
+        const key = `upscaled/${Date.now()}-${req.user.userId}.webp`;
+        const s3Result = await uploadToS3(
+            imageResponse.data,
+            key,
+            'image/webp'
+        );
+
+        if (!s3Result.success) {
+            throw new Error('Failed to upload to S3');
+        }
+
+        const originalImage = await client.query(
+            `SELECT id, prompt FROM images WHERE image_url = $1`,
+            [req.body.image]
+        );
+
+        const imageResult = await client.query(`
+            INSERT INTO images (
+                user_id, 
+                image_url, 
+                prompt,
+                aspect_ratio,
+                is_upscaled,
+                original_image_id,
+                upscale_version,
+                created_at
+            ) VALUES ($1, $2, $3, $4, true, $5, $6, NOW())
+            RETURNING id`,
+            [
+                req.user.userId,
+                s3Result.url,
+                req.body.originalPrompt || originalImage.rows[0]?.prompt || null, // Prioritize passed prompt
+                originalCategories.aspectRatio,
+                originalImage.rows[0]?.id || null,
+                'real-esrgan-8x'
+            ]
+        );
+
+        for (const { category, confidence } of originalCategories.categories) {
+            const categoryId = await ensureCategory(client, category);
+            await client.query(`
+                INSERT INTO image_categories (image_id, category_id, confidence)
+                VALUES ($1, $2, $3)
+            `, [imageResult.rows[0].id, categoryId, confidence]);
+        }
+
+        await client.query('COMMIT');
+
+        res.json({
+            upscaledImage: s3Result.url,
+            categories: originalCategories.categories,
+            aspectRatio: originalCategories.aspectRatio,
+            remainingGenerations
+        });
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Upscaling error:', error);
+        res.status(500).json({ error: 'Failed to upscale image' });
     } finally {
         client.release();
     }
@@ -2680,194 +2840,6 @@ const ensureFreeTierFallback = async (client, userId) => {
         throw error;
     }
 };
-
-app.post('/api/upscale', authenticateTokenWithAutoRefresh, async (req, res) => {
-    const client = await pool.connect();
-    let remainingGenerations = -1;
-    
-    try {
-        await client.query('BEGIN');
-
-        // Check subscription tier with row lock
-        const subscription = await client.query(
-            `SELECT st.name as tier_name
-             FROM user_subscriptions us
-             JOIN subscription_tiers st ON us.tier_id = st.id
-             WHERE us.user_id = $1 AND us.status = 'active'
-             FOR UPDATE`,
-            [req.user.userId]
-        );
-
-        if (!subscription.rows.length) {
-            await client.query('ROLLBACK');
-            return res.status(403).json({
-                error: 'No active subscription',
-                message: 'Please subscribe to upscale images'
-            });
-        }
-
-        // Handle free tier limits
-        if (subscription.rows[0]?.tier_name.toLowerCase() === 'free') {
-            const today = new Date().toISOString().split('T')[0];
-            
-            const currentCount = await client.query(
-                `SELECT count FROM daily_generations 
-                 WHERE user_id = $1 
-                 AND date = CURRENT_DATE AT TIME ZONE 'UTC'
-                 FOR UPDATE`,
-                [req.user.userId]
-            );
-
-            const usedToday = parseInt(currentCount.rows[0]?.count || 0);
-
-            if (usedToday >= 10) {
-                await client.query('ROLLBACK');
-                return res.status(403).json({
-                    error: 'Daily limit reached',
-                    message: 'Free tier is limited to 10 operations per day. Upgrade for unlimited usage!',
-                    remainingGenerations: 0
-                });
-            }
-
-            await client.query(
-                `INSERT INTO daily_generations (user_id, date, count)
-                 VALUES ($1, $2, 1)
-                 ON CONFLICT (user_id, date)
-                 DO UPDATE SET count = daily_generations.count + 1`,
-                [req.user.userId, today]
-            );
-
-            remainingGenerations = 9 - usedToday;
-        }
-
-        // Handle base64 image upload to S3 first
-        let imageUrl = req.body.image;
-        if (req.body.image.startsWith('data:')) {
-            const base64Data = req.body.image.split(',')[1];
-            const imageBuffer = Buffer.from(base64Data, 'base64');
-            
-            const tempKey = `original/${Date.now()}-${req.user.userId}.webp`;
-            const tempUpload = await uploadToS3(
-                imageBuffer,
-                tempKey,
-                'image/webp'
-            );
-
-            if (!tempUpload.success) {
-                throw new Error('Failed to upload original image');
-            }
-
-            imageUrl = tempUpload.url;
-        }
-
-        // Now use the S3 URL for categorization
-        const originalCategories = await categorizeImage(imageUrl);
-
-        // Use the S3 URL for Replicate
-        const response = await axios({
-            method: 'post',
-            url: 'https://api.replicate.com/v1/predictions',
-            headers: {
-                'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`,
-                'Content-Type': 'application/json'
-            },
-            data: {
-                version: "d0ee3d708c9b911f122a4ad90046c5d26a0293b99476d697f6bb7f2e251ce2d4",
-                input: {
-                    image: imageUrl,
-                    "upscale": 8
-                }
-            }
-        });
-
-        // Poll for completion
-        let prediction = response.data;
-        while (prediction.status !== 'succeeded' && prediction.status !== 'failed') {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            const pollResponse = await axios({
-                method: 'get',
-                url: `https://api.replicate.com/v1/predictions/${prediction.id}`,
-                headers: {
-                    'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`
-                }
-            });
-            prediction = pollResponse.data;
-        }
-
-        if (prediction.status === 'failed') {
-            throw new Error('Upscaling failed');
-        }
-
-        // Save upscaled image
-        const imageResponse = await axios({
-            url: prediction.output,
-            responseType: 'arraybuffer'
-        });
-
-        const key = `upscaled/${Date.now()}-${req.user.userId}.webp`;
-        const s3Result = await uploadToS3(
-            imageResponse.data,
-            key,
-            'image/webp'
-        );
-
-        if (!s3Result.success) {
-            throw new Error('Failed to upload to S3');
-        }
-
-        // Find original image if it exists
-        const originalImage = await client.query(
-            `SELECT id FROM images WHERE image_url = $1`,
-            [req.body.image]
-        );
-
-        // Insert upscaled version using original categories
-        const imageResult = await client.query(`
-            INSERT INTO images (
-                user_id, 
-                image_url, 
-                aspect_ratio,
-                is_upscaled,
-                original_image_id,
-                upscale_version,
-                created_at
-            ) VALUES ($1, $2, $3, true, $4, $5, NOW())
-            RETURNING id
-        `, [
-            req.user.userId,
-            s3Result.url,
-            originalCategories.aspectRatio,
-            originalImage.rows[0]?.id || null,
-            'real-esrgan-8x'  // Changed to reflect 8x upscaling
-        ]);
-
-        // Insert categories from original image
-        for (const { category, confidence } of originalCategories.categories) {
-            const categoryId = await ensureCategory(client, category);
-            await client.query(`
-                INSERT INTO image_categories (image_id, category_id, confidence)
-                VALUES ($1, $2, $3)
-            `, [imageResult.rows[0].id, categoryId, confidence]);
-        }
-
-        await client.query('COMMIT');
-
-        res.json({
-            upscaledImage: s3Result.url,
-            categories: originalCategories.categories,
-            aspectRatio: originalCategories.aspectRatio,
-            remainingGenerations
-        });
-
-    } catch (error) {
-        await client.query('ROLLBACK');
-        console.error('Upscaling error:', error);
-        res.status(500).json({ error: 'Failed to upscale image' });
-    } finally {
-        client.release();
-    }
-});
-
 
 // Start server
 app.listen(port, () => {

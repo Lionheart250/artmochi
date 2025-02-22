@@ -983,6 +983,19 @@ useEffect(() => {
     const [columnImages, setColumnImages] = useState([]); // Add this state
     const [error, setError] = useState(null);
 
+    // Add these functions after your existing state declarations
+    const handleImageEdit = (type, image) => {
+        // Store the image and its details in localStorage
+        localStorage.setItem('editImage', JSON.stringify({
+            url: image.image_url,
+            prompt: image.prompt,
+            type: type // 'upscale' or 'remix' or 'remixAndUpscale'
+        }));
+        
+        // Navigate to ImageGenerator
+        navigate('/imagegenerator');
+    };
+
     return (
         <div className="gallery-page">
             <div className="gallery-container">
@@ -1180,6 +1193,24 @@ useEffect(() => {
                                             </button>
                                             <button className="gallery-action-btn">
                                                 <BookmarkIcon />
+                                            </button>
+                                            <button 
+                                                onClick={() => handleImageEdit('upscale', images.find(img => img.id === activeImageId))}
+                                                className="gallery-action-btn"
+                                            >
+                                                🔍 Upscale
+                                            </button>
+                                            <button 
+                                                onClick={() => handleImageEdit('remix', images.find(img => img.id === activeImageId))}
+                                                className="gallery-action-btn"
+                                            >
+                                                🎨 Remix
+                                            </button>
+                                            <button 
+                                                onClick={() => handleImageEdit('remixAndUpscale', images.find(img => img.id === activeImageId))}
+                                                className="gallery-action-btn"
+                                            >
+                                                ✨ Remix & Upscale
                                             </button>
                                         </div>
                                         <div className="gallery-image-metadata">

@@ -5,37 +5,8 @@ import { jwtDecode } from 'jwt-decode';
 import { useProfile } from '../context/ProfileContext';
 import './ImageGenerator.css';
 import LoraSelector from '../components/LoraSelector';
-import LoadingSpirals from '../components/LoadingSpirals';
 // Add useSubscription to your imports
 import { useSubscription } from '../features/subscriptions/store/SubscriptionContext';
-
-// Add constants at top
-const dimensions = {
-    Portrait: { width: 768, height: 1280 },
-    Landscape: { width: 1280, height: 768 },
-    Square: { width: 1024, height: 1024 }
-};
-
-const SAMPLERS = [
-    "Euler",
-    "Euler a",
-    "DPM++ 2M",
-    "DPM++ SDE",
-    "DPM++ 2M SDE",
-    "DPM fast",
-    "DPM adaptive",
-    "LMS",
-    "Heun",
-    "DPM2",
-    "DPM2 a"
-];
-
-const SCHEDULERS = [
-    "Simple",
-    "Karras"
-];
-
-const FORGE_URL = 'http://127.0.0.1:7860';
 
 // Add this mapping near your other constants
 const aspectRatioMapping = {
@@ -109,6 +80,45 @@ const startProgressSimulation = (setProgressPercentage, setGenerationStage, step
     };
 };
 
+// Add a new progress simulation function for upscaling
+const startUpscaleProgressSimulation = (setUpscaleProgress, setUpscaleStage) => {
+    const duration = 60000; // 60 seconds for upscale
+    const startTime = Date.now();
+    let animationFrameId = null;
+    let shouldAccelerate = false;
+    let currentProgress = 0;
+    
+    const updateProgress = () => {
+        const elapsed = Date.now() - startTime;
+        
+        if (shouldAccelerate) {
+            currentProgress += (99 - currentProgress) * 0.3;
+        } else {
+            currentProgress = Math.min((elapsed / duration) * 99, 99);
+        }
+        
+        currentProgress = Math.min(Math.max(currentProgress, 0), 99);
+        
+        setUpscaleProgress(Math.floor(currentProgress));
+        setUpscaleStage('Upscaling image...');
+
+        if (currentProgress < 99) {
+            animationFrameId = requestAnimationFrame(updateProgress);
+        }
+    };
+
+    animationFrameId = requestAnimationFrame(updateProgress);
+
+    return {
+        stop: () => {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+        },
+        accelerate: () => { shouldAccelerate = true; }
+    };
+};
+
 const ImageGenerator = () => {
   const { user } = useAuth();
   const { fetchUserProfile } = useProfile(); // Add this
@@ -144,6 +154,12 @@ const ImageGenerator = () => {
   const [isUpscaling, setIsUpscaling] = useState(false);
   // Add this state near your other states
   const [mode, setMode] = useState('generate'); // 'generate' or 'upscale'
+  // Add new state for auto-upscale
+  const [autoUpscale, setAutoUpscale] = useState(false);
+  // Add new state for upscaling progress
+  const [upscaleProgress, setUpscaleProgress] = useState(0);
+  const [upscaleStage, setUpscaleStage] = useState('');
+  const [isUpscalingPhase, setIsUpscalingPhase] = useState(false);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -240,13 +256,22 @@ const handleSubmit = async (e) => {
                 reader.readAsDataURL(initImage);
             });
 
+            // Find original image's prompt if it exists
+            let originalPrompt = null;
+            if (initImage?.dataset?.prompt) {
+                originalPrompt = initImage.dataset.prompt;
+            }
+
             const response = await fetch(`${process.env.REACT_APP_API_URL}/api/upscale`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ image: base64Image })
+                body: JSON.stringify({ 
+                    image: base64Image,
+                    originalPrompt: originalPrompt
+                })
             });
 
             const data = await response.json();
@@ -284,7 +309,7 @@ const handleSubmit = async (e) => {
             const params = {
                 version: "2389224e115448d9a77c07d7d45672b3f0aa45acacf1c5bcf51857ac295e3aec",
                 input: {
-                    prompt: prompt + ' ' + buildLoraString(),
+                    prompt: prompt,
                     negative_prompt: negativePrompt,
                     hf_loras: Object.keys(selectedLoras),
                     lora_scales: Object.values(selectedLoras),
@@ -296,7 +321,8 @@ const handleSubmit = async (e) => {
                     prompt_strength: 0.8,
                     num_inference_steps: steps,
                     disable_safety_checker: true
-                }
+                },
+                autoUpscale: autoUpscale // Add this flag
             };
 
             if (isImageToImage && initImage) {
@@ -332,16 +358,48 @@ const handleSubmit = async (e) => {
                 setRemainingGenerations(data.remainingGenerations);
             }
 
+            // Inside handleSubmit, in the 'else' block where data.image is checked:
             if (data.image) {
                 progressControl.accelerate();
                 await new Promise(resolve => setTimeout(resolve, 600));
+                
+                if (autoUpscale) {
+                    progressControl.stop();
+                    setProgressPercentage(100);
+                    setIsUpscalingPhase(true);
+                    const upscaleProgressControl = startUpscaleProgressSimulation(setUpscaleProgress, setUpscaleStage);
+                    
+                    const upscaleResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/upscale`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ 
+                            image: data.image,
+                            originalPrompt: prompt // Always include the prompt
+                        })
+                    });
+
+                    const upscaleData = await upscaleResponse.json();
+                    if (upscaleData.error) {
+                        throw new Error(upscaleData.error);
+                    }
+                    
+                    upscaleProgressControl.accelerate();
+                    await new Promise(resolve => setTimeout(resolve, 600));
+                    setUpscaleProgress(100);
+                    setImage(upscaleData.upscaledImage);
+                    setIsUpscalingPhase(false);
+                } else {
+                    setImage(data.image);
+                }
+                
                 setProgressPercentage(100);
                 setGenerationStage('Complete!');
-                setImage(data.image);
             } else if (data.error) {
                 throw new Error(data.error);
             } else {
-                console.error('Unexpected response:', data);
                 throw new Error('No image in response');
             }
         }
@@ -351,12 +409,15 @@ const handleSubmit = async (e) => {
         setError(error.message || 'Failed to generate image');
     } finally {
         setLoading(false);
+        setIsUpscalingPhase(false);
+        setUpscaleProgress(0);
+        setProgressPercentage(0);
     }
 };
 
 // Add upscale handler
-const handleUpscale = async () => {
-    if (!image) return;
+const handleUpscale = async (imageToUpscale) => {
+    if (!imageToUpscale) return;
     
     setIsUpscaling(true);
     setError(null);
@@ -369,16 +430,18 @@ const handleUpscale = async () => {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ image })
+            body: JSON.stringify({ 
+                image: imageToUpscale,
+                originalPrompt: prompt // Add this to pass the prompt
+            })
         });
 
         const data = await response.json();
-
         if (data.error) {
             throw new Error(data.error);
         }
 
-        setImage(data.upscaledImage);
+        return data.upscaledImage;
     } catch (error) {
         console.error('Upscaling error:', error);
         setError('Failed to upscale image: ' + error.message);
@@ -426,7 +489,6 @@ const validUpscalers = [
     "SwinIR 4x"
 ];
 
-//const LoadingText = LoadingSpirals;
 
 useEffect(() => {
     const mainContainer = document.querySelector('.image-generator-container');
@@ -599,14 +661,14 @@ useEffect(() => {
                                     className={`mode-btn ${mode === 'generate' ? 'selected' : ''}`}
                                     onClick={() => setMode('generate')}
                                 >
-                                    Generate New
+                                    Remix Image
                                 </button>
                                 <button 
                                     type="button"
                                     className={`mode-btn ${mode === 'upscale' ? 'selected' : ''}`}
                                     onClick={() => setMode('upscale')}
                                 >
-                                    Upscale Existing
+                                    Upscale Only
                                 </button>
                             </div>
                             <div className="image-upload-container">
@@ -675,6 +737,19 @@ useEffect(() => {
                                 disabled={mode === 'upscale'}
                             />
                         </div>
+                        {mode === 'generate' && (
+                            <div className="image-generator-form-group">
+                                <label className="image-generator-label">
+                                    <input
+                                        type="checkbox"
+                                        checked={autoUpscale}
+                                        onChange={(e) => setAutoUpscale(e.target.checked)}
+                                        className="auto-upscale-checkbox"
+                                    />
+                                    Upscale after generation
+                                </label>
+                            </div>
+                        )}
                         {/* Update the submit button to show correct action */}
                         <button
                             type="submit"
@@ -695,21 +770,37 @@ useEffect(() => {
                     <div className="preview-content">
                         {loading ? (
                             <div className="loading-container">
-                               {/* <LoadingText /> */}
-                                <div className="generation-progress">
-                                    <div className="progress-bar">
-                                        <div 
-                                            className="progress-fill"
-                                            style={{ width: `${progressPercentage}%` }}
-                                        />
+                                {!isUpscalingPhase ? (
+                                    <div className="generation-progress">
+                                        <div className="progress-bar">
+                                            <div 
+                                                className="progress-fill"
+                                                style={{ width: `${progressPercentage}%` }}
+                                            />
+                                        </div>
+                                        <div className="progress-text">
+                                            {generationStage}
+                                            <span className="progress-percentage">
+                                                {progressPercentage}%
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div className="progress-text">
-                                        {generationStage}
-                                        <span className="progress-percentage">
-                                            {progressPercentage}%
-                                        </span>
+                                ) : (
+                                    <div className="generation-progress">
+                                        <div className="progress-bar">
+                                            <div 
+                                                className="progress-fill"
+                                                style={{ width: `${upscaleProgress}%` }}
+                                            />
+                                        </div>
+                                        <div className="progress-text">
+                                            {upscaleStage}
+                                            <span className="progress-percentage">
+                                                {upscaleProgress}%
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
                             </div>
                         ) : error ? (
                             <div className="error-message">{error}</div>
