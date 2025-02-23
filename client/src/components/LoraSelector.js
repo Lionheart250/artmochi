@@ -519,28 +519,28 @@ const realisticLoras = [
 
 const loraExamples = {
     'gothic-lines': [
-        '/examples/loras/gothic-lines/1.webp',
-        '/examples/loras/gothic-lines/2.webp',
-        '/examples/loras/gothic-lines/3.webp',
-        '/examples/loras/gothic-lines/4.webp'
+        '/examples/loras/gothic-lines/gothic-lines1.webp',
+        '/examples/loras/gothic-lines/gothic-lines2.webp',
+        '/examples/loras/gothic-lines/gothic-lines3.webp',
+        '/examples/loras/gothic-lines/gothic-lines4.webp'
     ],
     'anime-lines': [
-        '/examples/loras/anime-lines/1.webp',
-        '/examples/loras/anime-lines/2.webp',
-        '/examples/loras/anime-lines/3.webp',
-        '/examples/loras/anime-lines/4.webp'
+        '/examples/loras/anime-lines/anime-lines1.webp',
+        '/examples/loras/anime-lines/anime-lines2.webp',
+        '/examples/loras/anime-lines/anime-lines3.webp',
+        '/examples/loras/anime-lines/anime-lines4.webp'
     ],
     'dark-energetic-anime': [
-        '/examples/loras/dark-energetic-anime/1.webp',
-        '/examples/loras/dark-energetic-anime/2.webp',
-        '/examples/loras/dark-energetic-anime/3.webp',
-        '/examples/loras/dark-energetic-anime/4.webp'
+        '/examples/loras/dark-energetic-anime/dark-energetic-anime1.webp',
+        '/examples/loras/dark-energetic-anime/dark-energetic-anime2.webp',
+        '/examples/loras/dark-energetic-anime/dark-energetic-anime3.webp',
+        '/examples/loras/dark-energetic-anime/dark-energetic-anime4.webp'
     ],
     'vibrant-energetic-anime': [
-        '/examples/loras/vibrant-energetic-anime/1.webp',
-        '/examples/loras/vibrant-energetic-anime/2.webp',
-        '/examples/loras/vibrant-energetic-anime/3.webp',
-        '/examples/loras/vibrant-energetic-anime/4.webp'
+        '/examples/loras/vibrant-energetic-anime/vibrant-energetic-anime1.webp',
+        '/examples/loras/vibrant-energetic-anime/vibrant-energetic-anime2.webp',
+        '/examples/loras/vibrant-energetic-anime/vibrant-energetic-anime3.webp',
+        '/examples/loras/vibrant-energetic-anime/vibrant-energetic-anime4.webp'
     ],
     'vintage-pulp': [
         '/examples/loras/vintage-pulp/1.webp',
