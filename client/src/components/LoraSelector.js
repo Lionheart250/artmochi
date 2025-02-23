@@ -6,295 +6,307 @@ const artisticLoras = [
         id: 'gothic-lines',
         name: '🗡️ Shadow Weaver',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1202162?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:599757@1202162'
     },
     {
         id: 'anime-lines',
         name: '✨ Kawaii Master',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1296986?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:599757@1296986'
     },
     {
         id: 'dark-energetic-anime',
         name: '⚡ Dark Pulse',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/988430?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:883007@988430'
     },
     {
         id: 'vibrant-energetic-anime',
         name: '🌈 Color Blast',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/989004?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:1252726@989004'
     },
     {
         id: 'vintage-pulp',
         name: '📚 Retro Master',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1304212?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:1159484@1304212'
     },
     {
         id: 'anime-detailed-eyes',
         name: '👁️ Soul Gaze',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/726524?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:649378@726524'
     },
     {
         id: 'luminous-shadows-cape',
         name: '🌙 Luminous Shadows',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/791149?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:707312@791149'
     },
     {
         id: 'faetastic-details',
         name: '🧚 Fae Magic',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/720252?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:643886@720252'
     },
     {
         id: 'storybook-artstyle',
         name: '📖 Page Master',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/723968?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:552804@723968'
     },
     {
         id: 'castlevania-art-style',
         name: '🦇 Gothic Symphony',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/731291?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:653658@731291'
     },
     {
         id: 'retro-anime',
         name: '📺 Nostalgia Wave',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/806265?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:721039@806265'
     },
     {
         id: 'arcane-intro-style',
         name: '⚔️ Arcane Forge',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1089413?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:972886@1089413'
     },
     {
         id: 'midjourney-style',
         name: '🎨 Dream Vision',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1249246?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:646411@981456'
     },
     {
         id: 'animelike-digital-painting',
         name: '🖌️ Digital paint',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/778925?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:889233@995078'
+    },
+    {
+        id: 'glitch effect',
+        name: '🖌️ glitch effect',
+        defaultWeight: 1.0,
+        url: 'civitai:889233@995078'
     },
     {
         id: 'gothicniji',
         name: '🖤 Gothic Oil Paint',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1189748?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:910493@1018961'
     },
     {
         id: 'midjourneyanime',
         name: '✨ Dream Anime',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/837239?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:640247@837239'
     },
     {
         id: 'digital-abyss',
         name: '🌌 Void Explorer',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/945122?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:844787@945122'
     },
     {
         id: 'cyber-graphic',
         name: '🤖 Cyber Matrix',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/843447?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:104855@843447'
     },
     {
         id: 'elden-ring-style',
         name: '⚔️ Dark Souls',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/746484?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:667004@746484'
     },
     {
         id: 'frazetta-style',
         name: '🗡️ Fantasy Legend',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/792756?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:657789@792756'
     },
     {
         id: 'colored-pencil',
         name: '✏️ Master Sketch',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1086297?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:970164@1086297'
     },
     {
         id: 'dark-fantasy',
-        name: '🏰 Dark Fantasy',
+        name: '🏰 Dark Fantasy Anime',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/759880?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:987994@1106834'
     },
     {
         id: 'weird-core',
         name: '🌀 Weird Core',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1195582?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:651444@728797'
     },
     {
         id: 'citron-style',
         name: '🍋 Citron Style',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/756390?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:206975@748278'
     },
     {
         id: 'anime-no-line',
         name: '✨ Clean Anime',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1401595?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:610299@1401595'
     },
     {
         id: 'anime-digital-matte',
-        name: '🎨 Digital Matte',
+        name: '😈 Devilish Anime',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1424928?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:653658@1091576'
     },
     {
         id: 'dream-world',
-        name: '💫 Dream World',
+        name: '💫 Pastel Dream World',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1346178?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:1100297@1235963'
+    },
+    {
+        id: 'anime-furry-anime',
+        name: '🦊 Furry Anime',
+        defaultWeight: 1.0,
+        url: 'civitai:683555@765069'
     },
     {
         id: 'anime-furry',
-        name: '🦊 Furry Anime',
+        name: '🦊 animal people',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1413007?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:666530@745927'
     },
     {
         id: 'anime-gloss',
-        name: '✨ Glossy Anime',
+        name: '✨ Anime Abyss',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1318366?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:1220524@1375016'
     },
     {
         id: 'anime-patootie',
-        name: '🎀 Patootie Style',
+        name: '🎀 Cute anime',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1405358?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:714944@857267'
     },
     {
         id: 'commodore-64',
         name: '🕹️ Retro Gaming',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/804983?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:1264020@1425473'
     },
     {
-        id: 'arcane-art',
-        name: '⚡ Arcane Art',
+        id: 'ghibliesque',
+        name: '⚡ Ghibli Style',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1274224?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:433138@755852'
     },
     {
         id: 'anime-ink',
-        name: '🖋️ Ink Style',
+        name: '🖋️ Serial Experiments',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/914935?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:131706@997381'
     },
     {
         id: 'ethereal-dark',
         name: '🌑 Ethereal Dark',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1148373?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:1024070@1148373'
     },
     {
         id: 'painting-realm',
         name: '🎨 Painting Realm',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1161271?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:1035333@1161271'
     },
     {
         id: 'impressionist',
         name: '🖼️ Impressionist',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/755598?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:545264@755598'
     },
     {
         id: 'mai-colors',
         name: '🌈 Mai Colors',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1040356?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:862902@965491'
     },
     {
         id: 'neuro-cyberpunk',
         name: '🤖 Neuro Cyber',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1109173?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:903057@1410611'
     },
     {
         id: 'cyberpunk-anime',
         name: '🌆 Cyber Anime',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/747534?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:128568@747534'
     },
     {
         id: 'randomaxx-artistry',
-        name: '🎨 Random Art',
+        name: '🎨 Artifyer',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1075587?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:960680@1075587'
     },
     {
         id: 'randommax-animefy',
-        name: '✨ Random Anime',
+        name: '✨ Animeifyer',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1183977?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:1055190@1183977'
     },
     {
         id: 'randomax-illustrify',
-        name: '🖌️ Random Illust',
+        name: '🖌️ Illustifyer',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1146446?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:1022387@1146446'
     },
     {
         id: 'anime-niji',
         name: '🌈 Niji Style',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/937875?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:838306@937875'
     },
     {
         id: 'neon-fantasy',
         name: '💫 Neon Fantasy',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/798521?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:1271843@1434732'
     },
     {
         id: 'anime-shadow-circuit',
         name: '⚡ Shadow Circuit',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1050932?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:938811@1050932'
     },
     {
         id: 'details-colored-pencil',
         name: '✏️ Color Pencil Pro',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1299834?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:1155749@1405684'
     },
     {
         id: 'blender-style',
         name: '🎮 Blender Style',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/911089?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:638052@743692'
     },
     {
         id: 'pixel-art',
         name: '🎮 Pixel Art',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1329685?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:834943@934133'
     },
     {
         id: 'new-future',
         name: '🚀 New Future',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/737325?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:658958@737325'
     },
 ];
 
@@ -303,199 +315,205 @@ const realisticLoras = [
         id: 'dramatic-lighting',
         name: '💫 Light Sorcerer',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1278791?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:340248@1278791'
     },
     {
         id: 'image-upgrader',
         name: '🔮 Reality Enhancer',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/984672?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:562866@1405178'
     },
     {
         id: 'neon-lighting',
         name: '🌟 Neon Dreams',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1091576?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:109613@891865'
     },
     {
         id: 'turbo-detailer',
         name: '🔍 Detail Master',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1041442?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:930386@1041442'
     },
     {
         id: 'analog-grainy',
         name: '📷 Retro Time Capsule',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1276001?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:1134895@1276001'
     },
     {
         id: 'portrait-style',
         name: '👤 Portrait Style',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/728041?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:650743@728041'
     },
     {
         id: 'realistic-skin',
         name: '✨ Skin Perfectionist',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1081450?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:580857@1081450'
     },
     {
         id: 'realistic-horror',
         name: '👻 Nightmare Forge',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/875302?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:878368@983288'
     },
     {
         id: 'ultra-realistic',
         name: '🎭 Hyper Reality',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1026423?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:796382@1026423'
     },
     {
         id: 'fantasy-wizards-witches',
         name: '🧙‍♂️ Spellcraft Supreme',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/880134?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:308147@880134'        
     },
     {
         id: 'real-anime',
         name: '🎌 Real Anime',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/735703?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:1131779@1272367'
+    },
+    {
+        id: 'realanime ',
+        name: '🎌 Real Anime B',
+        defaultWeight: 1.0,
+        url: 'civitai:1078433@1210699'
     },
     {
         id: 'realistic-80s-fantasy',
         name: '🎬 80s Dark Fantasy',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1287297?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:789313@1287297'
     },
     {
         id: 'realistic-60s',
         name: '🎥 60s Cinema',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1282338?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:878199@1282338'
     },
     {
         id: 'surreal-landscapes',
         name: '🌅 Surreal Lands',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1295995?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'urn:air:flux1:lora:civitai:681518@762800'
     },
     {
         id: 'opal-style',
         name: '💎 Opal Dreams',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1329546?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'urn:air:flux1:lora:civitai:225003@1329546'
     },
     {
         id: 'liminal-space',
         name: '🚪 Liminal Space',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1388658?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'urn:air:flux1:lora:civitai:658134@898109'
     },
     {
         id: 'retro-future',
         name: '🚀 Retro Future',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1369314?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:886913@992798'
     },
     {
         id: 'new-fantasy-core',
         name: '✨ Fantasy Core',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1264088?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'urn:air:flux1:lora:civitai:810000@1264088'
     },
     {
         id: 'randomax-robotics',
         name: '🤖 Robotics',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1115596?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:995599@1115596'
     },
     {
         id: 'future-fashion',
         name: '👔 Future Fashion',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1067736?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:746410@1067736'
     },
     {
         id: 'epic-details',
         name: '🔍 Epic Details',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/863655?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:736706@863655'
     },
     {
         id: 'impossible-geometry',
         name: '📐 Impossible Space',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/874854?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:274425@874854'
     },
     {
         id: 'vintage-neon',
         name: '💫 Vintage Neon',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/756311?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:675648@756311'
     },
     {
         id: 'semi-realistic',
         name: '🎭 Semi Real',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/978472?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:731933@978472'
     },
     {
         id: 'ultra-style',
         name: '✨ Ultra Style',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1115050?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:978314@1413133'
     },
     {
         id: 'gold-leaf',
         name: '🌟 Gold Leaf',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1022295?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:311801@1022295'
     },
     {
         id: 'fantasy-scifi',
         name: '🚀 Sci-Fantasy',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/840288?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'urn:air:flux1:lora:civitai:751420@840288'
     },
     {
         id: 'neogods',
-        name: '👑 Neo Gods',
+        name: '👑 Alien Vibes',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1051442?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:182987@805363'
     },
     {
         id: 'vintage-abstract',
         name: '🎨 Vintage Abstract',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/804970?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'urn:air:flux1:lora:civitai:719889@804970'
     },
     {
         id: 'spooky-vibes',
         name: '👻 Spooky Vibes',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/922827?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:863136@1081646'
     },
     {
         id: 'fantasy-enhancer',
         name: '✨ Fantasy Plus',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/926161?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:854554@956116'
     },
     {
         id: '2000s-social',
-        name: '📱 2000s Social',
+        name: '📱 VHS',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1434002?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: ':civitai:71125@1135830'
     },
     {
-        id: 'sony-camera',
-        name: '📸 Old Camera',
+        id: 'darkcore',
+        name: '🌚 Darkness',
         defaultWeight: 1.0,
-        url: 'https://civitai.com/api/download/models/1321224?type=Model&format=SafeTensor&token=c581b817077f3d10301ca21d33b78186'
+        url: 'civitai:667693@747357'
     },
 ];
 
@@ -680,19 +698,17 @@ const loraExamples = {
         '/examples/loras/anime-patootie/3.webp',
         '/examples/loras/anime-patootie/4.webp'
     ],
-    // ... previous entries ...
-
     'commodore-64': [
         '/examples/loras/commodore-64/1.webp',
         '/examples/loras/commodore-64/2.webp',
         '/examples/loras/commodore-64/3.webp',
         '/examples/loras/commodore-64/4.webp'
     ],
-    'arcane-art': [
-        '/examples/loras/arcane-art/1.webp',
-        '/examples/loras/arcane-art/2.webp',
-        '/examples/loras/arcane-art/3.webp',
-        '/examples/loras/arcane-art/4.webp'
+    'ghibliesque': [
+        '/examples/loras/ghibliesque/1.webp',
+        '/examples/loras/ghibliesque/2.webp',
+        '/examples/loras/ghibliesque/3.webp',
+        '/examples/loras/ghibliesque/4.webp'
     ],
     'anime-ink': [
         '/examples/loras/anime-ink/1.webp',
@@ -977,11 +993,11 @@ const loraExamples = {
         '/examples/loras/2000s-social/3.webp',
         '/examples/loras/2000s-social/4.webp'
     ],
-    'sony-camera': [
-        '/examples/loras/sony-camera/1.webp',
-        '/examples/loras/sony-camera/2.webp',
-        '/examples/loras/sony-camera/3.webp',
-        '/examples/loras/sony-camera/4.webp'
+    'darkcore': [
+        '/examples/loras/darkcore/1.webp',
+        '/examples/loras/darkcore/2.webp',
+        '/examples/loras/darkcore/3.webp',
+        '/examples/loras/darkcore/4.webp'
     ]
 };
 

@@ -40,6 +40,7 @@ const crypto = require('crypto');
 const { categorizeImage } = require('./services/imageService');
 const app = express();
 const port = process.env.PORT || 3000;
+const { Runware } = require('@runware/sdk-js');
 
 const s3Client = new S3Client({
     credentials: {
@@ -2167,6 +2168,170 @@ app.post('/save_generated_image', authenticateTokenWithAutoRefresh, async (req, 
     } catch (error) {
         console.error('Error saving image:', error);
         res.status(500).json({ error: 'Failed to save image' });
+    }
+});
+
+app.post('/api/runware', authenticateTokenWithAutoRefresh, async (req, res) => {
+    const client = await pool.connect();
+    let remainingGenerations = -1;
+    
+    try {
+        await client.query('BEGIN');
+
+        // Same subscription check as Replicate
+        const subscription = await client.query(
+            `SELECT st.name as tier_name
+             FROM user_subscriptions us
+             JOIN subscription_tiers st ON us.tier_id = st.id
+             WHERE us.user_id = $1 AND us.status = 'active'
+             FOR UPDATE`,
+            [req.user.userId]
+        );
+
+        if (!subscription.rows.length) {
+            await client.query('ROLLBACK');
+            return res.status(403).json({
+                error: 'No active subscription',
+                message: 'Please subscribe to generate images',
+                remainingGenerations: 0
+            });
+        }
+
+        // Same free tier handling as Replicate
+        if (subscription.rows[0]?.tier_name.toLowerCase() === 'free') {
+            const currentCount = await client.query(
+                `SELECT count FROM daily_generations 
+                 WHERE user_id = $1 
+                 AND date = CURRENT_DATE AT TIME ZONE 'UTC'
+                 FOR UPDATE`,
+                [req.user.userId]
+            );
+
+            const usedToday = parseInt(currentCount.rows[0]?.count || 0);
+
+            if (usedToday >= 10) {
+                await client.query('ROLLBACK');
+                return res.status(403).json({
+                    error: 'Daily limit reached',
+                    message: 'Free tier is limited to 10 operations per day.',
+                    remainingGenerations: 0
+                });
+            }
+
+            await client.query(
+                `INSERT INTO daily_generations (user_id, date, count)
+                 VALUES ($1, CURRENT_DATE, 1)
+                 ON CONFLICT (user_id, date)
+                 DO UPDATE SET count = daily_generations.count + 1`,
+                [req.user.userId]
+            );
+
+            remainingGenerations = 9 - usedToday;
+        }
+
+        // Initialize Runware
+        const runware = new Runware({ apiKey: process.env.RUNWARE_API_KEY });
+        await runware.ensureConnection();
+
+        // Generate image with Runware
+        const result = await runware.requestImages({
+            taskType: "imageInference",
+            positivePrompt: req.body.input.prompt,
+            negativePrompt: req.body.input.negative_prompt || "",
+            width: req.body.input.width || 1024,
+            height: req.body.input.height || 1024,
+            model: "civitai:618692@691639",
+            steps: req.body.input.num_inference_steps || 20,
+            CFGScale: req.body.input.guidance_scale || 7,
+            scheduler: "DPM++ 2M Karras",
+            outputFormat: "PNG",
+            outputType: "URL",
+            outputQuality: 95,
+            // Add Lora handling
+            ...(req.body.input.lora && {
+                lora: req.body.input.lora.map(({ model, weight }) => ({
+                    model,
+                    weight: parseFloat(weight)
+                }))
+            }),
+            // Keep existing image-to-image handling
+            ...(req.body.input.init_image && {
+                seedImage: req.body.input.init_image,
+                strength: req.body.input.strength || 0.75
+            })
+        });
+        
+        // Add debug logging
+        console.log('Runware request params:', {
+            prompt: req.body.input.prompt,
+            lora: req.body.input.lora
+        });
+
+        if (!result || !result[0]?.imageURL) {
+            throw new Error('Image generation failed');
+        }
+
+        // Same S3 upload process as Replicate
+        const imageResponse = await axios({
+            url: result[0].imageURL,
+            responseType: 'arraybuffer'
+        });
+
+        const key = `generated/${Date.now()}-${req.user.userId}.webp`;
+        const s3Result = await uploadToS3(
+            imageResponse.data,
+            key,
+            'image/webp'
+        );
+
+        if (!s3Result.success) {
+            throw new Error('Failed to upload to S3');
+        }
+
+        // Same categorization and database storage as Replicate
+        const { categories, aspectRatio } = await categorizeImage(s3Result.url);
+
+        if (!req.body.autoUpscale) {
+            const imageResult = await client.query(`
+                INSERT INTO images (
+                    user_id, image_url, prompt, negative_prompt, 
+                    steps, aspect_ratio, created_at
+                ) VALUES ($1, $2, $3, $4, $5, $6, NOW())
+                RETURNING id
+            `, [
+                req.user.userId,
+                s3Result.url,
+                req.body.input.prompt,
+                req.body.input.negative_prompt || '',
+                req.body.input.num_inference_steps || 20,
+                aspectRatio
+            ]);
+
+            for (const { category, confidence } of categories) {
+                const categoryId = await ensureCategory(client, category);
+                await client.query(`
+                    INSERT INTO image_categories (image_id, category_id, confidence)
+                    VALUES ($1, $2, $3)
+                `, [imageResult.rows[0].id, categoryId, confidence]);
+            }
+        }
+
+        await client.query('COMMIT');
+
+        // Same response format as Replicate
+        res.json({
+            image: s3Result.url,
+            categories: categories,
+            aspectRatio: aspectRatio,
+            remainingGenerations: remainingGenerations
+        });
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Runware API error:', error);
+        res.status(500).json({ error: 'Failed to generate image' });
+    } finally {
+        client.release();
     }
 });
 

@@ -7,6 +7,8 @@ import './ImageGenerator.css';
 import LoraSelector from '../components/LoraSelector';
 // Add useSubscription to your imports
 import { useSubscription } from '../features/subscriptions/store/SubscriptionContext';
+// Add new imports at the top
+import { runwareService } from '../services/runwareService';
 
 // Add this mapping near your other constants
 const aspectRatioMapping = {
@@ -136,13 +138,10 @@ const ImageGenerator = () => {
   const [selectedLoras, setSelectedLoras] = useState({});
   const [isLoraOpen, setIsLoraOpen] = useState(false);
   const [categories, setCategories] = useState([]); // State for categories
-  const [sampler, setSampler] = useState("DPM++ 2M SDE");
-  const [upscaler, setUpscaler] = useState("R-ESRGAN 4x+");
   const [initImage, setInitImage] = useState(null);
   const [isImageToImage, setIsImageToImage] = useState(false);
   const [denoisingStrength, setDenoisingStrength] = useState(0.75);
   const [steps, setSteps] = useState(20); // Add state for steps
-  const [scheduler, setScheduler] = useState("Karras");
   const [showAdvanced, setShowAdvanced] = useState(false); // Add state for advanced section toggle
   const [distilledCfgScale, setDistilledCfgScale] = useState(3.5);
   // Add remaining generations state
@@ -160,6 +159,10 @@ const ImageGenerator = () => {
   const [upscaleProgress, setUpscaleProgress] = useState(0);
   const [upscaleStage, setUpscaleStage] = useState('');
   const [isUpscalingPhase, setIsUpscalingPhase] = useState(false);
+  // Add new state variables
+  const [selectedModel, setSelectedModel] = useState(runwareService.DEFAULT_MODEL);
+  const [controlNetSettings, setControlNetSettings] = useState(null);
+  const [cost, setCost] = useState(0);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -306,37 +309,63 @@ const handleSubmit = async (e) => {
 
             const progressControl = startProgressSimulation(setProgressPercentage, setGenerationStage, steps);
 
+            let generatedImage;
+
             const params = {
-                version: "2389224e115448d9a77c07d7d45672b3f0aa45acacf1c5bcf51857ac295e3aec",
                 input: {
                     prompt: prompt,
                     negative_prompt: negativePrompt,
-                    hf_loras: Object.keys(selectedLoras),
-                    lora_scales: Object.values(selectedLoras),
                     num_outputs: 1,
-                    aspect_ratio: aspectRatioMapping[aspectRatio],
-                    output_format: "png",
-                    guidance_scale: distilledCfgScale,
-                    output_quality: 80,
-                    prompt_strength: 0.8,
                     num_inference_steps: steps,
-                    disable_safety_checker: true
-                },
-                autoUpscale: autoUpscale // Add this flag
+                    guidance_scale: distilledCfgScale,
+                    output_format: "PNG", // Match Replicate's format
+                    outputType: "URL",
+                    // Map aspect ratio to dimensions
+                    ...(aspectRatio === 'Portrait' ? {
+                        width: 768,
+                        height: 1280
+                    } : aspectRatio === 'Landscape' ? {
+                        width: 1280,
+                        height: 768
+                    } : {
+                        width: 1024,
+                        height: 1024
+                    }),
+                    // Handle image-to-image
+                    ...(isImageToImage && initImage && {
+                        seedImage: await new Promise((resolve) => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => resolve(reader.result);
+                            reader.readAsDataURL(initImage);
+                        }),
+                        strength: denoisingStrength
+                    }),
+                    // Add Lora support if needed
+                    ...(Object.keys(selectedLoras).length > 0 && {
+                        lora: Object.entries(selectedLoras).map(([url, weight]) => {
+                            // Check if it's already in civitai:modelId@versionId format
+                            if (url.startsWith('civitai:')) {
+                                return {
+                                    model: url,
+                                    weight: parseFloat(weight)
+                                };
+                            }
+                            // Extract model ID and version from URL if it's a full URL
+                            const matches = url.match(/models\/(\d+)/);
+                            if (matches) {
+                                return {
+                                    model: `civitai:${matches[1]}`,
+                                    weight: parseFloat(weight)
+                                };
+                            }
+                            return null;
+                        }).filter(Boolean)
+                    })
+                }
             };
+            console.log('Lora params:', params.input.lora); // Add this for debugging
 
-            if (isImageToImage && initImage) {
-                const base64Image = await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result);
-                    reader.readAsDataURL(initImage);
-                });
-
-                params.input.image = base64Image;
-                params.input.strength = denoisingStrength;
-            }
-
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/replicate`, {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/runware`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -346,67 +375,54 @@ const handleSubmit = async (e) => {
             });
 
             const data = await response.json();
+            console.log('Runware response:', data); // Add this for debugging
 
-            if (data.error === 'Daily limit reached') {
-                if (currentSubscription?.tier_name === 'Free') {
-                    setRemainingGenerations(prev => prev + 1);
-                }
-                throw new Error('You have reached your daily free tier limit. Upgrade for unlimited generations!');
-            }
-
-            if (currentSubscription?.tier_name === 'Free' && data.remainingGenerations !== undefined) {
-                setRemainingGenerations(data.remainingGenerations);
-            }
-
-            // Inside handleSubmit, in the 'else' block where data.image is checked:
-            if (data.image) {
-                progressControl.accelerate();
-                await new Promise(resolve => setTimeout(resolve, 600));
-                
-                if (autoUpscale) {
-                    progressControl.stop();
-                    setProgressPercentage(100);
-                    setIsUpscalingPhase(true);
-                    const upscaleProgressControl = startUpscaleProgressSimulation(setUpscaleProgress, setUpscaleStage);
-                    
-                    const upscaleResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/upscale`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify({ 
-                            image: data.image,
-                            originalPrompt: prompt // Always include the prompt
-                        })
-                    });
-
-                    const upscaleData = await upscaleResponse.json();
-                    if (upscaleData.error) {
-                        throw new Error(upscaleData.error);
-                    }
-                    
-                    upscaleProgressControl.accelerate();
-                    await new Promise(resolve => setTimeout(resolve, 600));
-                    setUpscaleProgress(100);
-                    setImage(upscaleData.upscaledImage);
-                    setIsUpscalingPhase(false);
-                } else {
-                    setImage(data.image);
-                }
-                
-                setProgressPercentage(100);
-                setGenerationStage('Complete!');
-            } else if (data.error) {
+            if (data.error) {
                 throw new Error(data.error);
+            }
+
+            // Update this section to properly handle the image
+            progressControl.accelerate();
+            await new Promise(resolve => setTimeout(resolve, 600));
+            
+            if (autoUpscale) {
+                setProgressPercentage(100);
+                setIsUpscalingPhase(true);
+                const upscaleProgressControl = startUpscaleProgressSimulation(setUpscaleProgress, setUpscaleStage);
+                
+                const upscaleResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/upscale`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ 
+                        image: data.image, // Make sure this matches your server response
+                        originalPrompt: prompt
+                    })
+                });
+
+                const upscaleData = await upscaleResponse.json();
+                if (upscaleData.error) {
+                    throw new Error(upscaleData.error);
+                }
+                
+                upscaleProgressControl.accelerate();
+                await new Promise(resolve => setTimeout(resolve, 600));
+                setUpscaleProgress(100);
+                setImage(upscaleData.upscaledImage);
+                setIsUpscalingPhase(false);
             } else {
-                throw new Error('No image in response');
+                setImage(data.image); // Make sure data.image is the URL from your server
+            }
+            
+            setProgressPercentage(100);
+            setGenerationStage('Complete!');
+
+            if (data.categories) {
+                setCategories(data.categories);
             }
         }
-
-    } catch (error) {
-        console.error('Error:', error);
-        setError(error.message || 'Failed to generate image');
     } finally {
         setLoading(false);
         setIsUpscalingPhase(false);
@@ -471,24 +487,6 @@ useEffect(() => {
 
     fetchRemainingGenerations();
 }, [currentSubscription]);
-
-const validUpscalers = [
-    "Latent",
-    "Latent (antialiased)",
-    "Latent (bicubic)",
-    "Latent (bicubic antialiased)",
-    "Latent (nearest)",
-    "Latent (nearest-exact)",
-    "None",
-    "Lanczos",
-    "Nearest",
-    "ESRGAN_4x",
-    "R-ESRGAN 4x+",
-    "4x_foolhardy_Remacri",  // Custom ESRGAN model
-    "LDSR",
-    "SwinIR 4x"
-];
-
 
 useEffect(() => {
     const mainContainer = document.querySelector('.image-generator-container');

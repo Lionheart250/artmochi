@@ -1191,3 +1191,75 @@ img {
     margin-right: 8px;
     accent-color: #fe2c55;
 }
+
+/* Service Selector Styles */
+.service-selector {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+}
+
+.service-selector-label {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+    color: #e2e8f0;
+}
+
+.service-selector-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.service-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(30, 30, 30, 0.6);
+    border: 2px solid transparent;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    gap: 0.5rem;
+}
+
+.service-btn:hover {
+    background: rgba(40, 40, 40, 0.8);
+}
+
+.service-btn.active {
+    background: rgba(147, 51, 234, 0.3);
+    border-color: #9333ea;
+}
+
+.service-icon {
+    font-size: 1.25rem;
+}
+
+.service-name {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.service-beta {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #9333ea;
+    color: white;
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-weight: bold;
+}
+
+.service-active-indicator {
+    position: absolute;
+    bottom: -6px;
+    color: #9333ea;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
