@@ -30,7 +30,7 @@ const artisticLoras = [
         id: 'vintage-pulp',
         name: '📚 Retro Master',
         defaultWeight: 1.0,
-        url: 'civitai:1159484@1304212'
+        url: 'civitai:783000@884161'
     },
     {
         id: 'anime-detailed-eyes',
@@ -549,28 +549,28 @@ const loraExamples = {
         '/examples/loras/vintage-pulp/4.webp'
     ],
     'anime-detailed-eyes': [
-        '/examples/loras/anime-detailed-eyes/1.webp',
-        '/examples/loras/anime-detailed-eyes/2.webp',
-        '/examples/loras/anime-detailed-eyes/3.webp',
-        '/examples/loras/anime-detailed-eyes/4.webp'
+        '/examples/loras/anime-detailed-eyes/anime-detailed-eyes1.webp',
+        '/examples/loras/anime-detailed-eyes/anime-detailed-eyes2.webp',
+        '/examples/loras/anime-detailed-eyes/anime-detailed-eyes3.webp',
+        '/examples/loras/anime-detailed-eyes/anime-detailed-eyes4.webp'
     ],
     'luminous-shadows-cape': [
-        '/examples/loras/luminous-shadows-cape/1.webp',
-        '/examples/loras/luminous-shadows-cape/2.webp',
-        '/examples/loras/luminous-shadows-cape/3.webp',
-        '/examples/loras/luminous-shadows-cape/4.webp'
+        '/examples/loras/luminous-shadows-cape/luminous-shadows-cape1.webp',
+        '/examples/loras/luminous-shadows-cape/luminous-shadows-cape2.webp',
+        '/examples/loras/luminous-shadows-cape/luminous-shadows-cape3.webp',
+        '/examples/loras/luminous-shadows-cape/luminous-shadows-cape4.webp'
     ],
     'faetastic-details': [
-        '/examples/loras/faetastic-details/1.webp',
-        '/examples/loras/faetastic-details/2.webp',
-        '/examples/loras/faetastic-details/3.webp',
-        '/examples/loras/faetastic-details/4.webp'
+        '/examples/loras/faetastic-details/faetastic-details1.webp',
+        '/examples/loras/faetastic-details/faetastic-details2.webp',
+        '/examples/loras/faetastic-details/faetastic-details3.webp',
+        '/examples/loras/faetastic-details/faetastic-details4.webp'
     ],
     'storybook-artstyle': [
-        '/examples/loras/storybook-artstyle/1.webp',
-        '/examples/loras/storybook-artstyle/2.webp',
-        '/examples/loras/storybook-artstyle/3.webp',
-        '/examples/loras/storybook-artstyle/4.webp'
+        '/examples/loras/storybook-artstyle/storybook-artstyle1.webp',
+        '/examples/loras/storybook-artstyle/storybook-artstyle2.webp',
+        '/examples/loras/storybook-artstyle/storybook-artstyle3.webp',
+        '/examples/loras/storybook-artstyle/storybook-artstyle4.webp'
     ],
     'castlevania-art-style': [
         '/examples/loras/castlevania-art-style/1.webp',
