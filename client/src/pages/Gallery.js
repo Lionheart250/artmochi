@@ -796,7 +796,7 @@ const Gallery = () => {
                 pageNum === 1 ? filteredImages : [...prev, ...filteredImages]
             );
             
-            setHasMore(filteredImages.length === 20);
+            setHasMore(filteredImages.length > 0);
             fetchingRef.current = false;
         } catch (error) {
             console.error('Error fetching images:', error);

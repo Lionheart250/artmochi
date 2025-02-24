@@ -944,32 +944,32 @@ app.get('/images', cors(corsOptions), optionalAuthenticateToken, async (req, res
         const sortParam = paramIndex;
 
         const orderQuery = `
-            SELECT i.id
-            FROM images i
-            LEFT JOIN (
-                SELECT image_id,
-                    COUNT(*) as total_likes,
-                    COUNT(CASE WHEN created_at > NOW() - INTERVAL '24 hours' THEN 1 END) as recent_likes
-                FROM likes
-                GROUP BY image_id
-            ) l ON l.image_id = i.id
-            LEFT JOIN (
-                SELECT image_id,
-                    COUNT(*) as total_comments,
-                    COUNT(CASE WHEN created_at > NOW() - INTERVAL '24 hours' THEN 1 END) as recent_comments
-                FROM comments
-                GROUP BY image_id
-            ) c ON c.image_id = i.id
-            ${whereString}
-            ORDER BY 
-                CASE 
-                    WHEN $${sortParam} = 'mostLiked' THEN (SELECT COUNT(*) FROM likes WHERE image_id = i.id)
-                    WHEN $${sortParam} = 'mostCommented' THEN (SELECT COUNT(*) FROM comments WHERE image_id = i.id)
-                    WHEN $${sortParam} = 'trending' THEN 
-                        (COALESCE(recent_likes, 0) * 2 + COALESCE(recent_comments, 0) * 3) * 
-                        (1 + (1000000 / (EXTRACT(epoch FROM NOW() - i.created_at) + 1)))
-                    ELSE extract(epoch from i.created_at)::bigint
-                END DESC`;
+    SELECT i.id
+    FROM images i
+    LEFT JOIN (
+        SELECT image_id,
+            COUNT(*) as total_likes,
+            COUNT(CASE WHEN created_at > NOW() - INTERVAL '24 hours' THEN 1 END) as recent_likes
+        FROM likes
+        GROUP BY image_id
+    ) l ON l.image_id = i.id
+    LEFT JOIN (
+        SELECT image_id,
+            COUNT(*) as total_comments,
+            COUNT(CASE WHEN created_at > NOW() - INTERVAL '24 hours' THEN 1 END) as recent_comments
+        FROM comments
+        GROUP BY image_id
+    ) c ON c.image_id = i.id
+    ${whereString}
+    ORDER BY 
+        CASE 
+            WHEN $${sortParam} = 'mostLiked' THEN (SELECT COUNT(*) FROM likes WHERE image_id = i.id)
+            WHEN $${sortParam} = 'mostCommented' THEN (SELECT COUNT(*) FROM comments WHERE image_id = i.id)
+            WHEN $${sortParam} = 'trending' THEN 
+                (COALESCE(recent_likes, 0) * 2 + COALESCE(recent_comments, 0) * 3) * 
+                (1 + (1000000 / (EXTRACT(epoch FROM NOW() - i.created_at) + 1)))
+            ELSE EXTRACT(epoch FROM i.created_at)
+        END DESC`;
 
         const sortedIds = (await pool.query(orderQuery, params)).rows.map(row => row.id);
         const totalImages = sortedIds.length;
