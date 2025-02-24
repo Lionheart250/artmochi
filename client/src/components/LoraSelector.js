@@ -27,7 +27,7 @@ const artisticLoras = [
         url: 'civitai:1252726@989004'
     },
     {
-        id: 'retro anime dark',
+        id: 'retro-anime-dark',
         name: '🌙 dark retro anime',
         defaultWeight: 1.0,
         url: 'civitai:1061759@1191560'
@@ -542,11 +542,11 @@ const loraExamples = {
         '/examples/loras/vibrant-energetic-anime/vibrant-energetic-anime3.webp',
         '/examples/loras/vibrant-energetic-anime/vibrant-energetic-anime4.webp'
     ],
-    'vintage-pulp': [
-        '/examples/loras/vintage-pulp/1.webp',
-        '/examples/loras/vintage-pulp/2.webp',
-        '/examples/loras/vintage-pulp/3.webp',
-        '/examples/loras/vintage-pulp/4.webp'
+    'retro-anime-dark': [
+        '/examples/loras/retro-anime-dark/retro-anime-dark1.webp',
+        '/examples/loras/retro-anime-dark/retro-anime-dark2.webp',
+        '/examples/loras/retro-anime-dark/retro-anime-dark3.webp',
+        '/examples/loras/retro-anime-dark/retro-anime-dark4.webp'
     ],
     'anime-detailed-eyes': [
         '/examples/loras/anime-detailed-eyes/anime-detailed-eyes1.webp',
