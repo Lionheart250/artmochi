@@ -1001,6 +1001,7 @@ app.get('/images', cors(corsOptions), optionalAuthenticateToken, async (req, res
             LEFT JOIN image_categories ic ON i.id = ic.image_id
             LEFT JOIN categories c ON ic.category_id = c.id
             WHERE i.id = ANY($2)
+            AND NOT i.private  -- Add this line to exclude private images
             GROUP BY i.id, u.username, u.profile_picture
             ORDER BY array_position($2::int[], i.id)
             LIMIT $3`,
@@ -2178,7 +2179,6 @@ app.post('/api/runware', authenticateTokenWithAutoRefresh, async (req, res) => {
     try {
         await client.query('BEGIN');
 
-        // Same subscription check as Replicate
         const subscription = await client.query(
             `SELECT st.name as tier_name
              FROM user_subscriptions us
@@ -2197,7 +2197,6 @@ app.post('/api/runware', authenticateTokenWithAutoRefresh, async (req, res) => {
             });
         }
 
-        // Same free tier handling as Replicate
         if (subscription.rows[0]?.tier_name.toLowerCase() === 'free') {
             const currentCount = await client.query(
                 `SELECT count FROM daily_generations 
@@ -2229,49 +2228,47 @@ app.post('/api/runware', authenticateTokenWithAutoRefresh, async (req, res) => {
             remainingGenerations = 9 - usedToday;
         }
 
-        // Initialize Runware
         const runware = new Runware({ apiKey: process.env.RUNWARE_API_KEY });
         await runware.ensureConnection();
 
-        // Generate image with Runware
-        const result = await runware.requestImages({
+        const params = {
             taskType: "imageInference",
+            taskUUID: crypto.randomUUID(),
             positivePrompt: req.body.input.prompt,
-            negativePrompt: req.body.input.negative_prompt || "",
-            width: req.body.input.width || 1024,
-            height: req.body.input.height || 1024,
             model: "civitai:618692@691639",
-            steps: req.body.input.num_inference_steps || 20,
-            CFGScale: req.body.input.guidance_scale || 7,
-            scheduler: "DPM++ 2M Karras",
-            outputFormat: "PNG",
-            outputType: "URL",
-            outputQuality: 95,
-            // Add Lora handling
+            height: req.body.input.height || 1024,
+            width: req.body.input.width || 1024,
+            numberResults: 1,
+            ...((!req.body.input.seedImage) && {
+                outputType: "URL",
+                outputFormat: "PNG",
+                negativePrompt: req.body.input.negative_prompt || "",
+                steps: req.body.input.num_inference_steps || 20,
+                CFGScale: req.body.input.guidance_scale || 7
+            }),
+            ...(req.body.input.seedImage && {
+                seedImage: req.body.input.seedImage,
+                strength: req.body.input.strength || 0.75
+            }),
             ...(req.body.input.lora && {
                 lora: req.body.input.lora.map(({ model, weight }) => ({
-                    model,
+                    model: model.startsWith('civitai:') ? model : `civitai:${model}`,
                     weight: parseFloat(weight)
                 }))
-            }),
-            // Keep existing image-to-image handling
-            ...(req.body.input.init_image && {
-                seedImage: req.body.input.init_image,
-                strength: req.body.input.strength || 0.75
             })
-        });
-        
-        // Add debug logging
+        };
+
         console.log('Runware request params:', {
             prompt: req.body.input.prompt,
             lora: req.body.input.lora
         });
 
+        const result = await runware.requestImages(params);
+
         if (!result || !result[0]?.imageURL) {
             throw new Error('Image generation failed');
         }
 
-        // Same S3 upload process as Replicate
         const imageResponse = await axios({
             url: result[0].imageURL,
             responseType: 'arraybuffer'
@@ -2288,15 +2285,16 @@ app.post('/api/runware', authenticateTokenWithAutoRefresh, async (req, res) => {
             throw new Error('Failed to upload to S3');
         }
 
-        // Same categorization and database storage as Replicate
         const { categories, aspectRatio } = await categorizeImage(s3Result.url);
+        const isEnterprise = subscription.rows[0]?.tier_name.toLowerCase() === 'enterprise';
+        const isPrivate = isEnterprise && req.body.input.private === true;
 
         if (!req.body.autoUpscale) {
             const imageResult = await client.query(`
                 INSERT INTO images (
                     user_id, image_url, prompt, negative_prompt, 
-                    steps, aspect_ratio, created_at
-                ) VALUES ($1, $2, $3, $4, $5, $6, NOW())
+                    steps, aspect_ratio, created_at, private
+                ) VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7)
                 RETURNING id
             `, [
                 req.user.userId,
@@ -2304,7 +2302,8 @@ app.post('/api/runware', authenticateTokenWithAutoRefresh, async (req, res) => {
                 req.body.input.prompt,
                 req.body.input.negative_prompt || '',
                 req.body.input.num_inference_steps || 20,
-                aspectRatio
+                aspectRatio,
+                isPrivate
             ]);
 
             for (const { category, confidence } of categories) {
@@ -2318,12 +2317,12 @@ app.post('/api/runware', authenticateTokenWithAutoRefresh, async (req, res) => {
 
         await client.query('COMMIT');
 
-        // Same response format as Replicate
         res.json({
             image: s3Result.url,
             categories: categories,
             aspectRatio: aspectRatio,
-            remainingGenerations: remainingGenerations
+            remainingGenerations: remainingGenerations,
+            isPrivate: isPrivate
         });
 
     } catch (error) {

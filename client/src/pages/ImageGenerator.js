@@ -163,6 +163,9 @@ const ImageGenerator = () => {
   const [selectedModel, setSelectedModel] = useState(runwareService.DEFAULT_MODEL);
   const [controlNetSettings, setControlNetSettings] = useState(null);
   const [cost, setCost] = useState(0);
+  // Add new state for private generation
+  const [isPrivate, setIsPrivate] = useState(false);
+  const isEnterprise = currentSubscription?.tier_name === 'Enterprise';
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -309,61 +312,49 @@ const handleSubmit = async (e) => {
 
             const progressControl = startProgressSimulation(setProgressPercentage, setGenerationStage, steps);
 
-            let generatedImage;
+            // Convert image to base64 if it's image-to-image
+            let imageData = null;
+            if (isImageToImage && initImage) {
+                imageData = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        // Get the full base64 string including data URI
+                        resolve(reader.result);
+                    };
+                    reader.readAsDataURL(initImage);
+                });
+            }
 
             const params = {
-                input: {
-                    prompt: prompt,
-                    negative_prompt: negativePrompt,
-                    num_outputs: 1,
-                    num_inference_steps: steps,
-                    guidance_scale: distilledCfgScale,
-                    output_format: "PNG", // Match Replicate's format
+                taskType: "imageInference",
+                taskUUID: crypto.randomUUID(),
+                positivePrompt: prompt,
+                model: "civitai:618692@691639",
+                height: aspectRatio === 'Portrait' ? 1280 : aspectRatio === 'Landscape' ? 768 : 1024,
+                width: aspectRatio === 'Portrait' ? 768 : aspectRatio === 'Landscape' ? 1280 : 1024,
+                numberResults: 1,
+                
+                // Add image-to-image specific parameters
+                ...(isImageToImage && imageData ? {
+                    seedImage: imageData,
+                    strength: denoisingStrength
+                } : {
+                    // Text-to-image specific parameters
                     outputType: "URL",
-                    // Map aspect ratio to dimensions
-                    ...(aspectRatio === 'Portrait' ? {
-                        width: 768,
-                        height: 1280
-                    } : aspectRatio === 'Landscape' ? {
-                        width: 1280,
-                        height: 768
-                    } : {
-                        width: 1024,
-                        height: 1024
-                    }),
-                    // Handle image-to-image
-                    ...(isImageToImage && initImage && {
-                        seedImage: await new Promise((resolve) => {
-                            const reader = new FileReader();
-                            reader.onloadend = () => resolve(reader.result);
-                            reader.readAsDataURL(initImage);
-                        }),
-                        strength: denoisingStrength
-                    }),
-                    // Add Lora support if needed
-                    ...(Object.keys(selectedLoras).length > 0 && {
-                        lora: Object.entries(selectedLoras).map(([url, weight]) => {
-                            // Check if it's already in civitai:modelId@versionId format
-                            if (url.startsWith('civitai:')) {
-                                return {
-                                    model: url,
-                                    weight: parseFloat(weight)
-                                };
-                            }
-                            // Extract model ID and version from URL if it's a full URL
-                            const matches = url.match(/models\/(\d+)/);
-                            if (matches) {
-                                return {
-                                    model: `civitai:${matches[1]}`,
-                                    weight: parseFloat(weight)
-                                };
-                            }
-                            return null;
-                        }).filter(Boolean)
-                    })
-                }
+                    outputFormat: "PNG",
+                    negativePrompt: negativePrompt || "",
+                    steps: steps,
+                    CFGScale: distilledCfgScale
+                }),
+
+                // Add Lora parameters if any
+                ...(Object.keys(selectedLoras).length > 0 && {
+                    lora: Object.entries(selectedLoras).map(([url, weight]) => ({
+                        model: url.startsWith('civitai:') ? url : `civitai:${url.match(/models\/(\d+)/)?.[1]}`,
+                        weight: parseFloat(weight)
+                    })).filter(Boolean)
+                })
             };
-            console.log('Lora params:', params.input.lora); // Add this for debugging
 
             const response = await fetch(`${process.env.REACT_APP_API_URL}/api/runware`, {
                 method: 'POST',
@@ -371,7 +362,27 @@ const handleSubmit = async (e) => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(params)
+                body: JSON.stringify({
+                    input: {
+                        prompt: prompt,
+                        negative_prompt: negativePrompt,
+                        height: aspectRatio === 'Portrait' ? 1280 : aspectRatio === 'Landscape' ? 768 : 1024,
+                        width: aspectRatio === 'Portrait' ? 768 : aspectRatio === 'Landscape' ? 1280 : 1024,
+                        num_inference_steps: steps,
+                        guidance_scale: distilledCfgScale,
+                        ...(isImageToImage && imageData && {
+                            seedImage: imageData,
+                            strength: denoisingStrength
+                        }),
+                        ...(Object.keys(selectedLoras).length > 0 && {
+                            lora: Object.entries(selectedLoras).map(([url, weight]) => ({
+                                model: url.startsWith('civitai:') ? url : `civitai:${url.match(/models\/(\d+)/)?.[1]}`,
+                                weight: parseFloat(weight)
+                            }))
+                        }),
+                        private: isPrivate
+                    }
+                })
             });
 
             const data = await response.json();
@@ -723,7 +734,9 @@ const handleWeightChange = (loraId, newWeight) => {
                                         const file = e.target.files[0];
                                         if (file) {
                                             setInitImage(file);
-                                            setIsImageToImage(mode === 'generate');
+                                            if (mode === 'generate') {
+                                                setIsImageToImage(true);
+                                            }
                                         }
                                     }}
                                     className="image-generator-input"
@@ -791,6 +804,22 @@ const handleWeightChange = (loraId, newWeight) => {
                                         className="auto-upscale-checkbox"
                                     />
                                     Upscale after generation
+                                </label>
+                            </div>
+                        )}
+                        {isEnterprise && (
+                            <div className="image-generator-form-group">
+                                <label className="image-generator-label private-toggle">
+                                    <input
+                                        type="checkbox"
+                                        checked={isPrivate}
+                                        onChange={(e) => setIsPrivate(e.target.checked)}
+                                        className="private-checkbox"
+                                    />
+                                    Generate as Private Image
+                                    <span className="private-tooltip">
+                                        Private images are only visible to you
+                                    </span>
                                 </label>
                             </div>
                         )}

@@ -976,6 +976,9 @@ const Profile = () => {
         fetchProfileData();
     }, [id, user]);
 
+    // Add this check near the top of the component
+    const isOwnProfile = user && user.userId === parseInt(id);
+
     return (
         <div className="profile-container">
             <div className="profile-header-wrapper">
@@ -1046,23 +1049,25 @@ const Profile = () => {
                     Posts
                 </button>
                 <button 
-                    className={`tab-btn ${activeTab === 'likes' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('likes')}
+                    className={`tab-btn ${activeTab === 'private' ? 'active' : ''}`}
+                    onClick={() => isOwnProfile ? setActiveTab('private') : null}
+                    style={{ opacity: isOwnProfile ? 1 : 0.5, cursor: isOwnProfile ? 'pointer' : 'not-allowed' }}
                 >
-                    Likes
+                    Private
                 </button>
                 <button 
-                    className={`tab-btn ${activeTab === 'tagged' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('tagged')}
+                    className={`tab-btn ${activeTab === 'likes' ? 'active' : ''}`}
+                    onClick={() => isOwnProfile ? setActiveTab('likes') : null}
+                    style={{ opacity: isOwnProfile ? 1 : 0.5, cursor: isOwnProfile ? 'pointer' : 'not-allowed' }}
                 >
-                    Tagged
+                    Likes
                 </button>
             </div>
 
             {/* Keep existing grid */}
             {activeTab === 'posts' && (
                 <div className="profile-grid">
-                    {images && images.map((image) => (  // Added null check with &&
+                    {images && images.filter(image => !image.private).map((image) => (  // Added null check with &&
                         <div 
                             key={image.id} 
                             className="profile-item"
@@ -1074,7 +1079,21 @@ const Profile = () => {
                 </div>
             )}
 
-            {activeTab === 'likes' && (
+            {activeTab === 'private' && isOwnProfile && (
+                <div className="profile-grid">
+                    {images && images.filter(image => image.private).map((image) => (
+                        <div 
+                            key={image.id} 
+                            className="profile-item"
+                            onClick={() => openModal(image)}
+                        >
+                            <img src={image.image_url} alt={image.prompt} />
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {activeTab === 'likes' && isOwnProfile && (
                 <div className="profile-grid">
                     {isLoadingLikes ? (
                         <div className="loading-spinner">Loading...</div>

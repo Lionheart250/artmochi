@@ -860,6 +860,11 @@ textarea.profile-edit-input {
     cursor: pointer;
 }
 
+.tab-btn[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 /* Update existing responsive styles */
 @media screen and (max-width: 1024px) {
     .profile-container {

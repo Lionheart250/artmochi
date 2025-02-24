@@ -766,7 +766,8 @@ const Gallery = () => {
                 page: pageNum,
                 limit: 20,
                 sortType: sortType,
-                category: selectedCategory
+                category: selectedCategory,
+                hidePrivate: true // Add this parameter
             });
 
             console.log('Fetching images with params:', Object.fromEntries(params));
@@ -785,7 +786,8 @@ const Gallery = () => {
             }
 
             const data = await response.json();
-            const newImages = data?.images || [];
+            // Additional client-side filter to ensure no private images slip through
+            const newImages = (data?.images || []).filter(img => !img.private);
             
             // Filter images by aspect ratio client-side
             const filteredImages = await filterByAspectRatio(newImages, selectedAspectRatio);
