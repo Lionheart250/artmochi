@@ -1001,24 +1001,84 @@ const loraExamples = {
     ]
 };
 
-const LoraPreview = ({ examples, isVisible, position }) => {
-    if (!isVisible || !examples) return null;
+// component for preview modal
+const PreviewModal = ({ examples, isOpen, onClose, loraName, initialImage }) => {
+    const [currentImage, setCurrentImage] = useState(initialImage);
+
+    // Reset currentImage when modal opens with new initialImage
+    useEffect(() => {
+        if (isOpen) {
+            setCurrentImage(initialImage);
+        }
+    }, [isOpen, initialImage]);
+
+    if (!isOpen || !examples) return null;
 
     return (
-        <div 
-            className="lora-preview" 
-            style={{
-                left: `${position.x}px`,
-                top: `${position.y}px`
-            }}
-        >
-            <div className="preview-images">
-                {examples.map((img, index) => (
+        <div className="preview-modal-overlay" onClick={onClose}>
+            <div className="preview-modal" onClick={e => e.stopPropagation()}>
+                <h4>{loraName}</h4>
+                <div className="preview-modal-content">
+                    <div className="preview-main-image">
+                        <img src={examples[currentImage]} alt="Style example" />
+                    </div>
+                    <div className="preview-thumbnails">
+                        {examples.map((img, idx) => (
+                            <img 
+                                key={idx}
+                                src={img}
+                                alt={`Thumbnail ${idx + 1}`}
+                                className={currentImage === idx ? 'active' : ''}
+                                onClick={() => setCurrentImage(idx)}
+                            />
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// Update LoraItem component to pass the clicked image index
+const LoraItem = ({ lora, isSelected, onToggle, onWeightChange, weight, onPreviewClick }) => {
+    const handleWeightChange = (e) => {
+        const newWeight = parseFloat(e.target.value);
+        onWeightChange(lora.url, newWeight); // Pass lora.url and the new weight value
+    };
+
+    return (
+        <div className="lora-item">
+            <div className="lora-item-header">
+                <label>
+                    <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={onToggle}
+                    />
+                    {lora.name}
+                </label>
+            </div>
+            {isSelected && (
+                <div className="lora-controls">
+                    <input
+                        type="range"
+                        min="0.05"
+                        max="1"
+                        step="0.05"
+                        value={weight || 0} // Ensure there's always a value
+                        onChange={handleWeightChange}
+                    />
+                    <span>{(weight || 0).toFixed(2)}</span>
+                </div>
+            )}
+            <div className="thumbnail-strip">
+                {loraExamples[lora.id]?.map((img, idx) => (
                     <img 
-                        key={index} 
-                        src={img} 
-                        alt="Style example" 
-                        className="preview-image"
+                        key={idx}
+                        src={img}
+                        alt="Thumbnail"
+                        className="mini-thumbnail"
+                        onClick={() => onPreviewClick(lora.id, lora.name, idx)} // Pass the index
                     />
                 ))}
             </div>
@@ -1026,7 +1086,15 @@ const LoraPreview = ({ examples, isVisible, position }) => {
     );
 };
 
+// Update main LoraSelector component
 const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
+    const [previewModal, setPreviewModal] = useState({
+        isOpen: false,
+        loraId: null,
+        loraName: '',
+        initialImage: 0 // Add this to track initial image
+    });
+
     const [artisticExpanded, setArtisticExpanded] = useState(true);
     const [realisticExpanded, setRealisticExpanded] = useState(true);
     const [previewState, setPreviewState] = useState({
@@ -1055,8 +1123,10 @@ const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
         setSelectedLoras(prev => {
             const lora = loraArray.find(l => l.id === loraId);
             if (prev[lora.url]) {
-                const { [lora.url]: removed, ...rest } = prev;
-                return rest;
+                return {
+                    ...prev,
+                    [lora.url]: 0 // Set to 0 instead of removing
+                };
             }
             return {
                 ...prev,
@@ -1069,7 +1139,7 @@ const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
         const lora = loraArray.find(l => l.id === loraId);
         setSelectedLoras(prev => ({
             ...prev,
-            [lora.url]: parseFloat(weight)
+            [lora.url]: parseFloat(weight) // Keep it even when weight is 0
         }));
     };
 
@@ -1095,6 +1165,15 @@ const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
         setSelectedLoras(randomLoras);
     };
 
+    const handlePreviewClick = (loraId, loraName, imageIndex = 0) => {
+        setPreviewModal({
+            isOpen: true,
+            loraId,
+            loraName,
+            initialImage: imageIndex // Set the initial image index
+        });
+    };
+
     const renderLoraSection = (loras, expanded, setExpanded, title, emoji) => {
         return (
             <>
@@ -1104,34 +1183,15 @@ const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
                 {expanded && (
                     <div className="lora-section lora-grid">
                         {loras.map(lora => (
-                            <div 
-                                key={lora.id} 
-                                className="lora-item"
-                                onMouseEnter={(e) => handleMouseEnter(e, lora.id)}
-                                onMouseLeave={handleMouseLeave}
-                            >
-                                <label>
-                                    <input
-                                        type="checkbox"
-                                        checked={!!selectedLoras[lora.url]}
-                                        onChange={() => toggleLora(lora.id, loras)}
-                                    />
-                                    {lora.name}
-                                </label>
-                                {selectedLoras[lora.url] !== undefined && (
-                                    <>
-                                        <input
-                                            type="range"
-                                            min="0"
-                                            max="1"
-                                            step="0.05"
-                                            value={selectedLoras[lora.url]}
-                                            onChange={(e) => updateWeight(lora.id, e.target.value, loras)}
-                                        />
-                                        <span>{selectedLoras[lora.url].toFixed(2)}</span>
-                                    </>
-                                )}
-                            </div>
+                            <LoraItem
+                                key={lora.id}
+                                lora={lora}
+                                isSelected={!!selectedLoras[lora.url]}
+                                onToggle={() => toggleLora(lora.id, loras)}
+                                onWeightChange={(url, weight) => updateWeight(lora.id, weight, loras)} // Fix here
+                                weight={selectedLoras[lora.url] || lora.defaultWeight}
+                                onPreviewClick={handlePreviewClick}
+                            />
                         ))}
                     </div>
                 )}
@@ -1139,10 +1199,21 @@ const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
         );
     };
 
+    // Add this handler for the overlay click
+    const handleOverlayClick = (e) => {
+        if (previewModal.isOpen) {
+            // If preview modal is open, don't close the LoraSelector
+            e.stopPropagation();
+        } else {
+            // If preview modal is closed, allow LoraSelector to close
+            onClose();
+        }
+    };
+
     if (!isOpen) return null;
 
     return (
-        <div className="lora-overlay" onClick={onClose}>
+        <div className="lora-overlay" onClick={handleOverlayClick}>
             <div className="lora-popup" onClick={e => e.stopPropagation()}>
                 <div className="lora-popup-header">
                     <h3>✨ Style Presets ✨</h3>
@@ -1166,10 +1237,12 @@ const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
                     </div>
                 </div>
             </div>
-            <LoraPreview 
-                examples={previewState.loraId ? loraExamples[previewState.loraId] : null}
-                isVisible={previewState.visible}
-                position={previewState.position}
+            <PreviewModal
+                examples={previewModal.loraId ? loraExamples[previewModal.loraId] : null}
+                isOpen={previewModal.isOpen}
+                onClose={() => setPreviewModal(prev => ({ ...prev, isOpen: false }))}
+                loraName={previewModal.loraName}
+                initialImage={previewModal.initialImage} // Pass the initial image index
             />
         </div>
     );

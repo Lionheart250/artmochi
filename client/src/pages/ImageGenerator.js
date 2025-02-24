@@ -551,6 +551,13 @@ useEffect(() => {
     loadEditData();
 }, []); // Run once on component mount
 
+const handleWeightChange = (loraId, newWeight) => {
+    setSelectedLoras(prev => ({
+        ...prev,
+        [loraId]: newWeight
+    }));
+};
+
   return (
     <div className="image-generator">
         {!currentSubscription ? (
@@ -622,6 +629,7 @@ useEffect(() => {
                             setSelectedLoras={setSelectedLoras}
                             isOpen={isLoraOpen}
                             onClose={() => setIsLoraOpen(false)}
+                            onWeightChange={handleWeightChange}  // This should now work correctly
                         />
                         <div className={`image-generator-creative-section ${mode === 'upscale' ? 'disabled' : ''}`}>
                             <label className="image-generator-label">Creative Control</label>

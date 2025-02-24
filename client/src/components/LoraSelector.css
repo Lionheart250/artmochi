@@ -12,36 +12,82 @@
 }
 
 .lora-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 6px;
-    transition: background 0.2s ease;
-    position: relative;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+    min-height: 80px; /* Fixed height to prevent layout shifts */
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 12px;
 }
 
 .lora-item:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
 .lora-item label {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 12px;
     color: #fff;
+    font-weight: 500;
+    font-size: 14px;
 }
 
 .lora-item input[type="checkbox"] {
-    accent-color: #ff0050; /* TikTok red */
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.lora-item input[type="checkbox"]:checked {
+    background: #fe2c55;
+    border-color: #fe2c55;
+}
+
+.lora-item input[type="checkbox"]:checked::after {
+    content: "✓";
+    position: absolute;
+    color: white;
+    font-size: 14px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .lora-item input[type="range"] {
-    flex: 1;
-    margin: 0 1rem;
-    accent-color: #00f2ea; /* TikTok cyan */
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    outline: none;
+}
+
+.lora-item input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #fe2c55;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+}
+
+.lora-item input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
 }
 
 .lora-item span {
@@ -402,4 +448,143 @@ button:hover {
     height: 350px;
     object-fit: cover;
     border-radius: 4px;
+}
+
+.lora-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 40px; /* Fixed height */
+    margin-bottom: 8px;
+}
+
+.thumbnail-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+    height: 120px; /* Fixed height */
+}
+
+.mini-thumbnail {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mini-thumbnail:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.preview-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1100;
+    backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.75);
+}
+
+.preview-modal {
+    display: flex;               /* Enables flexbox */
+    flex-direction: column;     /* Arranges items in a column */
+    justify-content: center;     /* Centers items vertically */
+    align-items: center;  
+    background: #1a1a1a;        /* Dark background */
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
+    color: white;               /* Text color */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4); /* Shadow for depth */
+    padding: 10px;              /* Padding around content */
+    border-radius: 120px;       /* Rounded corners */
+    max-width: 90vw;            /* Responsive width */
+    max-height: 90vh;           /* Responsive height */
+    overflow: auto;             /* Allow scrolling if content overflows */
+}
+
+.preview-modal h4 {
+    margin: 0;                  /* Removes default margin */
+    font-family: 'Arial', sans-serif;  /* Sleek font for the title */
+    font-size: 24px;            /* Prominent font size */
+    font-weight: 600;           /* Bold weight for emphasis */
+    text-align: center;         /* Center the text */
+    letter-spacing: 0.5px;      /* Spacing between letters */
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); /* Subtle shadow for depth */
+    transition: color 0.3s;     /* Smooth transition for color */
+    color: #fe2c55;             /* Main text color */
+}
+
+/* Optional: Add hover effect */
+.preview-modal h4:hover {
+    color: #ff3d00;             /* Change color on hover for interactivity */
+}
+
+
+.preview-main-image {
+    margin: 20px 0;
+}
+
+.preview-main-image img {
+    max-width: 100%;
+    max-height: 60vh;
+    object-fit: contain;
+}
+
+.preview-thumbnails {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.preview-thumbnails img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.preview-thumbnails img.active {
+    opacity: 1;
+    border-color: #fe2c55;
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .lora-popup {
+        width: 95vw;
+        height: 90vh;
+        margin: 5vh auto;
+    }
+    
+    .preview-modal {
+        width: 95vw;
+    }
+    
+    .lora-item {
+        padding: 12px;
+    }
+    
+    .thumbnail-strip {
+        grid-template-columns: repeat(2, 1fr);
+        height: 120px;
+    }
+    
+    .mini-thumbnail {
+        height: 120px;
+    }
 }
