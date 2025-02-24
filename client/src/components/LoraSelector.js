@@ -30,7 +30,7 @@ const artisticLoras = [
         id: 'vintage-pulp',
         name: '📚 Retro Master',
         defaultWeight: 1.0,
-        url: 'civitai:783000@884161'
+        url: 'civitai:1159484@1304212'
     },
     {
         id: 'anime-detailed-eyes',
