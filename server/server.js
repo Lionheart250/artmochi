@@ -900,6 +900,19 @@ app.post('/logout', (req, res) => {
 
 // --- Image Routes ---
 
+const getActualImageDimensions = async (imageUrl) => {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            resolve({
+                width: img.width,
+                height: img.height
+            });
+        };
+        img.src = imageUrl;
+    });
+};
+
 // 2. Add corsOptions to all your routes that handle images
 app.get('/images', cors(corsOptions), optionalAuthenticateToken, async (req, res) => {
     try {
@@ -912,82 +925,81 @@ app.get('/images', cors(corsOptions), optionalAuthenticateToken, async (req, res
         } = req.query;
         const offset = (page - 1) * limit;
 
-        let whereClause = [];
-        let params = [];
-        let paramIndex = 1; // Start from 1
-
-        if (aspectRatio !== 'all') {
-            whereClause.push(`i.aspect_ratio = $${paramIndex}`);
-            params.push(aspectRatio);
-            paramIndex++;
-        }
-
-        if (category !== 'all') {
-            whereClause.push(`
-                EXISTS (
+        // Build initial query to get ALL filtered images first
+        const filterQuery = `
+            WITH filtered_images AS (
+                SELECT i.id
+                FROM images i
+                WHERE NOT i.private
+                ${aspectRatio !== 'all' ? 'AND ' + (
+                    aspectRatio === 'landscape' ? 'i.width > i.height' :
+                    aspectRatio === 'portrait' ? 'i.height > i.width' :
+                    'i.width = i.height'
+                ) : ''}
+                ${category !== 'all' ? `AND EXISTS (
                     SELECT 1 FROM image_categories ic
                     JOIN categories c ON ic.category_id = c.id
                     WHERE ic.image_id = i.id 
-                    AND LOWER(c.name) = LOWER($${paramIndex})
-                )
-            `);
-            params.push(category);
-            paramIndex++;
-        }
+                    AND LOWER(c.name) = LOWER($1)
+                )` : ''}
+            )
+            SELECT i.id
+            FROM filtered_images fi
+            JOIN images i ON i.id = fi.id
+            LEFT JOIN (
+                SELECT image_id,
+                    COUNT(*) as total_likes,
+                    COUNT(CASE WHEN l.created_at > NOW() - INTERVAL '24 hours' THEN 1 END) as recent_likes
+                FROM likes l
+                GROUP BY image_id
+            ) l ON l.image_id = i.id
+            LEFT JOIN (
+                SELECT image_id,
+                    COUNT(*) as total_comments,
+                    COUNT(CASE WHEN c.created_at > NOW() - INTERVAL '24 hours' THEN 1 END) as recent_comments
+                FROM comments c
+                GROUP BY image_id
+            ) c ON c.image_id = i.id
+            ORDER BY 
+                CASE 
+                    WHEN $${category !== 'all' ? '2' : '1'} = 'mostLiked' THEN (SELECT COUNT(*) FROM likes WHERE image_id = i.id)::bigint
+                    WHEN $${category !== 'all' ? '2' : '1'} = 'mostCommented' THEN (SELECT COUNT(*) FROM comments WHERE image_id = i.id)::bigint
+                    WHEN $${category !== 'all' ? '2' : '1'} = 'trending' THEN 
+                    (
+                        /* Very recent (last hour) */
+                        (SELECT COUNT(*) FROM likes WHERE image_id = i.id 
+                        AND created_at > NOW() - INTERVAL '1 hour') * 4 +
+                        (SELECT COUNT(*) FROM comments WHERE image_id = i.id 
+                        AND created_at > NOW() - INTERVAL '1 hour') * 6 +
+                        /* Recent (last 24h) */
+                        (COALESCE(l.recent_likes, 0) * 2) +
+                        (COALESCE(c.recent_comments, 0) * 3) +
+                        /* Base engagement */
+                        (SELECT COUNT(*) FROM likes WHERE image_id = i.id) +
+                        ((SELECT COUNT(*) FROM comments WHERE image_id = i.id) * 2)
+                    )::float / 
+                    POWER(
+                        GREATEST(1, 
+                            EXTRACT(epoch FROM (NOW() - i.created_at)) / 3600  /* Convert to hours */
+                        ), 
+                        1.8
+                    )
+                    ELSE EXTRACT(epoch FROM i.created_at)::bigint
+                END DESC
+            LIMIT ${limit} OFFSET ${offset}`;
 
-        const whereString = whereClause.length > 0 
-            ? 'WHERE ' + whereClause.join(' AND ')
-            : '';
+        const params = category !== 'all' ? [category, sortType] : [sortType];
+        const sortedIds = (await pool.query(filterQuery, params)).rows;
 
-        // Add sortType to params
-        params.push(sortType);
-        const sortParam = paramIndex;
-
-        const orderQuery = `
-    SELECT i.id
-    FROM images i
-    LEFT JOIN (
-        SELECT image_id,
-            COUNT(*) as total_likes,
-            COUNT(CASE WHEN created_at > NOW() - INTERVAL '24 hours' THEN 1 END) as recent_likes
-        FROM likes
-        GROUP BY image_id
-    ) l ON l.image_id = i.id
-    LEFT JOIN (
-        SELECT image_id,
-            COUNT(*) as total_comments,
-            COUNT(CASE WHEN created_at > NOW() - INTERVAL '24 hours' THEN 1 END) as recent_comments
-        FROM comments
-        GROUP BY image_id
-    ) c ON c.image_id = i.id
-    ${whereString}
-    ORDER BY 
-        CASE 
-            WHEN $${sortParam} = 'mostLiked' THEN (SELECT COUNT(*) FROM likes WHERE image_id = i.id)
-            WHEN $${sortParam} = 'mostCommented' THEN (SELECT COUNT(*) FROM comments WHERE image_id = i.id)
-            WHEN $${sortParam} = 'trending' THEN 
-                (COALESCE(recent_likes, 0) * 2 + COALESCE(recent_comments, 0) * 3) * 
-                (1 + (1000000 / (EXTRACT(epoch FROM NOW() - i.created_at) + 1)))
-            ELSE EXTRACT(epoch FROM i.created_at)
-        END DESC`;
-
-        const sortedIds = (await pool.query(orderQuery, params)).rows.map(row => row.id);
-        const totalImages = sortedIds.length;
-
-        if (offset >= totalImages) {
+        if (sortedIds.length === 0) {
             return res.json({
                 images: [],
                 hasMore: false,
-                total: totalImages
+                total: 0
             });
         }
 
-        const pageIds = sortedIds.slice(offset, Math.min(offset + limit, totalImages));
-
-        // Add userId param for user_has_liked check
         const userId = req.user?.userId || null;
-        params = [userId, pageIds, limit];
-
         const result = await pool.query(`
             SELECT i.*, 
                    u.username,
@@ -1001,17 +1013,33 @@ app.get('/images', cors(corsOptions), optionalAuthenticateToken, async (req, res
             LEFT JOIN image_categories ic ON i.id = ic.image_id
             LEFT JOIN categories c ON ic.category_id = c.id
             WHERE i.id = ANY($2)
-            AND NOT i.private  -- Add this line to exclude private images
             GROUP BY i.id, u.username, u.profile_picture
-            ORDER BY array_position($2::int[], i.id)
-            LIMIT $3`,
-            params
+            ORDER BY array_position($2::int[], i.id)`,
+            [userId, sortedIds.map(row => row.id)]
         );
+
+        const totalQuery = `
+            SELECT COUNT(*) 
+            FROM images i 
+            WHERE NOT i.private
+            ${aspectRatio !== 'all' ? 'AND ' + (
+                aspectRatio === 'landscape' ? 'i.width > i.height' :
+                aspectRatio === 'portrait' ? 'i.height > i.width' :
+                'i.width = i.height'
+            ) : ''}
+            ${category !== 'all' ? `AND EXISTS (
+                SELECT 1 FROM image_categories ic
+                JOIN categories c ON ic.category_id = c.id
+                WHERE ic.image_id = i.id 
+                AND LOWER(c.name) = LOWER($1)
+            )` : ''}`;
+
+        const totalCount = (await pool.query(totalQuery, category !== 'all' ? [category] : [])).rows[0].count;
 
         res.json({
             images: result.rows,
-            hasMore: offset + result.rows.length < totalImages,
-            total: totalImages
+            hasMore: offset + result.rows.length < totalCount,
+            total: parseInt(totalCount)
         });
 
     } catch (error) {
@@ -1019,6 +1047,7 @@ app.get('/images', cors(corsOptions), optionalAuthenticateToken, async (req, res
         res.status(500).json({ error: 'Database error' });
     }
 });
+
 
 app.post('/images', cors(corsOptions), optionalAuthenticateToken, async (req, res) => {
     try {
@@ -2293,8 +2322,8 @@ app.post('/api/runware', authenticateTokenWithAutoRefresh, async (req, res) => {
             const imageResult = await client.query(`
                 INSERT INTO images (
                     user_id, image_url, prompt, negative_prompt, 
-                    steps, aspect_ratio, created_at, private
-                ) VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7)
+                    steps, aspect_ratio, width, height, created_at, private
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), $9)
                 RETURNING id
             `, [
                 req.user.userId,
@@ -2303,6 +2332,8 @@ app.post('/api/runware', authenticateTokenWithAutoRefresh, async (req, res) => {
                 req.body.input.negative_prompt || '',
                 req.body.input.num_inference_steps || 20,
                 aspectRatio,
+                req.body.input.width || 1024,  // Ensure width is provided
+                req.body.input.height || 1024, // Ensure height is provided
                 isPrivate
             ]);
 

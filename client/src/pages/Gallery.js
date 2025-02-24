@@ -580,35 +580,6 @@ const Gallery = () => {
         }
     };
 
-    const calculateImageSpans = (images) => {
-        return images.map(image => {
-            return new Promise((resolve) => {
-                const img = new Image();
-                img.onload = () => {
-                    const aspectRatio = img.width / img.height;
-                    let columnSpan = 1;
-                    
-                    // Determine spans based on aspect ratio
-                    if (aspectRatio > 1.7) {
-                        columnSpan = 2; // Very wide images span 2 columns
-                    } else if (aspectRatio < 0.6) {
-                        columnSpan = 1; // Tall images take 1 column
-                    } else {
-                        columnSpan = Math.ceil(aspectRatio); // Others scale proportionally
-                    }
-    
-                    resolve({
-                        ...image,
-                        aspectRatio,
-                        columnSpan,
-                        height: Math.round(250 / aspectRatio) // Assuming 250px base width
-                    });
-                };
-                img.src = image.image_url;
-            });
-        });
-    };
-
     const createColumns = (images, columnCount) => {
         if (!Array.isArray(images) || images.length === 0) {
             return Array(columnCount).fill().map(() => []);
@@ -722,43 +693,12 @@ const Gallery = () => {
             setGlobalCommentCounts({});
         }
     };
-    
-    const handleSort = async (newSortType) => {
-        setSortType(newSortType);
-        setPage(1);
-        setImages([]);
-        setHasMore(true);
-        fetchingRef.current = false;
-        await fetchAllCounts(); // Get ALL counts first
-    };
-
-    const getImageOrientation = async (image) => {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.onload = function() {
-                let orientation;
-                if (this.width === this.height) {
-                    orientation = 'square';
-                } else if (this.width > this.height) {
-                    orientation = 'landscape';
-                } else {
-                    orientation = 'portrait';
-                }
-                
-                // Combine orientation with content category
-                resolve({
-                    aspectRatio: orientation,
-                    contentCategory: image.category || 'other' // Use the category from DB
-                });
-            };
-            img.src = image.image_url;
-        });
-    };
 
     // Define fetchImagesForPage function
     const fetchImagesForPage = async (pageNum) => {
-        if (loading) return;
+        if (loading || fetchingRef.current) return;
         setLoading(true);
+        fetchingRef.current = true;
         
         try {
             const token = localStorage.getItem('token');
@@ -767,6 +707,7 @@ const Gallery = () => {
                 limit: 20,
                 sortType: sortType,
                 category: selectedCategory,
+                aspectRatio: selectedAspectRatio, // Add this parameter
                 hidePrivate: true // Add this parameter
             });
 
@@ -789,43 +730,19 @@ const Gallery = () => {
             // Additional client-side filter to ensure no private images slip through
             const newImages = (data?.images || []).filter(img => !img.private);
             
-            // Filter images by aspect ratio client-side
-            const filteredImages = await filterByAspectRatio(newImages, selectedAspectRatio);
-            
             setImages(prev => 
-                pageNum === 1 ? filteredImages : [...prev, ...filteredImages]
+                pageNum === 1 ? newImages : [...prev, ...newImages]
             );
             
-            setHasMore(filteredImages.length > 0);
-            fetchingRef.current = false;
+            setHasMore(newImages.length > 0);
         } catch (error) {
             console.error('Error fetching images:', error);
             setError('Failed to load images');
             setImages(prev => pageNum === 1 ? [] : prev); // Keep existing images if not first page
         } finally {
             setLoading(false);
+            fetchingRef.current = false;
         }
-    };
-
-    // Add function to filter images by aspect ratio
-    const filterByAspectRatio = async (images, selectedAspectRatio) => {
-        if (selectedAspectRatio === 'all') return images;
-    
-        const imagesWithSpans = await Promise.all(calculateImageSpans(images));
-        
-        return imagesWithSpans.filter(image => {
-            const ratio = image.aspectRatio;
-            switch (selectedAspectRatio) {
-                case 'landscape':
-                    return ratio > 1.2;
-                case 'portrait':
-                    return ratio < 0.8;
-                case 'square':
-                    return ratio >= 0.8 && ratio <= 1.2;
-                default:
-                    return true;
-            }
-        });
     };
 
 // Add effect to fetch counts on mount
@@ -842,11 +759,11 @@ useEffect(() => {
     useEffect(() => {
         const observer = new IntersectionObserver(
             (entries) => {
-                if (entries[0].isIntersecting && hasMore && !loading) {
+                if (entries[0].isIntersecting && hasMore && !loading && !fetchingRef.current) {
                     setPage(prev => prev + 1);
                 }
             },
-            { threshold: 1.0 } // Ensures the element is fully visible
+            { threshold: 0.1 } // Ensures the element is fully visible
         );
     
         if (loadingRef.current) {
@@ -858,7 +775,7 @@ useEffect(() => {
                 observer.unobserve(loadingRef.current);
             }
         };
-    }, [hasMore, loading]);
+    }, [hasMore, loading, fetchingRef.current]);
 
     // Add effect to watch for page changes
     useEffect(() => {
@@ -1007,6 +924,39 @@ useEffect(() => {
         }
     };
 
+    // These handlers need to reset the state and trigger a new fetch:
+
+    // 1. Aspect Ratio change
+    const handleAspectRatioChange = (value) => {
+        setSelectedAspectRatio(value);
+        setPage(1);
+        setImages([]);
+        setHasMore(true);
+        setLoading(false);
+        fetchingRef.current = false;
+    };
+
+    // 2. Category change 
+    const handleCategoryChange = (value) => {
+        setSelectedCategory(value);
+        setPage(1);
+        setImages([]);
+        setHasMore(true);
+        setLoading(false);
+        fetchingRef.current = false;
+    };
+
+    // 3. Sort type change - your current handleSort function
+    const handleSort = async (newSortType) => {
+        setSortType(newSortType);
+        setPage(1);
+        setImages([]);
+        setHasMore(true);
+        setLoading(false);
+        fetchingRef.current = false;
+        await fetchAllCounts();
+    };
+
     return (
         <div className="gallery-page">
             <div className="gallery-container">
@@ -1039,11 +989,7 @@ useEffect(() => {
                             <select 
                                 className="gallery-aspect-ratio" 
                                 value={selectedAspectRatio} 
-                                onChange={(e) => {
-                                    setSelectedAspectRatio(e.target.value);
-                                    setPage(1);
-                                    setImages([]);
-                                }}
+                                onChange={(e) => handleAspectRatioChange(e.target.value)}
                             >
                                 <option value="all">All Orientations</option>
                                 <option value="landscape">Landscape</option>
@@ -1054,11 +1000,7 @@ useEffect(() => {
                             <select 
                                 className="gallery-category" 
                                 value={selectedCategory} 
-                                onChange={(e) => {
-                                    setSelectedCategory(e.target.value)
-                                    setPage(1); // Reset to first page when changing category
-                                    setImages([]); // Clear existing images
-                                }}
+                                onChange={(e) => handleCategoryChange(e.target.value)}
                             >
                                 <option value="all">All Categories</option>
                                 {availableCategories.map(cat => (
