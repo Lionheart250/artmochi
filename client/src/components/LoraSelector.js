@@ -1086,21 +1086,18 @@ const LoraItem = ({ lora, isSelected, onToggle, onWeightChange, weight, onPrevie
     );
 };
 
-// Add this helper function
-const formatLorasForRunware = (selectedLoras) => {
-    return Object.entries(selectedLoras)
-        .filter(([_, weight]) => weight > 0)
-        .map(([model, weight]) => ({
-            model,
-            weight: parseFloat(weight)
-        }));
-};
-
-// When sending to the server, transform the selectedLoras like this:
-const loras = formatLorasForRunware(selectedLoras);
-// This will produce: [{ model: "civitai:123@456", weight: 0.75 }, ...]
 // Update main LoraSelector component
 const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
+    // Helper function moved inside component scope
+    const formatLorasForRunware = (loras) => {
+        return Object.entries(loras)
+            .filter(([_, weight]) => weight > 0)
+            .map(([model, weight]) => ({
+                model,
+                weight: parseFloat(weight)
+            }));
+    };
+
     const [previewModal, setPreviewModal] = useState({
         isOpen: false,
         loraId: null,
@@ -1224,6 +1221,9 @@ const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
     };
 
     if (!isOpen) return null;
+
+    // Now we can use formatLorasForRunware with selectedLoras inside component
+    const formattedLoras = formatLorasForRunware(selectedLoras);
 
     return (
         <div className="lora-overlay" onClick={handleOverlayClick}>
