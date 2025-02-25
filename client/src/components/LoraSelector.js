@@ -84,13 +84,13 @@ const artisticLoras = [
         id: 'animelike-digital-painting',
         name: '🖌️ Digital paint',
         defaultWeight: 1.0,
-        url: 'civitai:889233@995078'
+        url: 'civitai:1050516@1178753'
     },
     {
-        id: 'glitch effect',
+        id: 'glitch-effect',
         name: '🖌️ glitch effect',
         defaultWeight: 1.0,
-        url: 'civitai:889233@995078'
+        url: 'civitai:764243@854817'
     },
     {
         id: 'gothicniji',
@@ -597,10 +597,16 @@ const loraExamples = {
         '/examples/loras/midjourney-style/midjourney-style4.webp'
     ],
     'animelike-digital-painting': [
-        '/examples/loras/animelike-digital-painting/1.webp',
-        '/examples/loras/animelike-digital-painting/2.webp',
-        '/examples/loras/animelike-digital-painting/3.webp',
-        '/examples/loras/animelike-digital-painting/4.webp'
+        '/examples/loras/animelike-digital-painting/animelike-digital-painting1.webp',
+        '/examples/loras/animelike-digital-painting/animelike-digital-painting2.webp',
+        '/examples/loras/animelike-digital-painting/animelike-digital-painting3.webp',
+        '/examples/loras/animelike-digital-painting/animelike-digital-painting4.webp'
+    ],
+    'glitch-effect': [
+        '/examples/loras/glitch-effect/glitch-effect1.webp',
+        '/examples/loras/glitch-effect/glitch-effect2.webp',
+        '/examples/loras/glitch-effect/glitch-effect3.webp',
+        '/examples/loras/glitch-effect/glitch-effect4.webp'
     ],
     'gothicniji': [
         '/examples/loras/gothicniji/1.webp',
