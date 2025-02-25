@@ -609,10 +609,10 @@ const loraExamples = {
         '/examples/loras/glitch-effect/glitch-effect4.webp'
     ],
     'gothicniji': [
-        '/examples/loras/gothicniji/1.webp',
-        '/examples/loras/gothicniji/2.webp',
-        '/examples/loras/gothicniji/3.webp',
-        '/examples/loras/gothicniji/4.webp'
+        '/examples/loras/gothicniji/gothicniji1.webp',
+        '/examples/loras/gothicniji/gothicniji2.webp',
+        '/examples/loras/gothicniji/gothicniji3.webp',
+        '/examples/loras/gothicniji/gothicniji4.webp'
     ],
     'midjourneyanime': [
         '/examples/loras/midjourneyanime/1.webp',
@@ -1097,7 +1097,7 @@ const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
     // Helper function moved inside component scope
     const formatLorasForRunware = (loras) => {
         return Object.entries(loras)
-            .filter(([_, weight]) => weight > 0)
+            .filter(([_, weight]) => weight > 0 && weight !== null && weight !== undefined)
             .map(([model, weight]) => ({
                 model,
                 weight: parseFloat(weight)
@@ -1138,16 +1138,17 @@ const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
     const toggleLora = (loraId, loraArray) => {
         setSelectedLoras(prev => {
             const lora = loraArray.find(l => l.id === loraId);
+            const newState = { ...prev };
+            
             if (prev[lora.url]) {
-                return {
-                    ...prev,
-                    [lora.url]: 0 // Set to 0 instead of removing
-                };
+                // Remove the lora completely instead of setting to 0
+                delete newState[lora.url];
+            } else {
+                // Add new lora with default weight
+                newState[lora.url] = lora.defaultWeight;
             }
-            return {
-                ...prev,
-                [lora.url]: lora.defaultWeight
-            };
+            
+            return newState;
         });
     };
 
