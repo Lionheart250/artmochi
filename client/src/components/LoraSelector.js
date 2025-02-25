@@ -78,7 +78,7 @@ const artisticLoras = [
         id: 'midjourney-style',
         name: '🎨 Dream Vision',
         defaultWeight: 1.0,
-        url: 'civitai:646411@981456'
+        url: 'civitai:1268816@1431182'
     },
     {
         id: 'animelike-digital-painting',
@@ -321,7 +321,7 @@ const realisticLoras = [
         id: 'image-upgrader',
         name: '🔮 Reality Enhancer',
         defaultWeight: 1.0,
-        url: 'civitai:562866@1405178'
+        url: 'civitai:562866@863991'
     },
     {
         id: 'neon-lighting',
@@ -1086,6 +1086,19 @@ const LoraItem = ({ lora, isSelected, onToggle, onWeightChange, weight, onPrevie
     );
 };
 
+// Add this helper function
+const formatLorasForRunware = (selectedLoras) => {
+    return Object.entries(selectedLoras)
+        .filter(([_, weight]) => weight > 0)
+        .map(([model, weight]) => ({
+            model,
+            weight: parseFloat(weight)
+        }));
+};
+
+// When sending to the server, transform the selectedLoras like this:
+const loras = formatLorasForRunware(selectedLoras);
+// This will produce: [{ model: "civitai:123@456", weight: 0.75 }, ...]
 // Update main LoraSelector component
 const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
     const [previewModal, setPreviewModal] = useState({
