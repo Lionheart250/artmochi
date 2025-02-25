@@ -315,7 +315,7 @@ const realisticLoras = [
         id: 'dramatic-lighting',
         name: '💫 Light Sorcerer',
         defaultWeight: 1.0,
-        url: 'civitai:340248@1278791'
+        url: 'civitai:340248@755549'
     },
     {
         id: 'image-upgrader',
