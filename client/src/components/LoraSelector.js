@@ -399,19 +399,19 @@ const realisticLoras = [
         id: 'surreal-landscapes',
         name: '🌅 Surreal Lands',
         defaultWeight: 1.0,
-        url: 'urn:air:flux1:lora:civitai:681518@762800'
+        url: 'civitai:681518@762800'
     },
     {
         id: 'opal-style',
         name: '💎 Opal Dreams',
         defaultWeight: 1.0,
-        url: 'urn:air:flux1:lora:civitai:225003@1329546'
+        url: 'civitai:225003@1329546'
     },
     {
         id: 'liminal-space',
         name: '🚪 Liminal Space',
         defaultWeight: 1.0,
-        url: 'urn:air:flux1:lora:civitai:658134@898109'
+        url: 'civitai:658134@898109'
     },
     {
         id: 'retro-future',
@@ -423,7 +423,7 @@ const realisticLoras = [
         id: 'new-fantasy-core',
         name: '✨ Fantasy Core',
         defaultWeight: 1.0,
-        url: 'urn:air:flux1:lora:civitai:810000@1264088'
+        url: 'civitai:810000@1264088'
     },
     {
         id: 'randomax-robotics',
@@ -477,7 +477,7 @@ const realisticLoras = [
         id: 'fantasy-scifi',
         name: '🚀 Sci-Fantasy',
         defaultWeight: 1.0,
-        url: 'urn:air:flux1:lora:civitai:751420@840288'
+        url: 'civitai:751420@840288'
     },
     {
         id: 'neogods',
@@ -489,7 +489,7 @@ const realisticLoras = [
         id: 'vintage-abstract',
         name: '🎨 Vintage Abstract',
         defaultWeight: 1.0,
-        url: 'urn:air:flux1:lora:civitai:719889@804970'
+        url: 'civitai:719889@804970'
     },
     {
         id: 'spooky-vibes',
@@ -573,28 +573,28 @@ const loraExamples = {
         '/examples/loras/storybook-artstyle/storybook-artstyle4.webp'
     ],
     'castlevania-art-style': [
-        '/examples/loras/castlevania-art-style/1.webp',
-        '/examples/loras/castlevania-art-style/2.webp',
-        '/examples/loras/castlevania-art-style/3.webp',
-        '/examples/loras/castlevania-art-style/4.webp'
+        '/examples/loras/castlevania-art-style/castlevania-art-style1.webp',
+        '/examples/loras/castlevania-art-style/castlevania-art-style2.webp',
+        '/examples/loras/castlevania-art-style/castlevania-art-style3.webp',
+        '/examples/loras/castlevania-art-style/castlevania-art-style4.webp'
     ],
     'retro-anime': [
-        '/examples/loras/retro-anime/1.webp',
-        '/examples/loras/retro-anime/2.webp',
-        '/examples/loras/retro-anime/3.webp',
-        '/examples/loras/retro-anime/4.webp'
+        '/examples/loras/retro-anime/retro-anime1.webp',
+        '/examples/loras/retro-anime/retro-anime2.webp',
+        '/examples/loras/retro-anime/retro-anime3.webp',
+        '/examples/loras/retro-anime/retro-anime4.webp'
     ],
     'arcane-intro-style': [
-        '/examples/loras/arcane-intro-style/1.webp',
-        '/examples/loras/arcane-intro-style/2.webp',
-        '/examples/loras/arcane-intro-style/3.webp',
-        '/examples/loras/arcane-intro-style/4.webp'
+        '/examples/loras/arcane-intro-style/arcane-intro-style1.webp',
+        '/examples/loras/arcane-intro-style/arcane-intro-style2.webp',
+        '/examples/loras/arcane-intro-style/arcane-intro-style3.webp',
+        '/examples/loras/arcane-intro-style/arcane-intro-style4.webp'
     ],
     'midjourney-style': [
-        '/examples/loras/midjourney-style/1.webp',
-        '/examples/loras/midjourney-style/2.webp',
-        '/examples/loras/midjourney-style/3.webp',
-        '/examples/loras/midjourney-style/4.webp'
+        '/examples/loras/midjourney-style/midjourney-style1.webp',
+        '/examples/loras/midjourney-style/midjourney-style2.webp',
+        '/examples/loras/midjourney-style/midjourney-style3.webp',
+        '/examples/loras/midjourney-style/midjourney-style4.webp'
     ],
     'animelike-digital-painting': [
         '/examples/loras/animelike-digital-painting/1.webp',
@@ -795,7 +795,7 @@ const loraExamples = {
         '/examples/loras/details-colored-pencil/4.webp'
     ],
     'blender-style': [
-        '/examples/loras/blender-style/1.webp',
+        '/examples/loras/blender-style/blender-style1.webp',
         '/examples/loras/blender-style/2.webp',
         '/examples/loras/blender-style/3.webp',
         '/examples/loras/blender-style/4.webp'
