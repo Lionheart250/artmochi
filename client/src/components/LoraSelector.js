@@ -808,64 +808,64 @@ const loraExamples = {
     ],
     // Realistic LoRAs
     'dramatic-lighting': [
-        '/examples/loras/dramatic-lighting/1.webp',
-        '/examples/loras/dramatic-lighting/2.webp',
-        '/examples/loras/dramatic-lighting/3.webp',
-        '/examples/loras/dramatic-lighting/4.webp'
+        '/examples/loras/dramatic-lighting/dramatic-lighting1.webp',
+        '/examples/loras/dramatic-lighting/dramatic-lighting2.webp',
+        '/examples/loras/dramatic-lighting/dramatic-lighting3.webp',
+        '/examples/loras/dramatic-lighting/dramatic-lighting4.webp'
     ],
     'image-upgrader': [
-        '/examples/loras/image-upgrader/1.webp',
-        '/examples/loras/image-upgrader/2.webp',
-        '/examples/loras/image-upgrader/3.webp',
-        '/examples/loras/image-upgrader/4.webp'
+        '/examples/loras/image-upgrader/image-upgrader1.webp',
+        '/examples/loras/image-upgrader/image-upgrader2.webp',
+        '/examples/loras/image-upgrader/image-upgrader3.webp',
+        '/examples/loras/image-upgrader/image-upgrader4.webp'
     ],
     'neon-lighting': [
-        '/examples/loras/neon-lighting/1.webp',
-        '/examples/loras/neon-lighting/2.webp',
-        '/examples/loras/neon-lighting/3.webp',
-        '/examples/loras/neon-lighting/4.webp'
+        '/examples/loras/neon-lighting/neon-lighting1.webp',
+        '/examples/loras/neon-lighting/neon-lighting2.webp',
+        '/examples/loras/neon-lighting/neon-lighting3.webp',
+        '/examples/loras/neon-lighting/neon-lighting4.webp'
     ],
     'turbo-detailer': [
-        '/examples/loras/turbo-detailer/1.webp',
-        '/examples/loras/turbo-detailer/2.webp',
-        '/examples/loras/turbo-detailer/3.webp',
-        '/examples/loras/turbo-detailer/4.webp'
+        '/examples/loras/turbo-detailer/turbo-detailer1.webp',
+        '/examples/loras/turbo-detailer/turbo-detailer2.webp',
+        '/examples/loras/turbo-detailer/turbo-detailer3.webp',
+        '/examples/loras/turbo-detailer/turbo-detailer4.webp'
     ],
     'analog-grainy': [
-        '/examples/loras/analog-grainy/1.webp',
-        '/examples/loras/analog-grainy/2.webp',
-        '/examples/loras/analog-grainy/3.webp',
-        '/examples/loras/analog-grainy/4.webp'
+        '/examples/loras/analog-grainy/analog-grainy1.webp',
+        '/examples/loras/analog-grainy/analog-grainy2.webp',
+        '/examples/loras/analog-grainy/analog-grainy3.webp',
+        '/examples/loras/analog-grainy/analog-grainy4.webp'
     ],
     'portrait-style': [
-        '/examples/loras/portrait-style/1.webp',
-        '/examples/loras/portrait-style/2.webp',
-        '/examples/loras/portrait-style/3.webp',
-        '/examples/loras/portrait-style/4.webp'
+        '/examples/loras/portrait-style/portrait-style1.webp',
+        '/examples/loras/portrait-style/portrait-style2.webp',
+        '/examples/loras/portrait-style/portrait-style3.webp',
+        '/examples/loras/portrait-style/portrait-style4.webp'
     ],
     'realistic-skin': [
-        '/examples/loras/realistic-skin/1.webp',
-        '/examples/loras/realistic-skin/2.webp',
-        '/examples/loras/realistic-skin/3.webp',
-        '/examples/loras/realistic-skin/4.webp'
+        '/examples/loras/realistic-skin/realistic-skin1.webp',
+        '/examples/loras/realistic-skin/realistic-skin2.webp',
+        '/examples/loras/realistic-skin/realistic-skin3.webp',
+        '/examples/loras/realistic-skin/realistic-skin4.webp'
     ],
     'realistic-horror': [
-        '/examples/loras/realistic-horror/1.webp',
-        '/examples/loras/realistic-horror/2.webp',
-        '/examples/loras/realistic-horror/3.webp',
-        '/examples/loras/realistic-horror/4.webp'
+        '/examples/loras/realistic-horror/realistic-horror1.webp',
+        '/examples/loras/realistic-horror/realistic-horror2.webp',
+        '/examples/loras/realistic-horror/realistic-horror3.webp',
+        '/examples/loras/realistic-horror/realistic-horror4.webp'
     ],
     'ultra-realistic': [
-        '/examples/loras/ultra-realistic/1.webp',
-        '/examples/loras/ultra-realistic/2.webp',
-        '/examples/loras/ultra-realistic/3.webp',
-        '/examples/loras/ultra-realistic/4.webp'
+        '/examples/loras/ultra-realistic/ultra-realistic1.webp',
+        '/examples/loras/ultra-realistic/ultra-realistic2.webp',
+        '/examples/loras/ultra-realistic/ultra-realistic3.webp',
+        '/examples/loras/ultra-realistic/ultra-realistic4.webp'
     ],
     'fantasy-wizards-witches': [
-        '/examples/loras/fantasy-wizards-witches/1.webp',
-        '/examples/loras/fantasy-wizards-witches/2.webp',
-        '/examples/loras/fantasy-wizards-witches/3.webp',
-        '/examples/loras/fantasy-wizards-witches/4.webp'
+        '/examples/loras/fantasy-wizards-witches/fantasy-wizards-witches1.webp',
+        '/examples/loras/fantasy-wizards-witches/fantasy-wizards-witches2.webp',
+        '/examples/loras/fantasy-wizards-witches/fantasy-wizards-witches3.webp',
+        '/examples/loras/fantasy-wizards-witches/fantasy-wizards-witches4.webp'
     ],
     'real-anime': [
         '/examples/loras/real-anime/1.webp',
