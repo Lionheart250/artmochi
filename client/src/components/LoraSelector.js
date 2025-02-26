@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './LoraSelector.css';
 
-const artisticLoras = [
+export const artisticLoras = [
     {
         id: 'gothic-lines',
         name: '🗡️ Shadow Weaver',
@@ -310,7 +310,7 @@ const artisticLoras = [
     },
 ];
 
-const realisticLoras = [
+export const realisticLoras = [
     {
         id: 'dramatic-lighting',
         name: '💫 Light Sorcerer',
@@ -1094,6 +1094,52 @@ const LoraItem = ({ lora, isSelected, onToggle, onWeightChange, weight, onPrevie
 
 // Update main LoraSelector component
 const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
+    const [previewModal, setPreviewModal] = useState({
+        isOpen: false,
+        loraId: null,
+        loraName: '',
+        initialImage: 0
+    });
+
+    const [artisticExpanded, setArtisticExpanded] = useState(true);
+    const [realisticExpanded, setRealisticExpanded] = useState(true);
+    
+    // Refs for scroll positions
+    const artisticColumnRef = useRef(null);
+    const realisticColumnRef = useRef(null);
+    const lastScrollPosition = useRef({ artistic: 0, realistic: 0 });
+
+    // Save scroll position when scrolling
+    const handleScroll = (type) => {
+        const position = type === 'artistic' ? 
+            artisticColumnRef.current?.scrollTop : 
+            realisticColumnRef.current?.scrollTop;
+            
+        lastScrollPosition.current[type] = position;
+    };
+
+    // Add scroll event listeners
+    useEffect(() => {
+        if (isOpen) {
+            const artistic = artisticColumnRef.current;
+            const realistic = realisticColumnRef.current;
+
+            if (artistic) {
+                artistic.scrollTop = lastScrollPosition.current.artistic;
+                artistic.addEventListener('scroll', () => handleScroll('artistic'));
+            }
+            if (realistic) {
+                realistic.scrollTop = lastScrollPosition.current.realistic;
+                realistic.addEventListener('scroll', () => handleScroll('realistic'));
+            }
+
+            return () => {
+                artistic?.removeEventListener('scroll', () => handleScroll('artistic'));
+                realistic?.removeEventListener('scroll', () => handleScroll('realistic'));
+            };
+        }
+    }, [isOpen]);
+
     // Helper function moved inside component scope
     const formatLorasForRunware = (loras) => {
         return Object.entries(loras)
@@ -1102,37 +1148,6 @@ const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
                 model,
                 weight: parseFloat(weight)
             }));
-    };
-
-    const [previewModal, setPreviewModal] = useState({
-        isOpen: false,
-        loraId: null,
-        loraName: '',
-        initialImage: 0 // Add this to track initial image
-    });
-
-    const [artisticExpanded, setArtisticExpanded] = useState(true);
-    const [realisticExpanded, setRealisticExpanded] = useState(true);
-    const [previewState, setPreviewState] = useState({
-        visible: false,
-        loraId: null,
-        position: { x: 0, y: 0 }
-    });
-
-    const handleMouseEnter = (e, loraId) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        setPreviewState({
-            visible: true,
-            loraId,
-            position: {
-                x: rect.right + 10,
-                y: rect.top
-            }
-        });
-    };
-
-    const handleMouseLeave = () => {
-        setPreviewState(prev => ({ ...prev, visible: false }));
     };
 
     const toggleLora = (loraId, loraArray) => {
@@ -1232,6 +1247,32 @@ const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
     // Now we can use formatLorasForRunware with selectedLoras inside component
     const formattedLoras = formatLorasForRunware(selectedLoras);
 
+    // Update renderLoraSection to use refs
+    const renderLoraSectionWithRef = (loras, expanded, setExpanded, title, emoji, columnRef) => {
+        return (
+            <>
+                <div className="section-header" onClick={() => setExpanded(!expanded)}>
+                    <h3>{emoji} {title} {expanded ? '▼' : '▶'}</h3>
+                </div>
+                {expanded && (
+                    <div className="lora-section lora-grid" ref={columnRef}>
+                        {loras.map(lora => (
+                            <LoraItem
+                                key={lora.id}
+                                lora={lora}
+                                isSelected={!!selectedLoras[lora.url]}
+                                onToggle={() => toggleLora(lora.id, loras)}
+                                onWeightChange={(url, weight) => updateWeight(lora.id, weight, loras)}
+                                weight={selectedLoras[lora.url] || lora.defaultWeight}
+                                onPreviewClick={handlePreviewClick}
+                            />
+                        ))}
+                    </div>
+                )}
+            </>
+        );
+    };
+
     return (
         <div className="lora-overlay" onClick={handleOverlayClick}>
             <div className="lora-popup" onClick={e => e.stopPropagation()}>
@@ -1244,15 +1285,16 @@ const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
                         <button type="button" onClick={handleRemoveAll} className="lora-action-btn">
                             Clear All
                         </button>
+                        {/* Change handleClose to onClose here */}
                         <button type="button" className="close-button" onClick={onClose}>×</button>
                     </div>
                 </div>
 
                 <div className="lora-content">
-                    <div className="lora-column">
+                    <div className="lora-column" ref={artisticColumnRef}>
                         {renderLoraSection(artisticLoras, artisticExpanded, setArtisticExpanded, "Artistic & Anime", "🎨")}
                     </div>
-                    <div className="lora-column">
+                    <div className="lora-column" ref={realisticColumnRef}>
                         {renderLoraSection(realisticLoras, realisticExpanded, setRealisticExpanded, "Realistic & Photo", "📷")}
                     </div>
                 </div>

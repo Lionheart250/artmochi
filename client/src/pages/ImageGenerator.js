@@ -9,6 +9,10 @@ import LoraSelector from '../components/LoraSelector';
 import { useSubscription } from '../features/subscriptions/store/SubscriptionContext';
 // Add new imports at the top
 import { runwareService } from '../services/runwareService';
+// Add import
+import SelectedLoras from '../components/SelectedLoras';
+// Add these imports at the top
+import { artisticLoras, realisticLoras } from '../components/LoraSelector';
 
 // Add this mapping near your other constants
 const aspectRatioMapping = {
@@ -135,7 +139,10 @@ const ImageGenerator = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [enableUpscale, setEnableUpscale] = useState(false); // State for upscaling
-  const [selectedLoras, setSelectedLoras] = useState({});
+  const [selectedLoras, setSelectedLoras] = useState(() => {
+    const saved = localStorage.getItem('selectedLoras');
+    return saved ? JSON.parse(saved) : {};
+  });
   const [isLoraOpen, setIsLoraOpen] = useState(false);
   const [categories, setCategories] = useState([]); // State for categories
   const [initImage, setInitImage] = useState(null);
@@ -166,6 +173,10 @@ const ImageGenerator = () => {
   // Add new state for private generation
   const [isPrivate, setIsPrivate] = useState(false);
   const isEnterprise = currentSubscription?.tier_name === 'Enterprise';
+  // Add new state variables at the top of ImageGenerator component
+  const [imageTitle, setImageTitle] = useState('');
+  const [autoGenerateTitle, setAutoGenerateTitle] = useState(true);
+  const [generatedTitle, setGeneratedTitle] = useState('');
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -221,6 +232,28 @@ const ImageGenerator = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(optionPayload)
     });
+};
+
+// Replace the existing generateImageTitle function with this:
+const generateImageTitle = async (imageUrl) => {
+    const token = localStorage.getItem('token');
+    try {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/generate-title`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ imageUrl })
+        });
+
+        const data = await response.json();
+        if (!data.success) throw new Error(data.error || 'Failed to generate title');
+        return data.title;
+    } catch (error) {
+        console.error('Failed to generate title:', error);
+        return 'Untitled';
+    }
 };
 
 // Update handleSubmit to handle both modes:
@@ -309,7 +342,6 @@ const handleSubmit = async (e) => {
             if (!prompt.trim()) {
                 throw new Error('Please enter a prompt');
             }
-
             const progressControl = startProgressSimulation(setProgressPercentage, setGenerationStage, steps);
 
             // Convert image to base64 if it's image-to-image
@@ -324,37 +356,6 @@ const handleSubmit = async (e) => {
                     reader.readAsDataURL(initImage);
                 });
             }
-
-            const params = {
-                taskType: "imageInference",
-                taskUUID: crypto.randomUUID(),
-                positivePrompt: prompt,
-                model: "civitai:618692@691639",
-                height: aspectRatio === 'Portrait' ? 1280 : aspectRatio === 'Landscape' ? 768 : 1024,
-                width: aspectRatio === 'Portrait' ? 768 : aspectRatio === 'Landscape' ? 1280 : 1024,
-                numberResults: 1,
-                
-                // Add image-to-image specific parameters
-                ...(isImageToImage && imageData ? {
-                    seedImage: imageData,
-                    strength: denoisingStrength
-                } : {
-                    // Text-to-image specific parameters
-                    outputType: "URL",
-                    outputFormat: "PNG",
-                    negativePrompt: negativePrompt || "",
-                    steps: steps,
-                    CFGScale: distilledCfgScale
-                }),
-
-                // Add Lora parameters if any
-                ...(Object.keys(selectedLoras).length > 0 && {
-                    lora: Object.entries(selectedLoras).map(([url, weight]) => ({
-                        model: url.startsWith('civitai:') ? url : `civitai:${url.match(/models\/(\d+)/)?.[1]}`,
-                        weight: parseFloat(weight)
-                    })).filter(Boolean)
-                })
-            };
 
             const response = await fetch(`${process.env.REACT_APP_API_URL}/api/runware`, {
                 method: 'POST',
@@ -380,7 +381,14 @@ const handleSubmit = async (e) => {
                                 weight: parseFloat(weight)
                             }))
                         }),
-                        private: isPrivate
+                        private: isPrivate,
+                        generateTitle: autoGenerateTitle,
+                        title: imageTitle || undefined,
+                        lorasUsed: Object.entries(selectedLoras).map(([url, weight]) => ({
+                            name: getLoraName(url),
+                            url: url,
+                            weight: parseFloat(weight)
+                        }))
                     }
                 })
             });
@@ -427,11 +435,47 @@ const handleSubmit = async (e) => {
                 setImage(data.image); // Make sure data.image is the URL from your server
             }
             
-            setProgressPercentage(100);
-            setGenerationStage('Complete!');
+            // In handleSubmit, modify the image generation response section:
+            if (data.image) {
+                if (autoGenerateTitle) {
+                    try {
+                        // Generate title first
+                        const generatedTitle = await generateImageTitle(data.image);
+                        setImageTitle(generatedTitle);
+                        
+                        // Update the title in the database
+                        const updateResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/update-image-title`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({
+                                imageUrl: data.image,
+                                title: generatedTitle
+                            })
+                        });
+
+                        if (!updateResponse.ok) {
+                            throw new Error('Failed to update image title');
+                        }
+                    } catch (error) {
+                        console.error('Title generation/update failed:', error);
+                        setImageTitle('Untitled');
+                    }
+                }
+                
+                setImage(data.image);
+                setProgressPercentage(100);
+                setGenerationStage('Complete!');
+            }
 
             if (data.categories) {
                 setCategories(data.categories);
+            }
+
+            if (autoGenerateTitle && data.title) {
+                setImageTitle(data.title);
             }
         }
     } finally {
@@ -501,28 +545,34 @@ useEffect(() => {
 
 useEffect(() => {
     const mainContainer = document.querySelector('.image-generator-container');
-    
+    let scrollY = 0; // Store scroll position
+
     if (isLoraOpen && mainContainer) {
-        const scrollY = window.scrollY;
-        mainContainer.style.position = 'fixed';
-        mainContainer.style.top = `-${scrollY}px`;
-        mainContainer.style.width = '100%';
-    } else if (mainContainer) {
-        const scrollY = mainContainer.style.top;
-        mainContainer.style.position = '';
-        mainContainer.style.top = '';
-        mainContainer.style.width = '';
-        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+        scrollY = window.scrollY;
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${scrollY}px`;
+        document.body.style.width = '100%';
+        document.body.style.overflow = 'hidden'; // Prevent scrolling
+    } else if (!isLoraOpen && mainContainer) {
+        const savedScrollY = Math.abs(parseInt(document.body.style.top || '0', 10));
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = ''; // Re-enable scrolling
+        window.scrollTo(0, savedScrollY);
     }
 
     return () => {
-        if (mainContainer) {
-            mainContainer.style.position = '';
-            mainContainer.style.top = '';
-            mainContainer.style.width = '';
-        }
+        if (!isLoraOpen) return; // Prevents unnecessary resets
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
     };
 }, [isLoraOpen]);
+
+
+
 
 useEffect(() => {
     const loadEditData = async () => {
@@ -562,11 +612,22 @@ useEffect(() => {
     loadEditData();
 }, []); // Run once on component mount
 
+useEffect(() => {
+    localStorage.setItem('selectedLoras', JSON.stringify(selectedLoras));
+}, [selectedLoras]);
+
 const handleWeightChange = (loraId, newWeight) => {
     setSelectedLoras(prev => ({
         ...prev,
         [loraId]: newWeight
     }));
+};
+
+// Add helper function to get LoRA name
+const getLoraName = (url) => {
+    const allLoras = [...artisticLoras, ...realisticLoras];
+    const lora = allLoras.find(l => l.url === url);
+    return lora ? lora.name : url;
 };
 
   return (
@@ -597,6 +658,29 @@ const handleWeightChange = (loraId, newWeight) => {
                 <div className="content-wrapper">
                     <h2 className="image-generator-heading">Generate Image</h2>
                     <form onSubmit={handleSubmit} className="image-generator-form">
+                        <div className="image-generator-form-group">
+                            <label className="image-generator-label">
+                                Image Title:
+                                <div className="title-input-group">
+                                    <input
+                                        type="text"
+                                        value={imageTitle}
+                                        onChange={(e) => setImageTitle(e.target.value)}
+                                        placeholder={autoGenerateTitle ? "Title will be auto-generated" : "Enter a title"}
+                                        disabled={autoGenerateTitle}
+                                        className="image-generator-input"
+                                    />
+                                    <label className="auto-title-toggle">
+                                        <input
+                                            type="checkbox"
+                                            checked={autoGenerateTitle}
+                                            onChange={(e) => setAutoGenerateTitle(e.target.checked)}
+                                        />
+                                        Auto-generate title
+                                    </label>
+                                </div>
+                            </label>
+                        </div>
                         <div className="image-generator-form-group">
                             <label className="image-generator-label" htmlFor="prompt">Prompt:</label>
                             <input
@@ -634,6 +718,16 @@ const handleWeightChange = (loraId, newWeight) => {
                                 Important: Choose your art style before generating!
                             </span>
                         </button>
+
+                        {/* Add this right after the button */}
+                        {Object.keys(selectedLoras).length > 0 && (
+                            <SelectedLoras
+                                selectedLoras={selectedLoras}
+                                setSelectedLoras={setSelectedLoras}
+                                artisticLoras={artisticLoras}
+                                realisticLoras={realisticLoras}
+                            />
+                        )}
                         
                         <LoraSelector 
                             selectedLoras={selectedLoras}

@@ -1128,6 +1128,7 @@ app.get('/categories', cors(corsOptions), async (req, res) => {
     }
 });
 
+
 // Fetch single image
 app.get('/images/:id', authenticateTokenWithAutoRefresh, async (req, res) => {
     const imageId = parseInt(req.params.id);
@@ -2172,9 +2173,12 @@ app.get('/user/:userId/followers', authenticateTokenWithAutoRefresh, async (req,
 });
 
 app.post('/save_generated_image', authenticateTokenWithAutoRefresh, async (req, res) => {
-    const { imageData, prompt, userId } = req.body;
+    const { imageData, prompt, userId, title, lorasUsed } = req.body;
+    const client = await pool.connect();
     
     try {
+        await client.query('BEGIN');
+
         const key = `saved/${Date.now()}-${userId}.jpg`;
         const imageBuffer = Buffer.from(imageData, 'base64');
         
@@ -2184,11 +2188,25 @@ app.post('/save_generated_image', authenticateTokenWithAutoRefresh, async (req, 
         }
 
         const result = await pool.query(
-            `INSERT INTO images (user_id, image_url, prompt, created_at) 
-             VALUES ($1, $2, $3, NOW()) 
-             RETURNING id`,
-            [userId, s3Result.url, prompt]
+            `INSERT INTO images (
+                user_id, 
+                image_url, 
+                prompt, 
+                created_at,
+                title,
+                loras_used
+            ) VALUES ($1, $2, $3, NOW(), $4, $5) 
+            RETURNING id`,
+            [
+                userId, 
+                s3Result.url, 
+                prompt,
+                title || 'Untitled',
+                JSON.stringify(lorasUsed || [])
+            ]
         );
+        
+        await client.query('COMMIT');
         
         res.json({ 
             success: true, 
@@ -2196,8 +2214,11 @@ app.post('/save_generated_image', authenticateTokenWithAutoRefresh, async (req, 
             imageUrl: s3Result.url
         });
     } catch (error) {
+        await client.query('ROLLBACK');
         console.error('Error saving image:', error);
         res.status(500).json({ error: 'Failed to save image' });
+    } finally {
+        client.release();
     }
 });
 
@@ -2317,25 +2338,71 @@ app.post('/api/runware', authenticateTokenWithAutoRefresh, async (req, res) => {
         const { categories, aspectRatio } = await categorizeImage(s3Result.url);
         const isEnterprise = subscription.rows[0]?.tier_name.toLowerCase() === 'enterprise';
         const isPrivate = isEnterprise && req.body.input.private === true;
-
+        
         if (!req.body.autoUpscale) {
-            const imageResult = await client.query(`
-                INSERT INTO images (
-                    user_id, image_url, prompt, negative_prompt, 
-                    steps, aspect_ratio, width, height, created_at, private
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), $9)
-                RETURNING id
-            `, [
-                req.user.userId,
-                s3Result.url,
-                req.body.input.prompt,
-                req.body.input.negative_prompt || '',
-                req.body.input.num_inference_steps || 20,
-                aspectRatio,
-                req.body.input.width || 1024,  // Ensure width is provided
-                req.body.input.height || 1024, // Ensure height is provided
-                isPrivate
-            ]);
+            // Generate title first
+            let generatedTitle = 'Untitled';
+            try {
+                const response = await axios({
+                    method: 'post',
+                    url: 'https://api.replicate.com/v1/predictions',
+                    headers: {
+                        'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    },
+                    data: {
+                        version: "2e1dddc8621f72155f24cf2e0adbde548458d3cab9f00c0139eea840d0ac4746",
+                        input: {
+                            image: s3Result.url,
+                            task: "image_captioning"
+                        }
+                    }
+                });
+        
+                let prediction = response.data;
+                while (prediction.status !== 'succeeded' && prediction.status !== 'failed') {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    const pollResponse = await axios({
+                        method: 'get',
+                        url: `https://api.replicate.com/v1/predictions/${prediction.id}`,
+                        headers: {
+                            'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`
+                        }
+                    });
+                    prediction = pollResponse.data;
+                }
+        
+                if (prediction.output) {
+                    // Remove "Caption: " prefix if it exists and get first sentence
+                    generatedTitle = prediction.output.replace(/^Caption:\s*/i, '').split('.')[0];
+                    generatedTitle = generatedTitle.charAt(0).toUpperCase() + generatedTitle.slice(1);
+                }
+            } catch (error) {
+                console.error('Title generation error:', error);
+                // Continue with default title if generation fails
+            }
+        
+            // Now use the generated title in the database insert
+                const imageResult = await client.query(`
+                    INSERT INTO images (
+                        user_id, image_url, prompt, negative_prompt, 
+                        steps, aspect_ratio, width, height, created_at, private,
+                        title, loras_used
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), $9, $10, $11)
+                    RETURNING id
+                `, [
+                    req.user.userId,
+                    s3Result.url,
+                    req.body.input.prompt,
+                    req.body.input.negative_prompt || '',
+                    req.body.input.num_inference_steps || 20,
+                    aspectRatio,
+                    req.body.input.width || 1024,
+                    req.body.input.height || 1024,
+                    isPrivate,
+                    generatedTitle, // Default title
+                    JSON.stringify(req.body.input.lora || [])
+                ]);
 
             for (const { category, confidence } of categories) {
                 const categoryId = await ensureCategory(client, category);
@@ -2360,6 +2427,88 @@ app.post('/api/runware', authenticateTokenWithAutoRefresh, async (req, res) => {
         await client.query('ROLLBACK');
         console.error('Runware API error:', error);
         res.status(500).json({ error: 'Failed to generate image' });
+    } finally {
+        client.release();
+    }
+});
+
+app.post('/api/generate-title', authenticateTokenWithAutoRefresh, async (req, res) => {
+    const { imageUrl } = req.body;
+
+    try {
+        const response = await axios({
+            method: 'post',
+            url: 'https://api.replicate.com/v1/predictions',
+            headers: {
+                'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`,
+                'Content-Type': 'application/json'
+            },
+            data: {
+                version: "2e1dddc8621f72155f24cf2e0adbde548458d3cab9f00c0139eea840d0ac4746",
+                input: {
+                    image: imageUrl,
+                    task: "image_captioning"
+                }
+            }
+        });
+
+        let prediction = response.data;
+        while (prediction.status !== 'succeeded' && prediction.status !== 'failed') {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const pollResponse = await axios({
+                method: 'get',
+                url: `https://api.replicate.com/v1/predictions/${prediction.id}`,
+                headers: {
+                    'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`
+                }
+            });
+            prediction = pollResponse.data;
+        }
+
+        if (prediction.status === 'failed') {
+            throw new Error('Title generation failed');
+        }
+
+        // Clean up and format the title
+        let title = prediction.output;
+        // Remove "Caption: " prefix and leading "a" or "an"
+        title = title.replace(/^(caption:\s*|a\s+|an\s+)/i, '');
+        // Get first sentence and trim whitespace
+        title = title.split('.')[0].trim();
+        // Capitalize first letter
+        title = title.charAt(0).toUpperCase() + title.slice(1);
+
+        res.json({
+            success: true,
+            title: title
+        });
+
+    } catch (error) {
+        console.error('Title generation error:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message,
+            title: 'Untitled'
+        });
+    }
+});
+
+app.post('/api/update-image-title', authenticateTokenWithAutoRefresh, async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const { imageUrl, title } = req.body;
+        
+        await client.query(`
+            UPDATE images 
+            SET title = $1 
+            WHERE image_url = $2 AND user_id = $3
+            RETURNING id
+        `, [title, imageUrl, req.user.userId]);
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Failed to update image title:', error);
+        res.status(500).json({ success: false, error: error.message });
     } finally {
         client.release();
     }

@@ -464,6 +464,12 @@ img {
     color: #8e8e8e;
 }
 
+.image-generator-input:disabled {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.5);
+    cursor: not-allowed;
+}
+
 /* Button Styles */
 .image-generator-creative-btn:hover,
 .image-generator-upscale-btn:hover {
@@ -1281,4 +1287,50 @@ img {
     font-size: 12px;
     color: #666;
     margin-left: 8px;
+}
+
+.title-input-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.auto-title-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: var(--tiktok-text);
+    cursor: pointer;
+}
+
+.auto-title-toggle input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+}
+
+.selected-loras-info {
+    margin: 16px 0;
+    padding: 12px;
+    background: rgba(254, 44, 85, 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(254, 44, 85, 0.2);
+}
+
+.lora-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.lora-info-pill {
+    background: rgba(254, 44, 85, 0.2);
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 13px;
+    color: white;
+    border: 1px solid rgba(254, 44, 85, 0.3);
 }

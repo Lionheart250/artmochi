@@ -1,0 +1,176 @@
+:root {
+    --tiktok-cyan: #25F4EE;
+    --tiktok-pink: #FE2C55;
+    --tiktok-dark: #010101;
+    --tiktok-text: #FFFFFF;
+}
+
+.selected-loras {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 12px 0;
+}
+
+.lora-pill {
+    background: rgba(254, 44, 85, 0.2);
+    border-radius: 20px;
+    padding: 6px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid rgba(254, 44, 85, 0.3);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 10px rgba(254, 44, 85, 0.15);
+    transition: all 0.2s ease;
+}
+
+.lora-pill:hover {
+    background: rgba(254, 44, 85, 0.25);
+    border-color: rgba(254, 44, 85, 0.4);
+    box-shadow: 0 4px 15px rgba(254, 44, 85, 0.25);
+    transform: translateY(-1px);
+}
+
+.lora-name {
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 1);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.remove-lora {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    padding: 4px;
+    font-size: 18px;
+    transition: all 0.2s ease;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-lora:hover {
+    color: var(--tiktok-pink);
+    background: rgba(254, 44, 85, 0.1);
+}
+
+.weight-editor {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px;
+    background: rgba(254, 44, 85, 0.25);
+    border-radius: 16px;
+    padding: 6px 12px;
+    border: 1px solid rgba(254, 44, 85, 0.35);
+}
+
+.weight-editor input {
+    width: 100px;
+}
+
+.weight-editor input[type="range"] {
+    -webkit-appearance: none;
+    width: 120px;
+    height: 4px;
+    background: rgba(254, 44, 85, 0.3);
+    border-radius: 2px;
+    outline: none;
+}
+
+.weight-editor input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--tiktok-cyan);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 4px rgba(37, 244, 238, 0.2);
+    transition: all 0.2s ease;
+}
+
+.weight-editor input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(254, 44, 85, 0.5);
+}
+
+.weight-editor span {
+    min-width: 45px;
+    text-align: center;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+}
+
+.weight-editor button {
+    background: rgba(37, 244, 238, 0.1);
+    border: 1px solid rgba(37, 244, 238, 0.2);
+    color: var(--tiktok-cyan);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.weight-editor button:hover {
+    background: rgba(37, 244, 238, 0.15);
+    border-color: rgba(37, 244, 238, 0.3);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(37, 244, 238, 0.2);
+}
+
+.slider-container {
+    position: relative;
+    width: 100px;
+    height: 20px;
+    cursor: pointer;
+    user-select: none;
+    touch-action: none;
+    display: flex;
+    align-items: center;
+}
+
+.slider-track {
+    position: absolute;
+    width: 100%;
+    height: 4px;
+    background: rgba(37, 244, 238, 0.1);
+    border-radius: 2px;
+}
+
+.slider-fill {
+    position: absolute;
+    height: 4px;
+    background: #4CAF50;
+    border-radius: 2px;
+}
+
+.slider-handle {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 50%;
+    transform: translateX(-50%);
+    cursor: grab;
+    z-index: 2;
+    top: 50%;
+    margin-top: -8px;
+}
+
+.slider-handle:active {
+    cursor: grabbing;
+}

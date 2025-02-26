@@ -9,6 +9,7 @@ import { ReactComponent as BookmarkIcon } from '../assets/icons/bookmark.svg';
 import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
 import { getImageUrl } from '../utils/imageUtils';
+import { artisticLoras, realisticLoras } from '../components/LoraSelector';
 
 const Gallery = () => {
     const { user, profile } = useAuth();
@@ -476,6 +477,21 @@ const Gallery = () => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [modalImage]);
     
+    // Add this useEffect near your other effects
+    useEffect(() => {
+        if (modalImage) {
+            // Disable scrolling on body when modal is open
+            document.body.style.overflow = 'hidden';
+        } else {
+            // Re-enable scrolling when modal is closed
+            document.body.style.overflow = 'unset';
+        }
+
+        // Cleanup function to ensure scrolling is re-enabled
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [modalImage]);
 
     // Add this utility function
     const formatTimestamp = (timestamp) => {
@@ -957,6 +973,36 @@ useEffect(() => {
         await fetchAllCounts();
     };
 
+    // Add this function at the component level
+    const getLoraName = (url) => {
+        // First check artistic loras
+        const artisticLora = artisticLoras.find(lora => lora.url === url);
+        if (artisticLora) return artisticLora.name;
+        
+        // Then check realistic loras
+        const realisticLora = realisticLoras.find(lora => lora.url === url);
+        if (realisticLora) return realisticLora.name;
+        
+        // Fallback to model ID if not found
+        return url.split(':')[1];
+    };
+
+    // Add this state at the top of your component
+    const [expandedPrompts, setExpandedPrompts] = useState(new Set());
+
+    // Add this function to your component
+    const togglePrompt = (imageId) => {
+        setExpandedPrompts(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(imageId)) {
+                newSet.delete(imageId);
+            } else {
+                newSet.add(imageId);
+            }
+            return newSet;
+        });
+    };
+
     return (
         <div className="gallery-page">
             <div className="gallery-container">
@@ -1129,9 +1175,43 @@ useEffect(() => {
                                                 </span>
                                             </div>
                                         </div>
+                                        
+                                        {/* Add title first */}
                                         <div className="gallery-modal-title">
-                                            {images.find(img => img.id === activeImageId)?.prompt}
+                                            {images.find(img => img.id === activeImageId)?.title || 'Untitled'}
                                         </div>
+                                        
+                                        {/* Then prompt */}
+                                        <div className="gallery-modal-prompt">
+                                            <div className={`prompt-text ${expandedPrompts.has(activeImageId) ? 'expanded' : ''}`}>
+                                                {images.find(img => img.id === activeImageId)?.prompt}
+                                            </div>
+                                            <button 
+                                                className="show-more-btn"
+                                                onClick={() => togglePrompt(activeImageId)}
+                                            >
+                                                {expandedPrompts.has(activeImageId) ? 'Show Less' : 'Show More'}
+                                            </button>
+                                        </div>
+                                        
+                                        {/* Then LoRAs */}
+                                        <div className="gallery-modal-loras">
+                                            <h4 className="metadata-heading">Styles Used:</h4>
+                                            <div className="lora-pills">
+                                                {images.find(img => img.id === activeImageId)?.loras_used && 
+                                                    (typeof images.find(img => img.id === activeImageId).loras_used === 'string' 
+                                                        ? JSON.parse(images.find(img => img.id === activeImageId).loras_used)
+                                                        : images.find(img => img.id === activeImageId).loras_used
+                                                    ).map((lora, index) => (
+                                                        <span key={index} className="lora-pill">
+                                                            {getLoraName(lora.model)} ({lora.weight})
+                                                        </span>
+                                                    ))
+                                                }
+                                            </div>
+                                        </div>
+
+                                        {/* Then the rest of your modal content */}
                                         <div className="gallery-interaction-buttons">
                                             <button onClick={() => handleLike(activeImageId)} className="gallery-action-btn">
                                                 <LikeIcon className={userLikedImages.has(activeImageId) ? 'liked' : ''} />
@@ -1160,14 +1240,20 @@ useEffect(() => {
                                                 🎨 Remix
                                             </button>
                                         </div>
+
+                                        {/* Update category display */}
                                         <div className="gallery-image-metadata">
-                                            <span className="gallery-image-category">
-                                                Category: {
-                                                    images.find(img => img.id === activeImageId)?.category
-                                                    ?.charAt(0).toUpperCase() + 
-                                                    images.find(img => img.id === activeImageId)?.category?.slice(1)
+                                            <h4 className="metadata-heading">Categories:</h4>
+                                            <div className="category-pills">
+                                                {images.find(img => img.id === activeImageId)?.categories?.length > 0 
+                                                    ? images.find(img => img.id === activeImageId).categories.map((category, index) => (
+                                                        <span key={index} className="category-pill">
+                                                            {category.charAt(0).toUpperCase() + category.slice(1)}
+                                                        </span>
+                                                    ))
+                                                    : <span className="category-pill">Uncategorized</span>
                                                 }
-                                            </span>
+                                            </div>
                                         </div>
                                         {/* Existing comments section */}
                                         <div className="gallery-comments-section">
