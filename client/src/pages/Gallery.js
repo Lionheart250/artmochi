@@ -1248,7 +1248,9 @@ useEffect(() => {
                                                 {images.find(img => img.id === activeImageId)?.categories?.length > 0 
                                                     ? images.find(img => img.id === activeImageId).categories.map((category, index) => (
                                                         <span key={index} className="category-pill">
-                                                            {category.charAt(0).toUpperCase() + category.slice(1)}
+                                                            {category && typeof category === 'string' 
+                                                                ? category.charAt(0).toUpperCase() + category.slice(1)
+                                                                : 'Unknown'}
                                                         </span>
                                                     ))
                                                     : <span className="category-pill">Uncategorized</span>
