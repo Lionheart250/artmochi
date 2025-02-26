@@ -30,7 +30,7 @@ export const artisticLoras = [
         id: 'retro-anime-dark',
         name: '🌙 dark retro anime',
         defaultWeight: 1.0,
-        url: 'civitai:1061759@1191560'
+        url: 'civitai:211819@238615'
     },
     {
         id: 'luminous-shadows-cape',
@@ -597,46 +597,46 @@ const loraExamples = {
         '/examples/loras/gothicniji/gothicniji4.webp'
     ],
     'midjourneyanime': [
-        '/examples/loras/midjourneyanime/1.webp',
-        '/examples/loras/midjourneyanime/2.webp',
-        '/examples/loras/midjourneyanime/3.webp',
-        '/examples/loras/midjourneyanime/4.webp'
+        '/examples/loras/midjourneyanime/midjourneyanime1.webp',
+        '/examples/loras/midjourneyanime/midjourneyanime2.webp',
+        '/examples/loras/midjourneyanime/midjourneyanime3.webp',
+        '/examples/loras/midjourneyanime/midjourneyanime4.webp'
     ],
     'digital-abyss': [
-        '/examples/loras/digital-abyss/1.webp',
-        '/examples/loras/digital-abyss/2.webp',
-        '/examples/loras/digital-abyss/3.webp',
-        '/examples/loras/digital-abyss/4.webp'
+        '/examples/loras/digital-abyss/digital-abyss1.webp',
+        '/examples/loras/digital-abyss/digital-abyss2.webp',
+        '/examples/loras/digital-abyss/digital-abyss3.webp',
+        '/examples/loras/digital-abyss/digital-abyss4.webp'
     ],
     'cyber-graphic': [
-        '/examples/loras/cyber-graphic/1.webp',
-        '/examples/loras/cyber-graphic/2.webp',
-        '/examples/loras/cyber-graphic/3.webp',
-        '/examples/loras/cyber-graphic/4.webp'
+        '/examples/loras/cyber-graphic/cyber-graphic1.webp',
+        '/examples/loras/cyber-graphic/cyber-graphic2.webp',
+        '/examples/loras/cyber-graphic/cyber-graphic3.webp',
+        '/examples/loras/cyber-graphic/cyber-graphic4.webp'
     ],
     'elden-ring-style': [
-        '/examples/loras/elden-ring-style/1.webp',
-        '/examples/loras/elden-ring-style/2.webp',
-        '/examples/loras/elden-ring-style/3.webp',
-        '/examples/loras/elden-ring-style/4.webp'
+        '/examples/loras/elden-ring-style/elden-ring-style1.webp',
+        '/examples/loras/elden-ring-style/elden-ring-style2.webp',
+        '/examples/loras/elden-ring-style/elden-ring-style3.webp',
+        '/examples/loras/elden-ring-style/elden-ring-style4.webp'
     ],
     'frazetta-style': [
-        '/examples/loras/frazetta-style/1.webp',
-        '/examples/loras/frazetta-style/2.webp',
-        '/examples/loras/frazetta-style/3.webp',
-        '/examples/loras/frazetta-style/4.webp'
+        '/examples/loras/frazetta-style/frazetta-style1.webp',
+        '/examples/loras/frazetta-style/frazetta-style2.webp',
+        '/examples/loras/frazetta-style/frazetta-style3.webp',
+        '/examples/loras/frazetta-style/frazetta-style4.webp'
     ],
     'colored-pencil': [
-        '/examples/loras/colored-pencil/1.webp',
-        '/examples/loras/colored-pencil/2.webp',
-        '/examples/loras/colored-pencil/3.webp',
-        '/examples/loras/colored-pencil/4.webp'
+        '/examples/loras/colored-pencil/colored-pencil1.webp',
+        '/examples/loras/colored-pencil/colored-pencil2.webp',
+        '/examples/loras/colored-pencil/colored-pencil3.webp',
+        '/examples/loras/colored-pencil/colored-pencil4.webp'
     ],
     'dark-fantasy': [
-        '/examples/loras/dark-fantasy/1.webp',
-        '/examples/loras/dark-fantasy/2.webp',
-        '/examples/loras/dark-fantasy/3.webp',
-        '/examples/loras/dark-fantasy/4.webp'
+        '/examples/loras/dark-fantasy/dark-fantasy1.webp',
+        '/examples/loras/dark-fantasy/dark-fantasy2.webp',
+        '/examples/loras/dark-fantasy/dark-fantasy3.webp',
+        '/examples/loras/dark-fantasy/dark-fantasy4.webp'
     ],
     'dark-anime': [
         '/examples/loras/dark-anime/dark-anime1.webp',
@@ -645,154 +645,154 @@ const loraExamples = {
         '/examples/loras/dark-anime/dark-anime4.webp'
     ],
     'weird-core': [
-        '/examples/loras/weird-core/1.webp',
-        '/examples/loras/weird-core/2.webp',
-        '/examples/loras/weird-core/3.webp',
-        '/examples/loras/weird-core/4.webp'
+        '/examples/loras/weird-core/weird-core1.webp',
+        '/examples/loras/weird-core/weird-core2.webp',
+        '/examples/loras/weird-core/weird-core3.webp',
+        '/examples/loras/weird-core/weird-core4.webp'
     ],
     'citron-style': [
-        '/examples/loras/citron-style/1.webp',
-        '/examples/loras/citron-style/2.webp',
-        '/examples/loras/citron-style/3.webp',
-        '/examples/loras/citron-style/4.webp'
+        '/examples/loras/citron-style/citron-style1.webp',
+        '/examples/loras/citron-style/citron-style2.webp',
+        '/examples/loras/citron-style/citron-style3.webp',
+        '/examples/loras/citron-style/citron-style4.webp'
     ],
     'anime-no-line': [
-        '/examples/loras/anime-no-line/1.webp',
-        '/examples/loras/anime-no-line/2.webp',
-        '/examples/loras/anime-no-line/3.webp',
-        '/examples/loras/anime-no-line/4.webp'
+        '/examples/loras/anime-no-line/anime-no-line1.webp',
+        '/examples/loras/anime-no-line/anime-no-line2.webp',
+        '/examples/loras/anime-no-line/anime-no-line3.webp',
+        '/examples/loras/anime-no-line/anime-no-line4.webp'
     ],
     'anime-digital-matte': [
-        '/examples/loras/anime-digital-matte/1.webp',
-        '/examples/loras/anime-digital-matte/2.webp',
-        '/examples/loras/anime-digital-matte/3.webp',
-        '/examples/loras/anime-digital-matte/4.webp'
+        '/examples/loras/anime-digital-matte/anime-digital-matte/1.webp',
+        '/examples/loras/anime-digital-matte/anime-digital-matte/2.webp',
+        '/examples/loras/anime-digital-matte/anime-digital-matte/3.webp',
+        '/examples/loras/anime-digital-matte/anime-digital-matte/4.webp'
     ],
     'dream-world': [
-        '/examples/loras/dream-world/1.webp',
-        '/examples/loras/dream-world/2.webp',
-        '/examples/loras/dream-world/3.webp',
-        '/examples/loras/dream-world/4.webp'
+        '/examples/loras/dream-world/dream-world1.webp',
+        '/examples/loras/dream-world/dream-world2.webp',
+        '/examples/loras/dream-world/dream-world3.webp',
+        '/examples/loras/dream-world/dream-world4.webp'
     ],
     'anime-furry': [
-        '/examples/loras/anime-furry/1.webp',
-        '/examples/loras/anime-furry/2.webp',
-        '/examples/loras/anime-furry/3.webp',
-        '/examples/loras/anime-furry/4.webp'
+        '/examples/loras/anime-furry/anime-furry1.webp',
+        '/examples/loras/anime-furry/anime-furry2.webp',
+        '/examples/loras/anime-furry/anime-furry3.webp',
+        '/examples/loras/anime-furry/anime-furry4.webp'
     ],
     'anime-gloss': [
-        '/examples/loras/anime-gloss/1.webp',
-        '/examples/loras/anime-gloss/2.webp',
-        '/examples/loras/anime-gloss/3.webp',
-        '/examples/loras/anime-gloss/4.webp'
+        '/examples/loras/anime-gloss/anime-gloss1.webp',
+        '/examples/loras/anime-gloss/anime-gloss2.webp',
+        '/examples/loras/anime-gloss/anime-gloss3.webp',
+        '/examples/loras/anime-gloss/anime-gloss4.webp'
     ],
     'anime-patootie': [
-        '/examples/loras/anime-patootie/1.webp',
-        '/examples/loras/anime-patootie/2.webp',
-        '/examples/loras/anime-patootie/3.webp',
-        '/examples/loras/anime-patootie/4.webp'
+        '/examples/loras/anime-patootie/anime-patootie1.webp',
+        '/examples/loras/anime-patootie/anime-patootie2.webp',
+        '/examples/loras/anime-patootie/anime-patootie3.webp',
+        '/examples/loras/anime-patootie/anime-patootie4.webp'
     ],
     'commodore-64': [
-        '/examples/loras/commodore-64/1.webp',
-        '/examples/loras/commodore-64/2.webp',
-        '/examples/loras/commodore-64/3.webp',
-        '/examples/loras/commodore-64/4.webp'
+        '/examples/loras/commodore-64/commodore-641.webp',
+        '/examples/loras/commodore-64/commodore-642.webp',
+        '/examples/loras/commodore-64/commodore-643.webp',
+        '/examples/loras/commodore-64/commodore-644.webp'
     ],
     'ghibliesque': [
-        '/examples/loras/ghibliesque/1.webp',
-        '/examples/loras/ghibliesque/2.webp',
-        '/examples/loras/ghibliesque/3.webp',
-        '/examples/loras/ghibliesque/4.webp'
+        '/examples/loras/ghibliesque/ghibliesque1.webp',
+        '/examples/loras/ghibliesque/ghibliesque2.webp',
+        '/examples/loras/ghibliesque/ghibliesque3.webp',
+        '/examples/loras/ghibliesque/ghibliesque4.webp'
     ],
     'anime-ink': [
-        '/examples/loras/anime-ink/1.webp',
-        '/examples/loras/anime-ink/2.webp',
-        '/examples/loras/anime-ink/3.webp',
-        '/examples/loras/anime-ink/4.webp'
+        '/examples/loras/anime-ink/anime-ink1.webp',
+        '/examples/loras/anime-ink/anime-ink2.webp',
+        '/examples/loras/anime-ink/anime-ink3.webp',
+        '/examples/loras/anime-ink/anime-ink4.webp'
     ],
     'ethereal-dark': [
-        '/examples/loras/ethereal-dark/1.webp',
-        '/examples/loras/ethereal-dark/2.webp',
-        '/examples/loras/ethereal-dark/3.webp',
-        '/examples/loras/ethereal-dark/4.webp'
+        '/examples/loras/ethereal-dark/ethereal-dark1.webp',
+        '/examples/loras/ethereal-dark/ethereal-dark2.webp',
+        '/examples/loras/ethereal-dark/ethereal-dark3.webp',
+        '/examples/loras/ethereal-dark/ethereal-dark4.webp'
     ],
     'painting-realm': [
-        '/examples/loras/painting-realm/1.webp',
-        '/examples/loras/painting-realm/2.webp',
-        '/examples/loras/painting-realm/3.webp',
-        '/examples/loras/painting-realm/4.webp'
+        '/examples/loras/painting-realm/painting-realm1.webp',
+        '/examples/loras/painting-realm/painting-realm2.webp',
+        '/examples/loras/painting-realm/painting-realm3.webp',
+        '/examples/loras/painting-realm/painting-realm4.webp'
     ],
     'impressionist': [
-        '/examples/loras/impressionist/1.webp',
-        '/examples/loras/impressionist/2.webp',
-        '/examples/loras/impressionist/3.webp',
-        '/examples/loras/impressionist/4.webp'
+        '/examples/loras/impressionist/impressionist1.webp',
+        '/examples/loras/impressionist/impressionist2.webp',
+        '/examples/loras/impressionist/impressionist3.webp',
+        '/examples/loras/impressionist/impressionist4.webp'
     ],
     'mai-colors': [
-        '/examples/loras/mai-colors/1.webp',
-        '/examples/loras/mai-colors/2.webp',
-        '/examples/loras/mai-colors/3.webp',
-        '/examples/loras/mai-colors/4.webp'
+        '/examples/loras/mai-colors/mai-colors/1.webp',
+        '/examples/loras/mai-colors/mai-colors/2.webp',
+        '/examples/loras/mai-colors/mai-colors/3.webp',
+        '/examples/loras/mai-colors/mai-colors/4.webp'
     ],
     'neuro-cyberpunk': [
-        '/examples/loras/neuro-cyberpunk/1.webp',
-        '/examples/loras/neuro-cyberpunk/2.webp',
-        '/examples/loras/neuro-cyberpunk/3.webp',
-        '/examples/loras/neuro-cyberpunk/4.webp'
+        '/examples/loras/neuro-cyberpunk/neuro-cyberpunk1.webp',
+        '/examples/loras/neuro-cyberpunk/neuro-cyberpunk2.webp',
+        '/examples/loras/neuro-cyberpunk/neuro-cyberpunk3.webp',
+        '/examples/loras/neuro-cyberpunk/neuro-cyberpunk4.webp'
     ],
     'cyberpunk-anime': [
-        '/examples/loras/cyberpunk-anime/1.webp',
-        '/examples/loras/cyberpunk-anime/2.webp',
-        '/examples/loras/cyberpunk-anime/3.webp',
-        '/examples/loras/cyberpunk-anime/4.webp'
+        '/examples/loras/cyberpunk-anime/cyberpunk-anime1.webp',
+        '/examples/loras/cyberpunk-anime/cyberpunk-anime2.webp',
+        '/examples/loras/cyberpunk-anime/cyberpunk-anime3.webp',
+        '/examples/loras/cyberpunk-anime/cyberpunk-anime4.webp'
     ],
     'randomaxx-artistry': [
-        '/examples/loras/randomaxx-artistry/1.webp',
-        '/examples/loras/randomaxx-artistry/2.webp',
-        '/examples/loras/randomaxx-artistry/3.webp',
-        '/examples/loras/randomaxx-artistry/4.webp'
+        '/examples/loras/randomaxx-artistry/randomaxx-artistry1.webp',
+        '/examples/loras/randomaxx-artistry/randomaxx-artistry2.webp',
+        '/examples/loras/randomaxx-artistry/randomaxx-artistry3.webp',
+        '/examples/loras/randomaxx-artistry/randomaxx-artistry4.webp'
     ],
     'randommax-animefy': [
-        '/examples/loras/randommax-animefy/1.webp',
-        '/examples/loras/randommax-animefy/2.webp',
-        '/examples/loras/randommax-animefy/3.webp',
-        '/examples/loras/randommax-animefy/4.webp'
+        '/examples/loras/randommax-animefy/randommax-animefy1.webp',
+        '/examples/loras/randommax-animefy/randommax-animefy2.webp',
+        '/examples/loras/randommax-animefy/randommax-animefy3.webp',
+        '/examples/loras/randommax-animefy/randommax-animefy4.webp'
     ],
     'randomax-illustrify': [
-        '/examples/loras/randomax-illustrify/1.webp',
-        '/examples/loras/randomax-illustrify/2.webp',
-        '/examples/loras/randomax-illustrify/3.webp',
-        '/examples/loras/randomax-illustrify/4.webp'
+        '/examples/loras/randomax-illustrify/randomax-illustrify/1.webp',
+        '/examples/loras/randomax-illustrify/randomax-illustrify/2.webp',
+        '/examples/loras/randomax-illustrify/randomax-illustrify/3.webp',
+        '/examples/loras/randomax-illustrify/randomax-illustrify/4.webp'
     ],
     'anime-niji': [
-        '/examples/loras/anime-niji/1.webp',
-        '/examples/loras/anime-niji/2.webp',
-        '/examples/loras/anime-niji/3.webp',
-        '/examples/loras/anime-niji/4.webp'
+        '/examples/loras/anime-niji/anime-niji1.webp',
+        '/examples/loras/anime-niji/anime-niji2.webp',
+        '/examples/loras/anime-niji/anime-niji3.webp',
+        '/examples/loras/anime-niji/anime-niji4.webp'
     ],
     'neon-fantasy': [
-        '/examples/loras/neon-fantasy/1.webp',
-        '/examples/loras/neon-fantasy/2.webp',
-        '/examples/loras/neon-fantasy/3.webp',
-        '/examples/loras/neon-fantasy/4.webp'
+        '/examples/loras/neon-fantasy/neon-fantasy1.webp',
+        '/examples/loras/neon-fantasy/neon-fantasy2.webp',
+        '/examples/loras/neon-fantasy/neon-fantasy3.webp',
+        '/examples/loras/neon-fantasy/neon-fantasy4.webp'
     ],
     'anime-shadow-circuit': [
-        '/examples/loras/anime-shadow-circuit/1.webp',
-        '/examples/loras/anime-shadow-circuit/2.webp',
-        '/examples/loras/anime-shadow-circuit/3.webp',
-        '/examples/loras/anime-shadow-circuit/4.webp'
+        '/examples/loras/anime-shadow-circuit/anime-shadow-circuit1.webp',
+        '/examples/loras/anime-shadow-circuit/anime-shadow-circuit2.webp',
+        '/examples/loras/anime-shadow-circuit/anime-shadow-circuit3.webp',
+        '/examples/loras/anime-shadow-circuit/anime-shadow-circuit4.webp'
     ],
     'details-colored-pencil': [
-        '/examples/loras/details-colored-pencil/1.webp',
-        '/examples/loras/details-colored-pencil/2.webp',
-        '/examples/loras/details-colored-pencil/3.webp',
-        '/examples/loras/details-colored-pencil/4.webp'
+        '/examples/loras/details-colored-pencil/details-colored-pencil1.webp',
+        '/examples/loras/details-colored-pencil/details-colored-pencil2.webp',
+        '/examples/loras/details-colored-pencil/details-colored-pencil3.webp',
+        '/examples/loras/details-colored-pencil/details-colored-pencil4.webp'
     ],
     'blender-style': [
         '/examples/loras/blender-style/blender-style1.webp',
-        '/examples/loras/blender-style/2.webp',
-        '/examples/loras/blender-style/3.webp',
-        '/examples/loras/blender-style/4.webp'
+        '/examples/loras/blender-style/blender-style2.webp',
+        '/examples/loras/blender-style/blender-style3.webp',
+        '/examples/loras/blender-style/blender-style4.webp'
     ],
     // Realistic LoRAs
     'midjourney-style': [
