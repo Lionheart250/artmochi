@@ -659,27 +659,6 @@ const getLoraName = (url) => {
                     <h2 className="image-generator-heading">Generate Image</h2>
                     <form onSubmit={handleSubmit} className="image-generator-form">
                         <div className="image-generator-form-group">
-                            <label className="image-generator-label">
-                                Image Title:
-                                <div className="title-input-group">
-                                    <input
-                                        type="text"
-                                        value={imageTitle}
-                                        onChange={(e) => setImageTitle(e.target.value)}
-                                        placeholder={autoGenerateTitle ? "Title will be auto-generated" : "Enter a title"}
-                                        disabled={autoGenerateTitle}
-                                        className="image-generator-input"
-                                    />
-                                    <label className="auto-title-toggle">
-                                        <input
-                                            type="checkbox"
-                                            checked={autoGenerateTitle}
-                                            onChange={(e) => setAutoGenerateTitle(e.target.checked)}
-                                        />
-                                        Auto-generate title
-                                    </label>
-                                </div>
-                            </label>
                         </div>
                         <div className="image-generator-form-group">
                             <label className="image-generator-label" htmlFor="prompt">Prompt:</label>
