@@ -33,22 +33,10 @@ export const artisticLoras = [
         url: 'civitai:1061759@1191560'
     },
     {
-        id: 'anime-detailed-eyes',
-        name: '👁️ Soul Gaze',
-        defaultWeight: 1.0,
-        url: 'civitai:649378@726524'
-    },
-    {
         id: 'luminous-shadows-cape',
         name: '🌙 Luminous Shadows',
         defaultWeight: 1.0,
         url: 'civitai:707312@791149'
-    },
-    {
-        id: 'faetastic-details',
-        name: '🧚 Fae Magic',
-        defaultWeight: 1.0,
-        url: 'civitai:643886@720252'
     },
     {
         id: 'storybook-artstyle',
@@ -73,12 +61,6 @@ export const artisticLoras = [
         name: '⚔️ Arcane Forge',
         defaultWeight: 1.0,
         url: 'civitai:972886@1089413'
-    },
-    {
-        id: 'midjourney-style',
-        name: '🎨 Dream Vision',
-        defaultWeight: 1.0,
-        url: 'civitai:1268816@1431182'
     },
     {
         id: 'animelike-digital-painting',
@@ -312,6 +294,12 @@ export const artisticLoras = [
 
 export const realisticLoras = [
     {
+        id: 'midjourney-style',
+        name: '🎨 Dream Vision',
+        defaultWeight: 1.0,
+        url: 'civitai:1268816@1431182'
+    },
+    {
         id: 'dramatic-lighting',
         name: '💫 Light Sorcerer',
         defaultWeight: 1.0,
@@ -372,6 +360,12 @@ export const realisticLoras = [
         url: 'civitai:308147@880134'        
     },
     {
+        id: 'anime-detailed-eyes',
+        name: '👁️ Soul Gaze',
+        defaultWeight: 1.0,
+        url: 'civitai:649378@726524'
+    },
+    {
         id: 'real-anime',
         name: '🎌 Real Anime',
         defaultWeight: 1.0,
@@ -406,6 +400,12 @@ export const realisticLoras = [
         name: '💎 Opal Dreams',
         defaultWeight: 1.0,
         url: 'civitai:225003@1329546'
+    },
+    {
+        id: 'faetastic-details',
+        name: '🧚 Fae Magic',
+        defaultWeight: 1.0,
+        url: 'civitai:643886@720252'
     },
     {
         id: 'liminal-space',
