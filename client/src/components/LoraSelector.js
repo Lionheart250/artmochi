@@ -468,7 +468,7 @@ export const realisticLoras = [
         url: 'civitai:731933@978472'
     },
     {
-        id: 'ultra-style',
+        id: 'boring-reality',
         name: '✨ Boring Reality',
         defaultWeight: 1.0,
         url: 'civitai:639937@810340'
@@ -513,7 +513,7 @@ export const realisticLoras = [
         id: '2000s-social',
         name: '📱 VHS',
         defaultWeight: 1.0,
-        url: ':civitai:71125@1135830'
+        url: 'civitai:71125@1135830'
     },
     {
         id: 'darkcore',
@@ -969,11 +969,11 @@ const loraExamples = {
         '/examples/loras/semi-realistic/semi-realistic3.webp',
         '/examples/loras/semi-realistic/semi-realistic4.webp'
     ],
-    'ultra-style': [
-        '/examples/loras/ultra-style/ultra-style1.webp',
-        '/examples/loras/ultra-style/ultra-style2.webp',
-        '/examples/loras/ultra-style/ultra-style3.webp',
-        '/examples/loras/ultra-style/ultra-style4.webp'
+    'boring-reality': [
+        '/examples/loras/boring-reality/boring-reality1.webp',
+        '/examples/loras/boring-reality/boring-reality2.webp',
+        '/examples/loras/boring-reality/boring-reality3.webp',
+        '/examples/loras/boring-reality/boring-reality4.webp'
     ],
     'gold-leaf': [
         '/examples/loras/gold-leaf/gold-leaf1.webp',
