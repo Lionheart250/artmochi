@@ -112,9 +112,15 @@ export const artisticLoras = [
     },
     {
         id: 'dark-fantasy',
-        name: '🏰 Dark Fantasy Anime',
+        name: '🏰 Dark Fantasy anime',
         defaultWeight: 1.0,
-        url: 'civitai:987994@1106834'
+        url: 'civitai:829155@927327'
+    },
+    {
+        id: 'dark-anime',
+        name: '🏰 Dark Anime',
+        defaultWeight: 1.0,
+        url: 'civitai:851695@952894'
     },
     {
         id: 'weird-core',
@@ -142,15 +148,15 @@ export const artisticLoras = [
     },
     {
         id: 'dream-world',
-        name: '💫 Pastel Dream World',
+        name: '💫 Pastel Dream',
         defaultWeight: 1.0,
-        url: 'civitai:1100297@1235963'
+        url: 'civitai:709014@793060'
     },
     {
         id: 'anime-furry-anime',
         name: '🦊 Furry Anime',
         defaultWeight: 1.0,
-        url: 'civitai:683555@765069'
+        url: 'civitai:683555@768449'
     },
     {
         id: 'anime-furry',
@@ -210,13 +216,13 @@ export const artisticLoras = [
         id: 'mai-colors',
         name: '🌈 Mai Colors',
         defaultWeight: 1.0,
-        url: 'civitai:862902@965491'
+        url: 'civitai:902162@1040356'
     },
     {
         id: 'neuro-cyberpunk',
         name: '🤖 Neuro Cyber',
         defaultWeight: 1.0,
-        url: 'civitai:903057@1410611'
+        url: 'civitai:903057@1109173'
     },
     {
         id: 'cyberpunk-anime',
@@ -262,9 +268,9 @@ export const artisticLoras = [
     },
     {
         id: 'details-colored-pencil',
-        name: '✏️ Color Pencil Pro',
+        name: '✏️ Simple and Cute',
         defaultWeight: 1.0,
-        url: 'civitai:1155749@1405684'
+        url: 'civitai:1007718@1129397'
     },
     {
         id: 'blender-style',
@@ -423,7 +429,7 @@ export const realisticLoras = [
         id: 'new-fantasy-core',
         name: '✨ Fantasy Core',
         defaultWeight: 1.0,
-        url: 'civitai:810000@1264088'
+        url: 'civitai:810000@1067495'
     },
     {
         id: 'randomax-robotics',
@@ -463,9 +469,9 @@ export const realisticLoras = [
     },
     {
         id: 'ultra-style',
-        name: '✨ Ultra Style',
+        name: '✨ Boring Reality',
         defaultWeight: 1.0,
-        url: 'civitai:978314@1413133'
+        url: 'civitai:639937@810340'
     },
     {
         id: 'gold-leaf',
@@ -493,9 +499,9 @@ export const realisticLoras = [
     },
     {
         id: 'spooky-vibes',
-        name: '👻 Spooky Vibes',
+        name: '👻 emo style',
         defaultWeight: 1.0,
-        url: 'civitai:863136@1081646'
+        url: 'civitai:687015@768888'
     },
     {
         id: 'fantasy-enhancer',
@@ -631,6 +637,12 @@ const loraExamples = {
         '/examples/loras/dark-fantasy/2.webp',
         '/examples/loras/dark-fantasy/3.webp',
         '/examples/loras/dark-fantasy/4.webp'
+    ],
+    'dark-anime': [
+        '/examples/loras/dark-anime/dark-anime1.webp',
+        '/examples/loras/dark-anime/dark-anime2.webp',
+        '/examples/loras/dark-anime/dark-anime3.webp',
+        '/examples/loras/dark-anime/dark-anime4.webp'
     ],
     'weird-core': [
         '/examples/loras/weird-core/1.webp',
