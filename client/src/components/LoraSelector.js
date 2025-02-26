@@ -387,7 +387,7 @@ export const realisticLoras = [
         id: 'realistic-60s',
         name: '🎥 60s Cinema',
         defaultWeight: 1.0,
-        url: 'civitai:878199@1282338'
+        url: 'civitai:878199@983116'
     },
     {
         id: 'surreal-landscapes',
