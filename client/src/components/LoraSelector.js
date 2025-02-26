@@ -69,12 +69,6 @@ export const artisticLoras = [
         url: 'civitai:1050516@1178753'
     },
     {
-        id: 'glitch-effect',
-        name: '🖌️ glitch effect',
-        defaultWeight: 1.0,
-        url: 'civitai:764243@854817'
-    },
-    {
         id: 'gothicniji',
         name: '🖤 Gothic Oil Paint',
         defaultWeight: 1.0,
@@ -310,6 +304,12 @@ export const realisticLoras = [
         name: '🔮 Reality Enhancer',
         defaultWeight: 1.0,
         url: 'civitai:562866@863991'
+    },
+    {
+        id: 'glitch-effect',
+        name: '🖌️ glitch effect',
+        defaultWeight: 1.0,
+        url: 'civitai:764243@854817'
     },
     {
         id: 'neon-lighting',
@@ -548,23 +548,11 @@ const loraExamples = {
         '/examples/loras/retro-anime-dark/retro-anime-dark3.webp',
         '/examples/loras/retro-anime-dark/retro-anime-dark4.webp'
     ],
-    'anime-detailed-eyes': [
-        '/examples/loras/anime-detailed-eyes/anime-detailed-eyes1.webp',
-        '/examples/loras/anime-detailed-eyes/anime-detailed-eyes2.webp',
-        '/examples/loras/anime-detailed-eyes/anime-detailed-eyes3.webp',
-        '/examples/loras/anime-detailed-eyes/anime-detailed-eyes4.webp'
-    ],
     'luminous-shadows-cape': [
         '/examples/loras/luminous-shadows-cape/luminous-shadows-cape1.webp',
         '/examples/loras/luminous-shadows-cape/luminous-shadows-cape2.webp',
         '/examples/loras/luminous-shadows-cape/luminous-shadows-cape3.webp',
         '/examples/loras/luminous-shadows-cape/luminous-shadows-cape4.webp'
-    ],
-    'faetastic-details': [
-        '/examples/loras/faetastic-details/faetastic-details1.webp',
-        '/examples/loras/faetastic-details/faetastic-details2.webp',
-        '/examples/loras/faetastic-details/faetastic-details3.webp',
-        '/examples/loras/faetastic-details/faetastic-details4.webp'
     ],
     'storybook-artstyle': [
         '/examples/loras/storybook-artstyle/storybook-artstyle1.webp',
@@ -590,23 +578,11 @@ const loraExamples = {
         '/examples/loras/arcane-intro-style/arcane-intro-style3.webp',
         '/examples/loras/arcane-intro-style/arcane-intro-style4.webp'
     ],
-    'midjourney-style': [
-        '/examples/loras/midjourney-style/midjourney-style1.webp',
-        '/examples/loras/midjourney-style/midjourney-style2.webp',
-        '/examples/loras/midjourney-style/midjourney-style3.webp',
-        '/examples/loras/midjourney-style/midjourney-style4.webp'
-    ],
     'animelike-digital-painting': [
         '/examples/loras/animelike-digital-painting/animelike-digital-painting1.webp',
         '/examples/loras/animelike-digital-painting/animelike-digital-painting2.webp',
         '/examples/loras/animelike-digital-painting/animelike-digital-painting3.webp',
         '/examples/loras/animelike-digital-painting/animelike-digital-painting4.webp'
-    ],
-    'glitch-effect': [
-        '/examples/loras/glitch-effect/glitch-effect1.webp',
-        '/examples/loras/glitch-effect/glitch-effect2.webp',
-        '/examples/loras/glitch-effect/glitch-effect3.webp',
-        '/examples/loras/glitch-effect/glitch-effect4.webp'
     ],
     'gothicniji': [
         '/examples/loras/gothicniji/gothicniji1.webp',
@@ -807,6 +783,12 @@ const loraExamples = {
         '/examples/loras/blender-style/4.webp'
     ],
     // Realistic LoRAs
+    'midjourney-style': [
+        '/examples/loras/midjourney-style/midjourney-style1.webp',
+        '/examples/loras/midjourney-style/midjourney-style2.webp',
+        '/examples/loras/midjourney-style/midjourney-style3.webp',
+        '/examples/loras/midjourney-style/midjourney-style4.webp'
+    ],
     'dramatic-lighting': [
         '/examples/loras/dramatic-lighting/dramatic-lighting1.webp',
         '/examples/loras/dramatic-lighting/dramatic-lighting2.webp',
@@ -818,6 +800,12 @@ const loraExamples = {
         '/examples/loras/image-upgrader/image-upgrader2.webp',
         '/examples/loras/image-upgrader/image-upgrader3.webp',
         '/examples/loras/image-upgrader/image-upgrader4.webp'
+    ],
+    'glitch-effect': [
+        '/examples/loras/glitch-effect/glitch-effect1.webp',
+        '/examples/loras/glitch-effect/glitch-effect2.webp',
+        '/examples/loras/glitch-effect/glitch-effect3.webp',
+        '/examples/loras/glitch-effect/glitch-effect4.webp'
     ],
     'neon-lighting': [
         '/examples/loras/neon-lighting/neon-lighting1.webp',
@@ -867,6 +855,12 @@ const loraExamples = {
         '/examples/loras/fantasy-wizards-witches/fantasy-wizards-witches3.webp',
         '/examples/loras/fantasy-wizards-witches/fantasy-wizards-witches4.webp'
     ],
+    'anime-detailed-eyes': [
+        '/examples/loras/anime-detailed-eyes/anime-detailed-eyes1.webp',
+        '/examples/loras/anime-detailed-eyes/anime-detailed-eyes2.webp',
+        '/examples/loras/anime-detailed-eyes/anime-detailed-eyes3.webp',
+        '/examples/loras/anime-detailed-eyes/anime-detailed-eyes4.webp'
+    ],
     'real-anime': [
         '/examples/loras/real-anime/1.webp',
         '/examples/loras/real-anime/2.webp',
@@ -896,6 +890,12 @@ const loraExamples = {
         '/examples/loras/opal-style/2.webp',
         '/examples/loras/opal-style/3.webp',
         '/examples/loras/opal-style/4.webp'
+    ],
+    'faetastic-details': [
+        '/examples/loras/faetastic-details/faetastic-details1.webp',
+        '/examples/loras/faetastic-details/faetastic-details2.webp',
+        '/examples/loras/faetastic-details/faetastic-details3.webp',
+        '/examples/loras/faetastic-details/faetastic-details4.webp'
     ],
     'liminal-space': [
         '/examples/loras/liminal-space/1.webp',
