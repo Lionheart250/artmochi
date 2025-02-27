@@ -608,18 +608,6 @@ const loraExamples = {
         '/examples/loras/digital-abyss/digital-abyss3.webp',
         '/examples/loras/digital-abyss/digital-abyss4.webp'
     ],
-    'cyber-graphic': [
-        '/examples/loras/cyber-graphic/cyber-graphic1.webp',
-        '/examples/loras/cyber-graphic/cyber-graphic2.webp',
-        '/examples/loras/cyber-graphic/cyber-graphic3.webp',
-        '/examples/loras/cyber-graphic/cyber-graphic4.webp'
-    ],
-    'elden-ring-style': [
-        '/examples/loras/elden-ring-style/elden-ring-style1.webp',
-        '/examples/loras/elden-ring-style/elden-ring-style2.webp',
-        '/examples/loras/elden-ring-style/elden-ring-style3.webp',
-        '/examples/loras/elden-ring-style/elden-ring-style4.webp'
-    ],
     'frazetta-style': [
         '/examples/loras/frazetta-style/frazetta-style1.webp',
         '/examples/loras/frazetta-style/frazetta-style2.webp',
@@ -681,10 +669,10 @@ const loraExamples = {
         '/examples/loras/anime-furry/anime-furry4.webp'
     ],
     'anime-furry-anime': [
-        '/examples/loras/anime-furry/anime-furry1.webp',
-        '/examples/loras/anime-furry/anime-furry2.webp',
-        '/examples/loras/anime-furry/anime-furry3.webp',
-        '/examples/loras/anime-furry/anime-furry4.webp'
+        '/examples/loras/anime-furry-anime/anime-furry-anime1.webp',
+        '/examples/loras/anime-furry-anime/anime-furry-anime2.webp',
+        '/examples/loras/anime-furry-anime/anime-furry-anime3.webp',
+        '/examples/loras/anime-furry-anime/anime-furry-anime4.webp' 
     ],
     'anime-gloss': [
         '/examples/loras/anime-gloss/anime-gloss1.webp',
@@ -716,12 +704,6 @@ const loraExamples = {
         '/examples/loras/anime-ink/anime-ink3.webp',
         '/examples/loras/anime-ink/anime-ink4.webp'
     ],
-    'ethereal-dark': [
-        '/examples/loras/ethereal-dark/ethereal-dark1.webp',
-        '/examples/loras/ethereal-dark/ethereal-dark2.webp',
-        '/examples/loras/ethereal-dark/ethereal-dark3.webp',
-        '/examples/loras/ethereal-dark/ethereal-dark4.webp'
-    ],
     'painting-realm': [
         '/examples/loras/painting-realm/painting-realm1.webp',
         '/examples/loras/painting-realm/painting-realm2.webp',
@@ -735,10 +717,10 @@ const loraExamples = {
         '/examples/loras/impressionist/impressionist4.webp'
     ],
     'mai-colors': [
-        '/examples/loras/mai-colors/mai-colors/mai-colors1.webp',
-        '/examples/loras/mai-colors/mai-colors/mai-colors2.webp',
-        '/examples/loras/mai-colors/mai-colors/mai-colors3.webp',
-        '/examples/loras/mai-colors/mai-colors/mai-colors4.webp'
+        '/examples/loras/mai-colors/mai-colors1.webp',
+        '/examples/loras/mai-colors/mai-colors2.webp',
+        '/examples/loras/mai-colors/mai-colors3.webp',
+        '/examples/loras/mai-colors/mai-colors4.webp'
     ],
     'neuro-cyberpunk': [
         '/examples/loras/neuro-cyberpunk/neuro-cyberpunk1.webp',
@@ -830,6 +812,24 @@ const loraExamples = {
         '/examples/loras/image-upgrader/image-upgrader2.webp',
         '/examples/loras/image-upgrader/image-upgrader3.webp',
         '/examples/loras/image-upgrader/image-upgrader4.webp'
+    ],
+    'ethereal-dark': [
+        '/examples/loras/ethereal-dark/ethereal-dark1.webp',
+        '/examples/loras/ethereal-dark/ethereal-dark2.webp',
+        '/examples/loras/ethereal-dark/ethereal-dark3.webp',
+        '/examples/loras/ethereal-dark/ethereal-dark4.webp'
+    ],
+    'cyber-graphic': [
+        '/examples/loras/cyber-graphic/cyber-graphic1.webp',
+        '/examples/loras/cyber-graphic/cyber-graphic2.webp',
+        '/examples/loras/cyber-graphic/cyber-graphic3.webp',
+        '/examples/loras/cyber-graphic/cyber-graphic4.webp'
+    ],
+    'elden-ring-style': [
+        '/examples/loras/elden-ring-style/elden-ring-style1.webp',
+        '/examples/loras/elden-ring-style/elden-ring-style2.webp',
+        '/examples/loras/elden-ring-style/elden-ring-style3.webp',
+        '/examples/loras/elden-ring-style/elden-ring-style4.webp'
     ],
     'glitch-effect': [
         '/examples/loras/glitch-effect/glitch-effect1.webp',
