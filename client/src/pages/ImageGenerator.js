@@ -263,227 +263,262 @@ const handleSubmit = async (e) => {
     setLoading(true);
     setProgressPercentage(0);
 
-    try {
-        if (!currentSubscription) {
-            setError('Please subscribe to start generating images');
-            return;
-        }
+    const maxRetries = 3;
+    let attempt = 0;
 
-        // Update remaining generations immediately for free tier
-        if (currentSubscription?.tier_name === 'Free') {
-            if (remainingGenerations <= 0) {
-                setError('You have reached your daily limit. Upgrade for unlimited generations!');
+    while (attempt < maxRetries) {
+        try {
+            if (!currentSubscription) {
+                setError('Please subscribe to start generating images');
                 return;
             }
-            // Decrement locally immediately
-            setRemainingGenerations(prev => Math.max(0, prev - 1));
-        }
 
-        const token = localStorage.getItem('token');
-
-        if (mode === 'upscale') {
-            // Handle upscaling
-            if (!initImage) {
-                throw new Error('Please select an image to upscale');
-            }
-
-            const progressControl = startProgressSimulation(setProgressPercentage, setGenerationStage, 20);
-
-            const base64Image = await new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result);
-                reader.readAsDataURL(initImage);
-            });
-
-            // Find original image's prompt if it exists
-            let originalPrompt = null;
-            if (initImage?.dataset?.prompt) {
-                originalPrompt = initImage.dataset.prompt;
-            }
-
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/upscale`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ 
-                    image: base64Image,
-                    originalPrompt: originalPrompt
-                })
-            });
-
-            const data = await response.json();
-
-            if (data.error === 'Daily limit reached') {
-                if (currentSubscription?.tier_name === 'Free') {
-                    setRemainingGenerations(prev => prev + 1);
+            // Update remaining generations immediately for free tier
+            if (currentSubscription?.tier_name === 'Free') {
+                if (remainingGenerations <= 0) {
+                    setError('You have reached your daily limit. Upgrade for unlimited generations!');
+                    return;
                 }
-                throw new Error('You have reached your daily free tier limit. Upgrade for unlimited generations!');
+                // Decrement locally immediately
+                setRemainingGenerations(prev => Math.max(0, prev - 1));
             }
 
-            // Update with server's count to stay in sync
-            if (currentSubscription?.tier_name === 'Free' && data.remainingGenerations !== undefined) {
-                setRemainingGenerations(data.remainingGenerations);
-            }
+            const token = localStorage.getItem('token');
 
-            if (data.error) {
-                throw new Error(data.error);
-            }
+            if (mode === 'upscale') {
+                // Handle upscaling
+                if (!initImage) {
+                    throw new Error('Please select an image to upscale');
+                }
 
-            progressControl.accelerate();
-            await new Promise(resolve => setTimeout(resolve, 600));
-            setProgressPercentage(100);
-            setGenerationStage('Complete!');
-            setImage(data.upscaledImage);
+                const progressControl = startProgressSimulation(setProgressPercentage, setGenerationStage, 20);
 
-        } else {
-            // Handle image generation
-            if (!prompt.trim()) {
-                throw new Error('Please enter a prompt');
-            }
-            const progressControl = startProgressSimulation(setProgressPercentage, setGenerationStage, steps);
-
-            // Convert image to base64 if it's image-to-image
-            let imageData = null;
-            if (isImageToImage && initImage) {
-                imageData = await new Promise((resolve) => {
+                const base64Image = await new Promise((resolve) => {
                     const reader = new FileReader();
-                    reader.onloadend = () => {
-                        // Get the full base64 string including data URI
-                        resolve(reader.result);
-                    };
+                    reader.onloadend = () => resolve(reader.result);
                     reader.readAsDataURL(initImage);
                 });
-            }
 
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/runware`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    input: {
-                        prompt: prompt,
-                        negative_prompt: negativePrompt,
-                        height: aspectRatio === 'Portrait' ? 1280 : aspectRatio === 'Landscape' ? 768 : 1024,
-                        width: aspectRatio === 'Portrait' ? 768 : aspectRatio === 'Landscape' ? 1280 : 1024,
-                        num_inference_steps: steps,
-                        guidance_scale: distilledCfgScale,
-                        ...(isImageToImage && imageData && {
-                            seedImage: imageData,
-                            strength: denoisingStrength
-                        }),
-                        ...(Object.keys(selectedLoras).length > 0 && {
-                            lora: Object.entries(selectedLoras).map(([url, weight]) => ({
-                                model: url.startsWith('civitai:') ? url : `civitai:${url.match(/models\/(\d+)/)?.[1]}`,
-                                weight: parseFloat(weight)
-                            }))
-                        }),
-                        private: isPrivate,
-                        generateTitle: autoGenerateTitle,
-                        title: imageTitle || undefined,
-                        lorasUsed: Object.entries(selectedLoras).map(([url, weight]) => ({
-                            name: getLoraName(url),
-                            url: url,
-                            weight: parseFloat(weight)
-                        }))
-                    }
-                })
-            });
+                // Find original image's prompt if it exists
+                let originalPrompt = null;
+                if (initImage?.dataset?.prompt) {
+                    originalPrompt = initImage.dataset.prompt;
+                }
 
-            const data = await response.json();
-            console.log('Runware response:', data); // Add this for debugging
-
-            if (data.error) {
-                throw new Error(data.error);
-            }
-
-            // Update this section to properly handle the image
-            progressControl.accelerate();
-            await new Promise(resolve => setTimeout(resolve, 600));
-            
-            if (autoUpscale) {
-                setProgressPercentage(100);
-                setIsUpscalingPhase(true);
-                const upscaleProgressControl = startUpscaleProgressSimulation(setUpscaleProgress, setUpscaleStage);
-                
-                const upscaleResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/upscale`, {
+                const response = await fetch(`${process.env.REACT_APP_API_URL}/api/upscale`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify({ 
-                        image: data.image, // Make sure this matches your server response
-                        originalPrompt: prompt
-                    })
+                        image: base64Image,
+                        originalPrompt: originalPrompt
+                    }),
+                    // Add timeout
+                    signal: AbortSignal.timeout(30000) // 30 second timeout
                 });
 
-                const upscaleData = await upscaleResponse.json();
-                if (upscaleData.error) {
-                    throw new Error(upscaleData.error);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
-                upscaleProgressControl.accelerate();
-                await new Promise(resolve => setTimeout(resolve, 600));
-                setUpscaleProgress(100);
-                setImage(upscaleData.upscaledImage);
-                setIsUpscalingPhase(false);
-            } else {
-                setImage(data.image); // Make sure data.image is the URL from your server
-            }
-            
-            // In handleSubmit, modify the image generation response section:
-            if (data.image) {
-                if (autoGenerateTitle) {
-                    try {
-                        // Generate title first
-                        const generatedTitle = await generateImageTitle(data.image);
-                        setImageTitle(generatedTitle);
-                        
-                        // Update the title in the database
-                        const updateResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/update-image-title`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`
-                            },
-                            body: JSON.stringify({
-                                imageUrl: data.image,
-                                title: generatedTitle
-                            })
-                        });
 
-                        if (!updateResponse.ok) {
-                            throw new Error('Failed to update image title');
-                        }
-                    } catch (error) {
-                        console.error('Title generation/update failed:', error);
-                        setImageTitle('Untitled');
+                const data = await response.json();
+
+                if (data.error === 'Daily limit reached') {
+                    if (currentSubscription?.tier_name === 'Free') {
+                        setRemainingGenerations(prev => prev + 1);
                     }
+                    throw new Error('You have reached your daily free tier limit. Upgrade for unlimited generations!');
                 }
-                
-                setImage(data.image);
+
+                // Update with server's count to stay in sync
+                if (currentSubscription?.tier_name === 'Free' && data.remainingGenerations !== undefined) {
+                    setRemainingGenerations(data.remainingGenerations);
+                }
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                progressControl.accelerate();
+                await new Promise(resolve => setTimeout(resolve, 600));
                 setProgressPercentage(100);
                 setGenerationStage('Complete!');
+                setImage(data.upscaledImage);
+
+            } else {
+                // Handle image generation
+                if (!prompt.trim()) {
+                    throw new Error('Please enter a prompt');
+                }
+                const progressControl = startProgressSimulation(setProgressPercentage, setGenerationStage, steps);
+
+                // Convert image to base64 if it's image-to-image
+                let imageData = null;
+                if (isImageToImage && initImage) {
+                    imageData = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                            // Get the full base64 string including data URI
+                            resolve(reader.result);
+                        };
+                        reader.readAsDataURL(initImage);
+                    });
+                }
+
+                const response = await fetch(`${process.env.REACT_APP_API_URL}/api/runware`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        input: {
+                            prompt: prompt,
+                            negative_prompt: negativePrompt,
+                            height: aspectRatio === 'Portrait' ? 1280 : aspectRatio === 'Landscape' ? 768 : 1024,
+                            width: aspectRatio === 'Portrait' ? 768 : aspectRatio === 'Landscape' ? 1280 : 1024,
+                            num_inference_steps: steps,
+                            guidance_scale: distilledCfgScale,
+                            ...(isImageToImage && imageData && {
+                                seedImage: imageData,
+                                strength: denoisingStrength
+                            }),
+                            ...(Object.keys(selectedLoras).length > 0 && {
+                                lora: Object.entries(selectedLoras).map(([url, weight]) => ({
+                                    model: url.startsWith('civitai:') ? url : `civitai:${url.match(/models\/(\d+)/)?.[1]}`,
+                                    weight: parseFloat(weight)
+                                }))
+                            }),
+                            private: isPrivate,
+                            generateTitle: autoGenerateTitle,
+                            title: imageTitle || undefined,
+                            lorasUsed: Object.entries(selectedLoras).map(([url, weight]) => ({
+                                name: getLoraName(url),
+                                url: url,
+                                weight: parseFloat(weight)
+                            }))
+                        }
+                    }),
+                    // Add timeout
+                    signal: AbortSignal.timeout(30000) // 30 second timeout
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Runware response:', data); // Add this for debugging
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Update this section to properly handle the image
+                progressControl.accelerate();
+                await new Promise(resolve => setTimeout(resolve, 600));
+                
+                if (autoUpscale) {
+                    setProgressPercentage(100);
+                    setIsUpscalingPhase(true);
+                    const upscaleProgressControl = startUpscaleProgressSimulation(setUpscaleProgress, setUpscaleStage);
+                    
+                    const upscaleResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/upscale`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ 
+                            image: data.image, // Make sure this matches your server response
+                            originalPrompt: prompt
+                        })
+                    });
+
+                    const upscaleData = await upscaleResponse.json();
+                    if (upscaleData.error) {
+                        throw new Error(upscaleData.error);
+                    }
+                    
+                    upscaleProgressControl.accelerate();
+                    await new Promise(resolve => setTimeout(resolve, 600));
+                    setUpscaleProgress(100);
+                    setImage(upscaleData.upscaledImage);
+                    setIsUpscalingPhase(false);
+                } else {
+                    setImage(data.image); // Make sure data.image is the URL from your server
+                }
+                
+                // In handleSubmit, modify the image generation response section:
+                if (data.image) {
+                    if (autoGenerateTitle) {
+                        try {
+                            // Generate title first
+                            const generatedTitle = await generateImageTitle(data.image);
+                            setImageTitle(generatedTitle);
+                            
+                            // Update the title in the database
+                            const updateResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/update-image-title`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${token}`
+                                },
+                                body: JSON.stringify({
+                                    imageUrl: data.image,
+                                    title: generatedTitle
+                                })
+                            });
+
+                            if (!updateResponse.ok) {
+                                throw new Error('Failed to update image title');
+                            }
+                        } catch (error) {
+                            console.error('Title generation/update failed:', error);
+                            setImageTitle('Untitled');
+                        }
+                    }
+                    
+                    setImage(data.image);
+                    setProgressPercentage(100);
+                    setGenerationStage('Complete!');
+                }
+
+                if (data.categories) {
+                    setCategories(data.categories);
+                }
+
+                if (autoGenerateTitle && data.title) {
+                    setImageTitle(data.title);
+                }
             }
 
-            if (data.categories) {
-                setCategories(data.categories);
+            break; // Exit loop on success
+        } catch (error) {
+            attempt++;
+            console.error(`Attempt ${attempt} failed:`, error);
+
+            if (error.name === 'AbortError') {
+                setError('Request timed out. Please try again.');
+            } else if (!navigator.onLine) {
+                setError('No internet connection. Please check your network.');
+            } else if (attempt === maxRetries) {
+                setError('Failed to generate image. Please try again later.');
             }
 
-            if (autoGenerateTitle && data.title) {
-                setImageTitle(data.title);
+            // Wait before retrying
+            if (attempt < maxRetries) {
+                await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
             }
         }
-    } finally {
-        setLoading(false);
-        setIsUpscalingPhase(false);
-        setUpscaleProgress(0);
-        setProgressPercentage(0);
     }
+
+    setLoading(false);
+    setIsUpscalingPhase(false);
+    setUpscaleProgress(0);
+    setProgressPercentage(0);
 };
 
 // Add upscale handler

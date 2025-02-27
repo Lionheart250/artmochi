@@ -30,7 +30,7 @@ export const artisticLoras = [
         id: 'retro-anime-dark',
         name: '🌙 dark retro anime',
         defaultWeight: 1.0,
-        url: 'civitai:881100@986307' 
+        url: 'civitai:1061759@1191560' 
     },
     {
         id: 'luminous-shadows-cape',
