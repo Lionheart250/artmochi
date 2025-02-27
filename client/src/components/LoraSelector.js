@@ -30,7 +30,7 @@ export const artisticLoras = [
         id: 'retro-anime-dark',
         name: '🌙 dark retro anime',
         defaultWeight: 1.0,
-        url: 'civitai:1061759@1191560' 
+        url: 'civitai:881100@986307' 
     },
     {
         id: 'luminous-shadows-cape',
@@ -85,18 +85,6 @@ export const artisticLoras = [
         name: '🌌 Void Explorer',
         defaultWeight: 1.0,
         url: 'civitai:844787@945122'
-    },
-    {
-        id: 'cyber-graphic',
-        name: '🤖 Cyber Matrix',
-        defaultWeight: 1.0,
-        url: 'civitai:104855@843447'
-    },
-    {
-        id: 'elden-ring-style',
-        name: '⚔️ Dark Souls',
-        defaultWeight: 1.0,
-        url: 'civitai:667004@746484'
     },
     {
         id: 'frazetta-style',
@@ -193,12 +181,6 @@ export const artisticLoras = [
         name: '🖋️ Serial Experiments',
         defaultWeight: 1.0,
         url: 'civitai:131706@997381'
-    },
-    {
-        id: 'ethereal-dark',
-        name: '🌑 Ethereal Dark',
-        defaultWeight: 1.0,
-        url: 'civitai:1024070@1148373'
     },
     {
         id: 'painting-realm',
@@ -310,6 +292,24 @@ export const realisticLoras = [
         name: '🔮 Reality Enhancer',
         defaultWeight: 1.0,
         url: 'civitai:562866@863991'
+    },
+    {
+        id: 'ethereal-dark',
+        name: '🌑 Ethereal Dark',
+        defaultWeight: 1.0,
+        url: 'civitai:1024070@1148373'
+    },
+    {
+        id: 'cyber-graphic',
+        name: '🤖 Cyber Matrix',
+        defaultWeight: 1.0,
+        url: 'civitai:104855@843447'
+    },
+    {
+        id: 'elden-ring-style',
+        name: '⚔️ Dark Souls',
+        defaultWeight: 1.0,
+        url: 'civitai:667004@746484'
     },
     {
         id: 'glitch-effect',
@@ -663,10 +663,10 @@ const loraExamples = {
         '/examples/loras/anime-no-line/anime-no-line4.webp'
     ],
     'anime-digital-matte': [
-        '/examples/loras/anime-digital-matte/anime-digital-matte/1.webp',
-        '/examples/loras/anime-digital-matte/anime-digital-matte/2.webp',
-        '/examples/loras/anime-digital-matte/anime-digital-matte/3.webp',
-        '/examples/loras/anime-digital-matte/anime-digital-matte/4.webp'
+        '/examples/loras/anime-digital-matte/anime-digital-matte1.webp',
+        '/examples/loras/anime-digital-matte/anime-digital-matte2.webp',
+        '/examples/loras/anime-digital-matte/anime-digital-matte3.webp',
+        '/examples/loras/anime-digital-matte/anime-digital-matte4.webp'
     ],
     'dream-world': [
         '/examples/loras/dream-world/dream-world1.webp',
@@ -675,6 +675,12 @@ const loraExamples = {
         '/examples/loras/dream-world/dream-world4.webp'
     ],
     'anime-furry': [
+        '/examples/loras/anime-furry/anime-furry1.webp',
+        '/examples/loras/anime-furry/anime-furry2.webp',
+        '/examples/loras/anime-furry/anime-furry3.webp',
+        '/examples/loras/anime-furry/anime-furry4.webp'
+    ],
+    'anime-furry-anime': [
         '/examples/loras/anime-furry/anime-furry1.webp',
         '/examples/loras/anime-furry/anime-furry2.webp',
         '/examples/loras/anime-furry/anime-furry3.webp',
@@ -729,10 +735,10 @@ const loraExamples = {
         '/examples/loras/impressionist/impressionist4.webp'
     ],
     'mai-colors': [
-        '/examples/loras/mai-colors/mai-colors/1.webp',
-        '/examples/loras/mai-colors/mai-colors/2.webp',
-        '/examples/loras/mai-colors/mai-colors/3.webp',
-        '/examples/loras/mai-colors/mai-colors/4.webp'
+        '/examples/loras/mai-colors/mai-colors/mai-colors1.webp',
+        '/examples/loras/mai-colors/mai-colors/mai-colors2.webp',
+        '/examples/loras/mai-colors/mai-colors/mai-colors3.webp',
+        '/examples/loras/mai-colors/mai-colors/mai-colors4.webp'
     ],
     'neuro-cyberpunk': [
         '/examples/loras/neuro-cyberpunk/neuro-cyberpunk1.webp',
@@ -759,10 +765,10 @@ const loraExamples = {
         '/examples/loras/randommax-animefy/randommax-animefy4.webp'
     ],
     'randomax-illustrify': [
-        '/examples/loras/randomax-illustrify/randomax-illustrify/1.webp',
-        '/examples/loras/randomax-illustrify/randomax-illustrify/2.webp',
-        '/examples/loras/randomax-illustrify/randomax-illustrify/3.webp',
-        '/examples/loras/randomax-illustrify/randomax-illustrify/4.webp'
+        '/examples/loras/randomax-illustrify/randomax-illustrify1.webp',
+        '/examples/loras/randomax-illustrify/randomax-illustrify2.webp',
+        '/examples/loras/randomax-illustrify/randomax-illustrify3.webp',
+        '/examples/loras/randomax-illustrify/randomax-illustrify4.webp'
     ],
     'anime-niji': [
         '/examples/loras/anime-niji/anime-niji1.webp',
@@ -793,6 +799,18 @@ const loraExamples = {
         '/examples/loras/blender-style/blender-style2.webp',
         '/examples/loras/blender-style/blender-style3.webp',
         '/examples/loras/blender-style/blender-style4.webp'
+    ],
+    'pixel-art': [
+        '/examples/loras/pixel-art/pixel-art1.webp',
+        '/examples/loras/pixel-art/pixel-art2.webp',
+        '/examples/loras/pixel-art/pixel-art3.webp',
+        '/examples/loras/pixel-art/bpixel-art4.webp'
+    ],
+    'new-future': [
+        '/examples/loras/new-future/new-future1.webp',
+        '/examples/loras/new-future/new-future2.webp',
+        '/examples/loras/new-future/new-future3.webp',
+        '/examples/loras/new-future/new-future4.webp'
     ],
     // Realistic LoRAs
     'midjourney-style': [
