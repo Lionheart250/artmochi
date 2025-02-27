@@ -1,4 +1,4 @@
-.lora-selector {
+button.lora-selector {
     background: #1a1a1a;
     padding: 1rem;
     border-radius: 8px;
@@ -69,7 +69,6 @@
 }
 
 .lora-item input[type="range"] {
-    -webkit-appearance: none;
     width: 95%;
     height: 4px;
     min-height: 4px;
@@ -134,7 +133,7 @@
     z-index: 1000;
 }
 
-.lora-popup {
+.loraselector-popup {
     width: 90%;
     max-width: 1200px;
     max-height: 90vh;
@@ -163,16 +162,27 @@
 }
 
 .lora-popup .close-button {
-    background: none;
-    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     color: #fff;
-    font-size: 1.5rem;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
     cursor: pointer;
-    transition: color 0.2s;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.lora-popup .close-button::before {
+    content: "✕";
+    font-size: 12px;
 }
 
 .lora-popup .close-button:hover {
-    color: #ff0050; /* TikTok red */
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
 }
 
 .section-header {
@@ -431,7 +441,8 @@ button:hover {
     display: flex;
     gap: 12px;
     justify-content: center;
-    
+    padding: 16px;
+    flex-wrap: wrap;
 }
 
 .lora-action-btn {
@@ -439,6 +450,8 @@ button:hover {
     border-radius: 20px;
     font-weight: 600;
     transition: all 0.3s ease;
+    min-width: 120px; /* Set minimum width for consistency */
+    text-align: center;
 }
 
 .lora-action-btn.primary {
@@ -599,19 +612,41 @@ button:hover {
     .preview-modal {
         width: 95vw;
     }
-    
-    .lora-item {
 
+    .lora-content {
+        gap: 1px;
     }
     
     .thumbnail-strip {
-        grid-template-columns: repeat(4, 1fr);
-        height: 25px;
+        grid-template-columns: repeat(2, 1fr);
+        height: 100%;
     }
     
     .mini-thumbnail {
-        height: 25px;
-        width: 25px;
+        height: 160px;
+        width: 160px;
+    }
+
+    .preview-modal {
+        padding: 2px;
+        border-radius: 40px;
+    }
+
+    .preview-main-image img {
+        max-width: 100%;
+        max-height: 40vh;
+        object-fit: contain;
+    }
+
+    .lora-actions {
+        gap: 8px;
+        padding: 12px;
+    }
+
+    .lora-action-btn {
+        min-width: calc(33.33% - 8px); /* Three buttons per row with gap */
+        padding: 10px;
+        font-size: 14px;
     }
 }
 
@@ -619,25 +654,34 @@ button:hover {
     .lora-popup {
         width: 95vw;
         height: 90vh;
-        margin: 5vh auto;
+        margin: auto;
     }
+
+    .loraselector-popup-header h3 {
+           font-size: 1.2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    
+
     
     .preview-modal {
         width: 95vw;
     }
-    
-    .lora-item {
-  
+
+    .lora-content {
+        gap: 1px;
     }
     
     .thumbnail-strip {
-        grid-template-columns: repeat(4, 1fr);
-        height: 25px;
+        grid-template-columns: repeat(2, 1fr);
+        height: 100%;
     }
     
     .mini-thumbnail {
-        height: 25px;
-        width: 25px;
+        height: 70px;
+        width: 70px;
     }
 
     .lora-item label {
@@ -648,5 +692,52 @@ button:hover {
         color: #fff;
         font-weight: 500;
         font-size: 7px;
+    }
+
+    .preview-modal {
+        padding: 2px;
+        border-radius: 40px;
+    }
+
+    .preview-main-image img {
+        max-width: 100%;
+        max-height: 40vh;
+        object-fit: contain;
+    }
+
+    .lora-actions {
+        gap: 6px;
+        padding: 8px;
+        flex-direction: column; /* Stack buttons vertically */
+        position: fixed; /* Fix to bottom of popup */
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #1a1a1a; /* Match popup background */
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .lora-action-btn {
+        width: 100%; /* Full width buttons */
+        min-width: unset;
+        padding: 12px;
+        margin: 0;
+        font-size: 16px; /* Larger font for better touch targets */
+    }
+
+    /* Adjust content area to account for fixed button container */
+    .lora-content {
+        padding-bottom: 180px; /* Adjust based on your button container height */
+    }
+
+    .lora-popup .close-button {
+        padding: 6px 12px;
+        font-size: 12px;
+        display: flex;
+        justify-content: center;
+    }
+    
+    .lora-popup .close-button::before {
+        font-size: 10px;
     }
 }

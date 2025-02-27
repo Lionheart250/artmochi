@@ -77,7 +77,6 @@
 }
 
 .weight-editor input[type="range"] {
-    -webkit-appearance: none;
     width: 120px;
     height: 4px;
     background: rgba(254, 44, 85, 0.3);
