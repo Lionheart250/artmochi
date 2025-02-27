@@ -1083,15 +1083,33 @@ const PreviewModal = ({ examples, isOpen, onClose, loraName, initialImage }) => 
 
 // Update LoraItem component to pass the clicked image index
 const LoraItem = ({ lora, isSelected, onToggle, onWeightChange, weight, onPreviewClick }) => {
+    const handleClick = (e) => {
+        // Don't toggle if clicking on controls or thumbnails
+        if (
+            e.target.type === 'range' || 
+            e.target.className === 'mini-thumbnail' ||
+            e.target.className.includes('lora-controls')
+        ) {
+            return;
+        }
+        onToggle();
+    };
+
     const handleWeightChange = (e) => {
+        e.stopPropagation(); // Prevent item click when adjusting slider
         const newWeight = parseFloat(e.target.value);
-        onWeightChange(lora.url, newWeight); // Pass lora.url and the new weight value
+        onWeightChange(lora.url, newWeight);
     };
 
     return (
-        <div className="lora-item">
+        <div 
+            className={`lora-item ${isSelected ? 'selected' : ''}`}
+            onClick={handleClick}
+            role="button"
+            tabIndex={0}
+        >
             <div className="lora-item-header">
-                <label>
+                <label onClick={e => e.stopPropagation()}>
                     <input
                         type="checkbox"
                         checked={isSelected}
@@ -1101,26 +1119,29 @@ const LoraItem = ({ lora, isSelected, onToggle, onWeightChange, weight, onPrevie
                 </label>
             </div>
             {isSelected && (
-                <div className="lora-controls">
+                <div className="lora-controls" onClick={e => e.stopPropagation()}>
                     <input
                         type="range"
                         min="0.05"
                         max="1"
                         step="0.05"
-                        value={weight || 0} // Ensure there's always a value
+                        value={weight || 0}
                         onChange={handleWeightChange}
                     />
                     <span>{(weight || 0).toFixed(2)}</span>
                 </div>
             )}
-            <div className="thumbnail-strip">
+            <div className="thumbnail-strip" onClick={e => e.stopPropagation()}>
                 {loraExamples[lora.id]?.map((img, idx) => (
                     <img 
                         key={idx}
                         src={img}
                         alt="Thumbnail"
                         className="mini-thumbnail"
-                        onClick={() => onPreviewClick(lora.id, lora.name, idx)} // Pass the index
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onPreviewClick(lora.id, lora.name, idx);
+                        }}
                     />
                 ))}
             </div>
