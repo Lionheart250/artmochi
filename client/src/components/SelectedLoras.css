@@ -1,10 +1,3 @@
-:root {
-    --tiktok-cyan: #25F4EE;
-    --tiktok-pink: #FE2C55;
-    --tiktok-dark: #010101;
-    --tiktok-text: #FFFFFF;
-}
-
 .selected-loras {
     display: flex;
     flex-wrap: wrap;

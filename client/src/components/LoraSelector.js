@@ -1313,16 +1313,19 @@ const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
         <div className="lora-overlay" onClick={handleOverlayClick}>
             <div className="loraselector-popup" onClick={e => e.stopPropagation()}>
                 <div className="loraselector-popup-header">
-                    <h3>✨ Style Presets ✨</h3>
                     <div className="lora-actions">
-                        <button type="button" onClick={handleRandom} className="lora-action-btn primary">
-                            🎲 Random Mix
-                        </button>
-                        <button type="button" onClick={handleRemoveAll} className="lora-action-btn">
-                            Clear All
-                        </button>
-                        {/* Change handleClose to onClose here */}
-                        <button type="button" className="close-button" onClick={onClose}>Close</button>
+                        <h3>✨ Style Presets ✨</h3>
+                        <div className="lora-action-buttons">
+                            <button type="button" onClick={handleRandom} className="lora-action-btn primary">
+                                🎲 Random Mix
+                            </button>
+                            <button type="button" onClick={handleRemoveAll} className="lora-action-btn">
+                                Clear All
+                            </button>
+                            <button type="button" className="loraselector-close-button" onClick={onClose}>
+                                Close
+                            </button>
+                        </div>
                     </div>
                 </div>
 

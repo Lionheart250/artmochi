@@ -139,7 +139,6 @@ button.lora-selector {
     max-height: 90vh;
     background: #1a1a1a;
     border-radius: 12px;
-    padding: 24px;
     position: relative;
     overflow: hidden;
     color: #fff;
@@ -161,7 +160,7 @@ button.lora-selector {
     color: #ff0050; /* TikTok red */
 }
 
-.lora-popup .close-button {
+.loraselector-close-button {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     color: #fff;
@@ -175,27 +174,27 @@ button.lora-selector {
     gap: 6px;
 }
 
-.lora-popup .close-button::before {
+.loraselector-close-button::before {
     content: "✕";
     font-size: 12px;
 }
 
-.lora-popup .close-button:hover {
+.loraselector-close-button:hover {
     background: rgba(255, 255, 255, 0.2);
     transform: translateY(-1px);
 }
 
 .section-header {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 12px;
+    position: sticky;
+    top: 0;  /* Changed from previous value */
+    background: #1a1a1a;
+    z-index: 10;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 0;
     display: flex;
-    justify-content: space-between;
     align-items: center;
     cursor: pointer;
-    padding: 1rem 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .section-header h3 {
@@ -309,8 +308,8 @@ button:hover {
     }
 
     .lora-popup .lora-action-btn {
-        padding: 6px 12px;
-        font-size: 0.9rem;
+        padding: 3px 6px;
+        font-size: 0.7rem;
         margin: 3px;
     }
 
@@ -339,8 +338,8 @@ button:hover {
 
     .lora-popup .preset-button,
     .lora-popup .lora-action-btn {
-        padding: 4px 8px;
-        font-size: 0.8rem;
+        padding: 2px 4px;
+        font-size: 0.7rem;
         min-width: calc(50% - 8px); /* Two buttons per row */
     }
 
@@ -409,8 +408,9 @@ button:hover {
 .lora-content {
     display: flex;
     gap: 24px;
-    margin-top: 20px;
     height: calc(80vh - 100px);
+    margin-top: 0;  /* Remove top margin */
+    padding-top: 0; /* Remove top padding */
 }
 
 .lora-column {
@@ -419,30 +419,16 @@ button:hover {
     overflow-y: auto;
     padding: 0 12px;
     max-height: 70vh;
-    scrollbar-width: thin;
-    scroll-behavior: smooth;
-}
-
-.lora-column::-webkit-scrollbar {
-    width: 6px;
-}
-
-.lora-column::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
-}
-
-.lora-column::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 3px;
 }
 
 .lora-actions {
     display: flex;
     gap: 12px;
-    justify-content: center;
+    justify-content: flex-end;
     padding: 16px;
     flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .lora-action-btn {
@@ -730,14 +716,85 @@ button:hover {
         padding-bottom: 180px; /* Adjust based on your button container height */
     }
 
-    .lora-popup .close-button {
+.loraselector-close-button {
         padding: 6px 12px;
         font-size: 12px;
         display: flex;
         justify-content: center;
+        border-radius: 20px;
     }
     
-    .lora-popup .close-button::before {
+.loraselector-close-button::before {
         font-size: 10px;
     }
+
+    .lora-actions {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .lora-action-buttons {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 12px;
+        background: #1a1a1a;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .lora-content {
+        padding-bottom: 180px; /* Space for fixed buttons */
+    }
+
+    .section-header {
+        top: 56px; /* Adjusted for mobile header height */
+    }
+
+    .loraselector-popup-header {
+        padding: 12px;
+    }
+
+    .section-header {
+        top: 0;
+        padding: 10px;
+        margin: 0;
+    }
+
+    .lora-content {
+        padding-top: 0;
+    }
+
+    .lora-column {
+        padding: 0 8px;
+    }
+
+    /* Ensure section content starts immediately after header */
+    .lora-section {
+        margin-top: 0;
+        padding-top: 8px;
+    }
+}
+
+.loraselector-popup-header {
+    position: sticky;
+    top: 0;
+    background: #1a1a1a;
+    z-index: 11;  /* Higher than section headers */
+    padding: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 0;
+}
+
+.lora-actions h3 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.lora-action-buttons {
+    display: flex;
+    gap: 8px;
 }
