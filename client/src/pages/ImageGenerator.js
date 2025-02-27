@@ -177,6 +177,9 @@ const ImageGenerator = () => {
   const [imageTitle, setImageTitle] = useState('');
   const [autoGenerateTitle, setAutoGenerateTitle] = useState(true);
   const [generatedTitle, setGeneratedTitle] = useState('');
+  // Add this state at the top with other state declarations
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const abortControllerRef = useRef(null);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -259,15 +262,29 @@ const generateImageTitle = async (imageUrl) => {
 // Update handleSubmit to handle both modes:
 const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Prevent multiple submissions
+    if (isSubmitting) return;
+    
     setError(null);
     setLoading(true);
     setProgressPercentage(0);
+    setIsSubmitting(true);
+
+    // Cleanup previous abort controller
+    if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+    }
 
     const maxRetries = 3;
     let attempt = 0;
 
     while (attempt < maxRetries) {
         try {
+            // Create new abort controller for this attempt
+            abortControllerRef.current = new AbortController();
+            const timeoutId = setTimeout(() => abortControllerRef.current.abort(), 30000);
+
             if (!currentSubscription) {
                 setError('Please subscribe to start generating images');
                 return;
@@ -316,8 +333,10 @@ const handleSubmit = async (e) => {
                         originalPrompt: originalPrompt
                     }),
                     // Add timeout
-                    signal: AbortSignal.timeout(30000) // 30 second timeout
+                    signal: abortControllerRef.current.signal
                 });
+
+                clearTimeout(timeoutId);
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -402,8 +421,10 @@ const handleSubmit = async (e) => {
                         }
                     }),
                     // Add timeout
-                    signal: AbortSignal.timeout(30000) // 30 second timeout
+                    signal: abortControllerRef.current.signal
                 });
+
+                clearTimeout(timeoutId);
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -515,10 +536,13 @@ const handleSubmit = async (e) => {
         }
     }
 
+    // Cleanup
     setLoading(false);
+    setIsSubmitting(false);
     setIsUpscalingPhase(false);
     setUpscaleProgress(0);
     setProgressPercentage(0);
+    abortControllerRef.current = null;
 };
 
 // Add upscale handler
@@ -664,6 +688,14 @@ const getLoraName = (url) => {
     const lora = allLoras.find(l => l.url === url);
     return lora ? lora.name : url;
 };
+
+useEffect(() => {
+    return () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+    };
+}, []);
 
   return (
     <div className="image-generator">
@@ -934,7 +966,7 @@ const getLoraName = (url) => {
                         {/* Update the submit button to show correct action */}
                         <button
                             type="submit"
-                            disabled={loading || (mode === 'upscale' && !initImage)}
+                            disabled={loading || isSubmitting || (mode === 'upscale' && !initImage)}
                             className="generate-button"
                         >
                             {loading ? (mode === 'upscale' ? 'Upscaling...' : 'Generating...') 
