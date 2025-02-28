@@ -714,7 +714,7 @@ const loraExamples = {
         '/examples/loras/pixel-art/pixel-art1.webp',
         '/examples/loras/pixel-art/pixel-art2.webp',
         '/examples/loras/pixel-art/pixel-art3.webp',
-        '/examples/loras/pixel-art/bpixel-art4.webp'
+        '/examples/loras/pixel-art/pixel-art4.webp'
     ],
     'new-future': [
         '/examples/loras/new-future/new-future1.webp',
