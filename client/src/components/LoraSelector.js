@@ -141,18 +141,6 @@ export const artisticLoras = [
         url: 'civitai:709014@793060'
     },
     {
-        id: 'anime-furry-anime',
-        name: '🦊 Furry Anime',
-        defaultWeight: 1.0,
-        url: 'civitai:683555@768449'
-    },
-    {
-        id: 'anime-furry',
-        name: '🦊 animal people',
-        defaultWeight: 1.0,
-        url: 'civitai:666530@745927'
-    },
-    {
         id: 'anime-gloss',
         name: '✨ Anime Abyss',
         defaultWeight: 1.0,
@@ -163,12 +151,6 @@ export const artisticLoras = [
         name: '🎀 Cute anime',
         defaultWeight: 1.0,
         url: 'civitai:714944@857267'
-    },
-    {
-        id: 'commodore-64',
-        name: '🕹️ Retro Gaming',
-        defaultWeight: 1.0,
-        url: 'civitai:1264020@1425473'
     },
     {
         id: 'ghibliesque',
@@ -211,24 +193,6 @@ export const artisticLoras = [
         name: '🌆 Cyber Anime',
         defaultWeight: 1.0,
         url: 'civitai:128568@747534'
-    },
-    {
-        id: 'randomaxx-artistry',
-        name: '🎨 Artifyer',
-        defaultWeight: 1.0,
-        url: 'civitai:960680@1075587'
-    },
-    {
-        id: 'randommax-animefy',
-        name: '✨ Animeifyer',
-        defaultWeight: 1.0,
-        url: 'civitai:1055190@1183977'
-    },
-    {
-        id: 'randomax-illustrify',
-        name: '🖌️ Illustifyer',
-        defaultWeight: 1.0,
-        url: 'civitai:1022387@1146446'
     },
     {
         id: 'anime-niji',
@@ -662,18 +626,6 @@ const loraExamples = {
         '/examples/loras/dream-world/dream-world3.webp',
         '/examples/loras/dream-world/dream-world4.webp'
     ],
-    'anime-furry': [
-        '/examples/loras/anime-furry/anime-furry1.webp',
-        '/examples/loras/anime-furry/anime-furry2.webp',
-        '/examples/loras/anime-furry/anime-furry3.webp',
-        '/examples/loras/anime-furry/anime-furry4.webp'
-    ],
-    'anime-furry-anime': [
-        '/examples/loras/anime-furry-anime/anime-furry-anime1.webp',
-        '/examples/loras/anime-furry-anime/anime-furry-anime2.webp',
-        '/examples/loras/anime-furry-anime/anime-furry-anime3.webp',
-        '/examples/loras/anime-furry-anime/anime-furry-anime4.webp' 
-    ],
     'anime-gloss': [
         '/examples/loras/anime-gloss/anime-gloss1.webp',
         '/examples/loras/anime-gloss/anime-gloss2.webp',
@@ -685,12 +637,6 @@ const loraExamples = {
         '/examples/loras/anime-patootie/anime-patootie2.webp',
         '/examples/loras/anime-patootie/anime-patootie3.webp',
         '/examples/loras/anime-patootie/anime-patootie4.webp'
-    ],
-    'commodore-64': [
-        '/examples/loras/commodore-64/commodore-641.webp',
-        '/examples/loras/commodore-64/commodore-642.webp',
-        '/examples/loras/commodore-64/commodore-643.webp',
-        '/examples/loras/commodore-64/commodore-644.webp'
     ],
     'ghibliesque': [
         '/examples/loras/ghibliesque/ghibliesque1.webp',
@@ -733,24 +679,6 @@ const loraExamples = {
         '/examples/loras/cyberpunk-anime/cyberpunk-anime2.webp',
         '/examples/loras/cyberpunk-anime/cyberpunk-anime3.webp',
         '/examples/loras/cyberpunk-anime/cyberpunk-anime4.webp'
-    ],
-    'randomaxx-artistry': [
-        '/examples/loras/randomaxx-artistry/randomaxx-artistry1.webp',
-        '/examples/loras/randomaxx-artistry/randomaxx-artistry2.webp',
-        '/examples/loras/randomaxx-artistry/randomaxx-artistry3.webp',
-        '/examples/loras/randomaxx-artistry/randomaxx-artistry4.webp'
-    ],
-    'randommax-animefy': [
-        '/examples/loras/randommax-animefy/randommax-animefy1.webp',
-        '/examples/loras/randommax-animefy/randommax-animefy2.webp',
-        '/examples/loras/randommax-animefy/randommax-animefy3.webp',
-        '/examples/loras/randommax-animefy/randommax-animefy4.webp'
-    ],
-    'randomax-illustrify': [
-        '/examples/loras/randomax-illustrify/randomax-illustrify1.webp',
-        '/examples/loras/randomax-illustrify/randomax-illustrify2.webp',
-        '/examples/loras/randomax-illustrify/randomax-illustrify3.webp',
-        '/examples/loras/randomax-illustrify/randomax-illustrify4.webp'
     ],
     'anime-niji': [
         '/examples/loras/anime-niji/anime-niji1.webp',
