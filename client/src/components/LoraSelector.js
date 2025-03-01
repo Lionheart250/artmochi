@@ -236,6 +236,12 @@ export const artisticLoras = [
         defaultWeight: 1.0,
         url: 'civitai:658958@737325'
     },
+    {
+        id: 'glitch-effect',
+        name: '🖌️ glitch effect',
+        defaultWeight: 1.0,
+        url: 'civitai:764243@854817'
+    },
 ];
 
 export const realisticLoras = [
@@ -274,12 +280,6 @@ export const realisticLoras = [
         name: '⚔️ Dark Souls',
         defaultWeight: 1.0,
         url: 'civitai:667004@746484'
-    },
-    {
-        id: 'glitch-effect',
-        name: '🖌️ glitch effect',
-        defaultWeight: 1.0,
-        url: 'civitai:764243@854817'
     },
     {
         id: 'neon-lighting',
@@ -722,6 +722,12 @@ const loraExamples = {
         '/examples/loras/new-future/new-future3.webp',
         '/examples/loras/new-future/new-future4.webp'
     ],
+    'glitch-effect': [
+        '/examples/loras/glitch-effect/glitch-effect1.webp',
+        '/examples/loras/glitch-effect/glitch-effect2.webp',
+        '/examples/loras/glitch-effect/glitch-effect3.webp',
+        '/examples/loras/glitch-effect/glitch-effect4.webp'
+    ],
     // Realistic LoRAs
     'midjourney-style': [
         '/examples/loras/midjourney-style/midjourney-style1.webp',
@@ -759,19 +765,13 @@ const loraExamples = {
         '/examples/loras/elden-ring-style/elden-ring-style3.webp',
         '/examples/loras/elden-ring-style/elden-ring-style4.webp'
     ],
-    'glitch-effect': [
-        '/examples/loras/glitch-effect/glitch-effect1.webp',
-        '/examples/loras/glitch-effect/glitch-effect2.webp',
-        '/examples/loras/glitch-effect/glitch-effect3.webp',
-        '/examples/loras/glitch-effect/glitch-effect4.webp'
-    ],
     'neon-lighting': [
         '/examples/loras/neon-lighting/neon-lighting1.webp',
         '/examples/loras/neon-lighting/neon-lighting2.webp',
         '/examples/loras/neon-lighting/neon-lighting3.webp',
         '/examples/loras/neon-lighting/neon-lighting4.webp'
     ],
-    'turbo-detailer': [
+    'turbo-detailer': [ // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
         '/examples/loras/turbo-detailer/turbo-detailer1.webp',
         '/examples/loras/turbo-detailer/turbo-detailer2.webp',
         '/examples/loras/turbo-detailer/turbo-detailer3.webp',
