@@ -485,6 +485,12 @@ export const realisticLoras = [
         defaultWeight: 1.0,
         url: 'civitai:667693@747357'
     },
+    {
+        id: 'anime-makeup',
+        name: '🌚 animakeup',
+        defaultWeight: 1.0,
+        url: 'civitai:946363@1059557'
+    },
 ];
 
 const loraExamples = {
@@ -968,7 +974,13 @@ const loraExamples = {
         '/examples/loras/darkcore/darkcore2.webp',
         '/examples/loras/darkcore/darkcore3.webp',
         '/examples/loras/darkcore/darkcore4.webp'
-    ]
+    ],
+    'anime-makeup': [   
+        '/examples/loras/anime-makeup/anime-makeup1.webp',
+        '/examples/loras/anime-makeup/anime-makeup2.webp',
+        '/examples/loras/anime-makeup/anime-makeup3.webp',
+        '/examples/loras/anime-makeup/anime-makeup4.webp'
+    ],  
 };
 
 // component for preview modal
