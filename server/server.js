@@ -2514,6 +2514,48 @@ app.post('/api/update-image-title', authenticateTokenWithAutoRefresh, async (req
     }
 });
 
+app.post('/images/:imageId/privacy', authenticateTokenWithAutoRefresh, async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const { imageId } = req.params;
+        const userId = req.user.userId;
+
+        // First verify the user owns this image
+        const verifyResult = await client.query(
+            'SELECT user_id FROM images WHERE id = $1',
+            [imageId]
+        );
+
+        if (verifyResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Image not found' });
+        }
+
+        if (verifyResult.rows[0].user_id !== userId) {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        // Toggle the private status
+        const result = await client.query(
+            `UPDATE images 
+             SET private = NOT private 
+             WHERE id = $1 AND user_id = $2 
+             RETURNING private`,
+            [imageId, userId]
+        );
+
+        res.json({
+            success: true,
+            private: result.rows[0].private
+        });
+
+    } catch (error) {
+        console.error('Error toggling image privacy:', error);
+        res.status(500).json({ error: 'Failed to update privacy setting' });
+    } finally {
+        client.release();
+    }
+});
+
 app.post('/api/replicate', authenticateTokenWithAutoRefresh, async (req, res) => {
     const client = await pool.connect();
     let remainingGenerations = -1;

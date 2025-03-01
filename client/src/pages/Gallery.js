@@ -822,6 +822,33 @@ useEffect(() => {
         }
     };
 
+    const handlePrivacyToggle = async (imageId) => {
+        const token = localStorage.getItem('token');
+        const currentImage = images.find(img => img.id === imageId);
+        
+        if (!currentImage || !token) return;
+    
+        try {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/images/${imageId}/privacy`, {
+                method: 'Post',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+    
+            if (response.ok) {
+                const data = await response.json();
+                // Update local state
+                setImages(prevImages => prevImages.map(img => 
+                    img.id === imageId ? { ...img, private: data.private } : img
+                ));
+            }
+        } catch (error) {
+            console.error('Error toggling privacy:', error);
+        }
+    };
+
     // Add a useEffect to monitor these values instead
     useEffect(() => {
         if (activeImageId && imageUserDetails[activeImageId]) {
@@ -1174,6 +1201,14 @@ useEffect(() => {
                                                     {formatDate(images.find(img => img.id === activeImageId)?.created_at)}
                                                 </span>
                                             </div>
+                                            {user?.userId === imageUserDetails[activeImageId]?.user_id && (
+                                                <button 
+                                                    className={`privacy-toggle ${images.find(img => img.id === activeImageId)?.private ? 'private' : 'public'}`}
+                                                    onClick={() => handlePrivacyToggle(activeImageId)}
+                                                >
+                                                    {images.find(img => img.id === activeImageId)?.private ? '🔒 Private' : '🌐 Public'}
+                                                </button>
+                                            )}
                                         </div>
                                         
                                         {/* Add title first */}
