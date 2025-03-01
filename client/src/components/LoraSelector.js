@@ -771,7 +771,7 @@ const loraExamples = {
         '/examples/loras/neon-lighting/neon-lighting3.webp',
         '/examples/loras/neon-lighting/neon-lighting4.webp'
     ],
-    'turbo-detailer': [ // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
+    'turbo-detailer': [
         '/examples/loras/turbo-detailer/turbo-detailer1.webp',
         '/examples/loras/turbo-detailer/turbo-detailer2.webp',
         '/examples/loras/turbo-detailer/turbo-detailer3.webp',
@@ -806,7 +806,7 @@ const loraExamples = {
         '/examples/loras/ultra-realistic/ultra-realistic2.webp',
         '/examples/loras/ultra-realistic/ultra-realistic3.webp',
         '/examples/loras/ultra-realistic/ultra-realistic4.webp'
-    ],
+    ], // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
     'fantasy-wizards-witches': [
         '/examples/loras/fantasy-wizards-witches/fantasy-wizards-witches1.webp',
         '/examples/loras/fantasy-wizards-witches/fantasy-wizards-witches2.webp',
