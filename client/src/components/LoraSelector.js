@@ -491,6 +491,18 @@ export const realisticLoras = [
         defaultWeight: 1.0,
         url: 'civitai:946363@1059557'
     },
+    {
+        id: 'anime-makeup2',
+        name: '🌚 animakeup',
+        defaultWeight: 1.0,
+        url: 'civitai:690505@772807'
+    },
+    {
+        id: 'anime-makeup3',
+        name: '🌚 animakeup',
+        defaultWeight: 1.0,
+        url: 'civitai:660973@739661'
+    },
 ];
 
 const loraExamples = {
