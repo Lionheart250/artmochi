@@ -527,6 +527,12 @@ export const realisticLoras = [
         defaultWeight: 1.0,
         url: 'civitai:1215196@1368864'
     },
+    {
+        id: 'nightmare-thin',
+        name: '🌚 Nightmare Skinny',
+        defaultWeight: 1.0,
+        url: 'civitai:1164450@1309935'
+    },
 ];
 
 const loraExamples = {
@@ -1052,6 +1058,12 @@ const loraExamples = {
         '/examples/loras/biotacean/biotacean2.webp',
         '/examples/loras/biotacean/biotacean3.webp',
         '/examples/loras/biotacean/biotacean4.webp'
+    ],
+    'nightmare-thin': [
+        '/examples/loras/nightmare-thin/nightmare-thin1.webp',
+        '/examples/loras/nightmare-thin/nightmare-thin2.webp',
+        '/examples/loras/nightmare-thin/nightmare-thin3.webp',
+        '/examples/loras/nightmare-thin/nightmare-thin4.webp'
     ],
 };
 
