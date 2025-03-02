@@ -533,6 +533,13 @@ export const realisticLoras = [
         defaultWeight: 1.0,
         url: 'civitai:1164450@1309935'
     },
+    {
+        id: 'nightmare-cyber',
+        name: '🌚 Nightmare cyber',
+        defaultWeight: 1.0,
+        url: 'civitai:1132814@1273566'
+    },
+    
 ];
 
 const loraExamples = {
