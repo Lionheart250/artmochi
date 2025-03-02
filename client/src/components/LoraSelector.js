@@ -237,10 +237,16 @@ export const artisticLoras = [
         url: 'civitai:658958@737325'
     },
     {
-        id: 'glitch-effect',
+        id: 'glitch-effect',  
         name: '🖌️ glitch effect',
         defaultWeight: 1.0,
         url: 'civitai:764243@854817'
+    },
+    {
+        id: 'sexy-robots',
+        name: '🚀 hot robots',
+        defaultWeight: 1.0,
+        url: 'civitai:836173@935521'
     },
 ];
 
@@ -492,16 +498,34 @@ export const realisticLoras = [
         url: 'civitai:946363@1059557'
     },
     {
-        id: 'anime-makeup2',
-        name: '🌚 animakeup',
+        id: 'fangs',
+        name: '🌚 fangs',
         defaultWeight: 1.0,
         url: 'civitai:690505@772807'
     },
     {
-        id: 'anime-makeup3',
-        name: '🌚 animakeup',
+        id: 'tiktoker-style',
+        name: '🌚 tiktoker',
         defaultWeight: 1.0,
         url: 'civitai:660973@739661'
+    },
+    {
+        id: 'kbeauty-style',
+        name: '🌚 k beauty',
+        defaultWeight: 1.0,
+        url: 'civitai:690545@772853'
+    },
+    {
+        id: 'jpop-style',
+        name: '🌚 jpop idol',
+        defaultWeight: 1.0,
+        url: 'civitai:730402@831457'
+    },
+    {
+        id: 'kpop-style',
+        name: '🌚 kpop idol',
+        defaultWeight: 1.0,
+        url: 'civitai:650848@728154'
     },
 ];
 
@@ -746,6 +770,12 @@ const loraExamples = {
         '/examples/loras/glitch-effect/glitch-effect3.webp',
         '/examples/loras/glitch-effect/glitch-effect4.webp'
     ],
+    'sexy-robots': [
+        '/examples/loras/sexy-robots/sexy-robots1.webp',
+        '/examples/loras/sexy-robots/sexy-robots2.webp',
+        '/examples/loras/sexy-robots/sexy-robots3.webp',
+        '/examples/loras/sexy-robots/sexy-robots4.webp'
+    ],
     // Realistic LoRAs
     'midjourney-style': [
         '/examples/loras/midjourney-style/midjourney-style1.webp',
@@ -824,7 +854,7 @@ const loraExamples = {
         '/examples/loras/ultra-realistic/ultra-realistic2.webp',
         '/examples/loras/ultra-realistic/ultra-realistic3.webp',
         '/examples/loras/ultra-realistic/ultra-realistic4.webp'
-    ], // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
+    ], 
     'fantasy-wizards-witches': [
         '/examples/loras/fantasy-wizards-witches/fantasy-wizards-witches1.webp',
         '/examples/loras/fantasy-wizards-witches/fantasy-wizards-witches2.webp',
@@ -992,7 +1022,37 @@ const loraExamples = {
         '/examples/loras/anime-makeup/anime-makeup2.webp',
         '/examples/loras/anime-makeup/anime-makeup3.webp',
         '/examples/loras/anime-makeup/anime-makeup4.webp'
-    ],  
+    ],
+    'fangs': [   
+        '/examples/loras/fangs/fangs1.webp',
+        '/examples/loras/fangs/fangs2.webp',
+        '/examples/loras/fangs/fangs3.webp',
+        '/examples/loras/fangs/fangs4.webp'
+    ],
+    'tiktoker-style': [
+        '/examples/loras/tiktoker-style/tiktoker-style1.webp',  
+        '/examples/loras/tiktoker-style/tiktoker-style2.webp',
+        '/examples/loras/tiktoker-style/tiktoker-style3.webp',
+        '/examples/loras/tiktoker-style/tiktoker-style4.webp'
+    ],
+    'kbeauty-style': [
+        '/examples/loras/kbeauty-style/kbeauty-style1.webp',
+        '/examples/loras/kbeauty-style/kbeauty-style2.webp',
+        '/examples/loras/kbeauty-style/kbeauty-style3.webp',
+        '/examples/loras/kbeauty-style/kbeauty-style4.webp'
+    ],
+    'jpop-style': [
+        '/examples/loras/jpop-style/jpop-style1.webp',
+        '/examples/loras/jpop-style/jpop-style2.webp',
+        '/examples/loras/jpop-style/jpop-style3.webp',
+        '/examples/loras/jpop-style/jpop-style4.webp'
+    ],
+    'kpop-style': [
+        '/examples/loras/kpop-style/kpop-style1.webp',
+        '/examples/loras/kpop-style/kpop-style2.webp',
+        '/examples/loras/kpop-style/kpop-style3.webp',
+        '/examples/loras/kpop-style/kpop-style4.webp'
+    ],
 };
 
 // component for preview modal
