@@ -940,7 +940,9 @@ const loraExamples = {
         '/examples/loras/new-fantasy-core/new-fantasy-core3.webp',
         '/examples/loras/new-fantasy-core/new-fantasy-core4.webp'
     ],
-    'future-fashion': [
+    /////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////
+    'future-fashion': [ //////////////////////////////////////////////////////////////////////////////////
         '/examples/loras/future-fashion/future-fashion1.webp',
         '/examples/loras/future-fashion/future-fashion2.webp',
         '/examples/loras/future-fashion/future-fashion3.webp',
@@ -1071,6 +1073,12 @@ const loraExamples = {
         '/examples/loras/nightmare-thin/nightmare-thin2.webp',
         '/examples/loras/nightmare-thin/nightmare-thin3.webp',
         '/examples/loras/nightmare-thin/nightmare-thin4.webp'
+    ],
+    'nightmare-cyber': [
+        '/examples/loras/nightmare-cyber/nightmare-cyber1.webp',
+        '/examples/loras/nightmare-cyber/nightmare-cyber2.webp',
+        '/examples/loras/nightmare-cyber/nightmare-cyber3.webp',
+        '/examples/loras/nightmare-cyber/nightmare-cyber4.webp'
     ],
 };
 
