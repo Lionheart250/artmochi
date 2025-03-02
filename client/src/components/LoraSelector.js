@@ -527,6 +527,12 @@ export const realisticLoras = [
         defaultWeight: 1.0,
         url: 'civitai:650848@728154'
     },
+    {
+        id: 'biotacean',
+        name: '🌚 exoskelly',
+        defaultWeight: 1.0,
+        url: 'civitai:1215196@1368864'
+    },
 ];
 
 const loraExamples = {
@@ -1052,6 +1058,12 @@ const loraExamples = {
         '/examples/loras/kpop-style/kpop-style2.webp',
         '/examples/loras/kpop-style/kpop-style3.webp',
         '/examples/loras/kpop-style/kpop-style4.webp'
+    ],
+    'biotacean': [
+        '/examples/loras/biotacean/biotacean1.webp',
+        '/examples/loras/biotacean/biotacean2.webp',
+        '/examples/loras/biotacean/biotacean3.webp',
+        '/examples/loras/biotacean/biotacean4.webp'
     ],
 };
 
