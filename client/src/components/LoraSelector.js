@@ -246,7 +246,7 @@ export const artisticLoras = [
         id: 'sexy-robots',
         name: '🚀 hot robots',
         defaultWeight: 1.0,
-        url: 'civitai:836173@935521'
+        url: 'civitai:812057@908077'
     },
 ];
 
@@ -400,12 +400,6 @@ export const realisticLoras = [
         name: '✨ Fantasy Core',
         defaultWeight: 1.0,
         url: 'civitai:810000@1067495'
-    },
-    {
-        id: 'randomax-robotics',
-        name: '🤖 Robotics',
-        defaultWeight: 1.0,
-        url: 'civitai:995599@1115596'
     },
     {
         id: 'future-fashion',
@@ -932,12 +926,6 @@ const loraExamples = {
         '/examples/loras/new-fantasy-core/new-fantasy-core2.webp',
         '/examples/loras/new-fantasy-core/new-fantasy-core3.webp',
         '/examples/loras/new-fantasy-core/new-fantasy-core4.webp'
-    ],
-    'randomax-robotics': [
-        '/examples/loras/randomax-robotics/randomax-robotics1.webp',
-        '/examples/loras/randomax-robotics/randomax-robotics2.webp',
-        '/examples/loras/randomax-robotics/randomax-robotics3.webp',
-        '/examples/loras/randomax-robotics/randomax-robotics4.webp'
     ],
     'future-fashion': [
         '/examples/loras/future-fashion/future-fashion1.webp',
