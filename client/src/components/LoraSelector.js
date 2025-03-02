@@ -525,7 +525,7 @@ export const realisticLoras = [
         id: 'biotacean',
         name: '🌚 exoskelly',
         defaultWeight: 1.0,
-        url: 'civitai:1215196@1368864'
+        url: 'civitai:718932@803900'
     },
     {
         id: 'nightmare-thin',
