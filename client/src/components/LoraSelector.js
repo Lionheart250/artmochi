@@ -1,6 +1,25 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './LoraSelector.css';
 
+// Add this hook at the top of the file after imports
+const useImagePreloader = () => {
+  const [loadedImages, setLoadedImages] = useState(new Set());
+  
+  const preloadImage = useCallback((src) => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        setLoadedImages(prev => new Set(prev).add(src));
+        resolve(src);
+      };
+      img.onerror = reject;
+      img.src = src;
+    });
+  }, []);
+
+  return { loadedImages, preloadImage };
+};
+
 export const artisticLoras = [
     {
         id: 'gothic-lines',
@@ -529,7 +548,7 @@ export const realisticLoras = [
     },
 ];
 
-const loraExamples = {
+export const loraExamples = {
     'gothic-lines': [
         '/examples/loras/gothic-lines/gothic-lines1.webp',
         '/examples/loras/gothic-lines/gothic-lines2.webp',
@@ -1178,6 +1197,29 @@ const LoraItem = ({ lora, isSelected, onToggle, onWeightChange, weight, onPrevie
 
 // Update main LoraSelector component
 const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
+    const { loadedImages, preloadImage } = useImagePreloader();
+
+    // Add this effect to preload images when the selector opens
+    useEffect(() => {
+        if (isOpen) {
+            const preloadBatch = async (startIdx, batchSize) => {
+                const allImages = Object.values(loraExamples).flat();
+                const batch = allImages.slice(startIdx, startIdx + batchSize);
+                
+                await Promise.all(batch.map(src => preloadImage(src)));
+                
+                if (startIdx + batchSize < allImages.length) {
+                    requestIdleCallback(() => {
+                        preloadBatch(startIdx + batchSize, batchSize);
+                    });
+                }
+            };
+
+            // Start preloading in batches of 20
+            preloadBatch(0, 20);
+        }
+    }, [isOpen, preloadImage]);
+
     const [previewModal, setPreviewModal] = useState({
         isOpen: false,
         loraId: null,
@@ -1423,46 +1465,6 @@ const preloadNearbyImages = (currentIndex, loraExamples) => {
     );
 };
 
-const styles = `
-.thumbnail-placeholder {
-  background: linear-gradient(110deg, #282828 8%, #383838 18%, #282828 33%);
-  background-size: 200% 100%;
-  animation: shine 1.5s linear infinite;
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-@keyframes shine {
-  to {
-    background-position-x: -200%;
-  }
-}
-
-.mini-thumbnail {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  background: #282828;
-  opacity: 0;
-  transition: opacity 0.3s ease-in;
-}
-
-.mini-thumbnail.loaded {
-  opacity: 1;
-}
-
-.thumbnail-container {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  border-radius: 4px;
-}
-`;
-
 // Update the LazyThumbnail component
 const LazyThumbnail = ({ src, alt, className, onClick }) => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -1516,11 +1518,5 @@ const LazyThumbnail = ({ src, alt, className, onClick }) => {
     </div>
   );
 };
-
-// Add the styles to your document
-const styleSheet = document.createElement('style');
-styleSheet.type = 'text/css';
-styleSheet.innerText = styles;
-document.head.appendChild(styleSheet);
 
 export default LoraSelector;

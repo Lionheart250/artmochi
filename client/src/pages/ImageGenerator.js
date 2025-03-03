@@ -12,8 +12,7 @@ import { runwareService } from '../services/runwareService';
 // Add import
 import SelectedLoras from '../components/SelectedLoras';
 // Add these imports at the top
-import { artisticLoras, realisticLoras } from '../components/LoraSelector';
-
+import { artisticLoras, realisticLoras, loraExamples } from '../components/LoraSelector';
 // Add this mapping near your other constants
 const aspectRatioMapping = {
     'Portrait': '9:16',
@@ -629,6 +628,46 @@ const getLoraName = (url) => {
     const lora = allLoras.find(l => l.url === url);
     return lora ? lora.name : url;
 };
+
+// Add this function inside ImageGenerator component
+const preloadLoraImages = () => {
+  // Get all unique image URLs
+  const allImages = new Set(Object.values(loraExamples).flat());
+  
+  // Create a low-priority queue for preloading
+  const queue = [...allImages];
+  let currentIndex = 0;
+
+  const loadNext = () => {
+    if (currentIndex >= queue.length) return;
+
+    const img = new Image();
+    img.src = queue[currentIndex];
+    
+    img.onload = () => {
+      currentIndex++;
+      // Use requestIdleCallback to load next image when browser is idle
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => loadNext(), { timeout: 1000 });
+      } else {
+        setTimeout(loadNext, 100);
+      }
+    };
+
+    img.onerror = () => {
+      currentIndex++;
+      loadNext();
+    };
+  };
+
+  loadNext();
+};
+
+// Add this useEffect in your ImageGenerator component
+useEffect(() => {
+  // Start preloading after component mounts
+  preloadLoraImages();
+}, []);
 
   return (
     <div className="image-generator">
