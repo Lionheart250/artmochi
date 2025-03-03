@@ -1315,6 +1315,32 @@ const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
         );
     };
 
+    // Add this function at the component level
+const preloadNearbyImages = (currentIndex, loraExamples) => {
+    const preloadCount = 10; // Number of items to preload ahead
+    const imagesToPreload = [];
+    
+    for (let i = currentIndex; i < currentIndex + preloadCount; i++) {
+      const loraIds = Object.keys(loraExamples);
+      if (i < loraIds.length) {
+        const loraId = loraIds[i];
+        imagesToPreload.push(...loraExamples[loraId]);
+      }
+    }
+  
+    imagesToPreload.forEach(src => {
+      const img = new Image();
+      img.src = src;
+    });
+  };
+  
+  // Call this when the LoraSelector opens
+  useEffect(() => {
+    if (isOpen) {
+      preloadNearbyImages(0, loraExamples);
+    }
+  }, [isOpen]);
+
     // Add this handler for the overlay click
     const handleOverlayClick = (e) => {
         if (previewModal.isOpen) {
@@ -1397,41 +1423,104 @@ const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
     );
 };
 
+const styles = `
+.thumbnail-placeholder {
+  background: linear-gradient(110deg, #282828 8%, #383838 18%, #282828 33%);
+  background-size: 200% 100%;
+  animation: shine 1.5s linear infinite;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+@keyframes shine {
+  to {
+    background-position-x: -200%;
+  }
+}
+
+.mini-thumbnail {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  background: #282828;
+  opacity: 0;
+  transition: opacity 0.3s ease-in;
+}
+
+.mini-thumbnail.loaded {
+  opacity: 1;
+}
+
+.thumbnail-container {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  overflow: hidden;
+  border-radius: 4px;
+}
+`;
+
+// Update the LazyThumbnail component
 const LazyThumbnail = ({ src, alt, className, onClick }) => {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isInView, setIsInView] = useState(false);
   const imageRef = useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
+    // Preload the image before showing it
+    const img = new Image();
+    
+    img.onload = () => {
+      if (imageRef.current) {
+        imageRef.current.src = src;
+        setIsLoaded(true);
+      }
+    };
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          imageRef.current.src = src;
-          observer.unobserve(imageRef.current);
+          setIsInView(true);
+          img.src = src; // Start loading when in view
+          observer.unobserve(entry.target);
         }
       },
-      { rootMargin: '50px' }
+      {
+        rootMargin: '50px',
+        threshold: 0.1
+      }
     );
 
-    if (imageRef.current) {
-      observer.observe(imageRef.current);
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
     }
 
     return () => {
-      if (imageRef.current) {
-        observer.unobserve(imageRef.current);
-      }
+      observer.disconnect();
+      img.onload = null;
     };
   }, [src]);
 
   return (
-    <img
-      ref={imageRef}
-      alt={alt}
-      className={`${className} ${isLoaded ? 'loaded' : 'loading'}`}
-      onLoad={() => setIsLoaded(true)}
-      onClick={onClick}
-    />
+    <div ref={containerRef} className="thumbnail-container" onClick={onClick}>
+      {!isLoaded && <div className="thumbnail-placeholder" />}
+      <img
+        ref={imageRef}
+        alt={alt}
+        className={`${className} ${isLoaded ? 'loaded' : ''}`}
+      />
+    </div>
   );
 };
+
+// Add the styles to your document
+const styleSheet = document.createElement('style');
+styleSheet.type = 'text/css';
+styleSheet.innerText = styles;
+document.head.appendChild(styleSheet);
 
 export default LoraSelector;
