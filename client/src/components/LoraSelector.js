@@ -20,6 +20,9 @@ const useImagePreloader = () => {
   return { loadedImages, preloadImage };
 };
 
+// Add this at the top of your file with other imports
+const imageCache = new Map();
+
 export const artisticLoras = [
     {
         id: 'gothic-lines',
@@ -1467,53 +1470,47 @@ const preloadNearbyImages = (currentIndex, loraExamples) => {
 
 // Update the LazyThumbnail component
 const LazyThumbnail = ({ src, alt, className, onClick }) => {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [isInView, setIsInView] = useState(false);
-  const imageRef = useRef(null);
-  const containerRef = useRef(null);
+  const [isLoaded, setIsLoaded] = useState(imageCache.has(src));
+  const imgRef = useRef(null);
 
   useEffect(() => {
-    // Preload the image before showing it
+    // If image is already cached, use it
+    if (imageCache.has(src)) {
+      if (imgRef.current) {
+        imgRef.current.src = src;
+      }
+      return;
+    }
+
     const img = new Image();
     
     img.onload = () => {
-      if (imageRef.current) {
-        imageRef.current.src = src;
-        setIsLoaded(true);
+      imageCache.set(src, true);
+      setIsLoaded(true);
+      if (imgRef.current) {
+        imgRef.current.src = src;
       }
     };
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsInView(true);
-          img.src = src; // Start loading when in view
-          observer.unobserve(entry.target);
-        }
-      },
-      {
-        rootMargin: '50px',
-        threshold: 0.1
-      }
-    );
-
-    if (containerRef.current) {
-      observer.observe(containerRef.current);
-    }
+    img.src = src;
 
     return () => {
-      observer.disconnect();
       img.onload = null;
     };
   }, [src]);
 
   return (
-    <div ref={containerRef} className="thumbnail-container" onClick={onClick}>
+    <div className="thumbnail-container">
       {!isLoaded && <div className="thumbnail-placeholder" />}
       <img
-        ref={imageRef}
+        ref={imgRef}
         alt={alt}
-        className={`${className} ${isLoaded ? 'loaded' : ''}`}
+        className={`mini-thumbnail ${isLoaded ? 'loaded' : ''}`}
+        onClick={onClick}
+        style={{
+          opacity: isLoaded ? 1 : 0,
+          display: isLoaded ? 'block' : 'none'
+        }}
       />
     </div>
   );

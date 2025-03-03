@@ -411,7 +411,7 @@ button:hover {
 .lora-content {
     display: flex;
     gap: 24px;
-    height: calc(80vh - 100px);
+    height: calc(80vh - 10px);
     margin-top: 0;  /* Remove top margin */
     padding-top: 0; /* Remove top padding */
 }
@@ -421,7 +421,7 @@ button:hover {
     min-width: 0;
     overflow-y: auto;
     padding: 0 12px;
-    max-height: 70vh;
+    max-height: 90vh;
 }
 
 .lora-actions {
@@ -692,13 +692,13 @@ button:hover {
     }
     
     .thumbnail-strip {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(4, 1fr);
         height: 100%;
     }
     
     .mini-thumbnail {
-        height: 70px;
-        width: 70px;
+        height: 100%;
+        width: 100%;
     }
 
     .lora-item label {
@@ -737,7 +737,7 @@ button:hover {
     .lora-action-btn {
         width: 100%; /* Full width buttons */
         min-width: unset;
-        padding: 12px;
+        padding: 3px 12px;
         margin: 0;
         font-size: 16px; /* Larger font for better touch targets */
     }
