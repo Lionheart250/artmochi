@@ -815,3 +815,17 @@ button:hover {
     background: rgba(255, 255, 255, 0.08);
     border-color: rgba(255, 255, 255, 0.2);
 }
+
+.mini-thumbnail.loading {
+    background: #2a2a2a;
+    min-height: 100px;
+  }
+  
+  .mini-thumbnail.loaded {
+    animation: fadeIn 0.3s ease-in;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }

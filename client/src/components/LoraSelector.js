@@ -242,12 +242,6 @@ export const artisticLoras = [
         defaultWeight: 1.0,
         url: 'civitai:764243@854817'
     },
-    {
-        id: 'sexy-robots',
-        name: '🚀 hot robots',
-        defaultWeight: 1.0,
-        url: 'civitai:812057@908077'
-    },
 ];
 
 export const realisticLoras = [
@@ -528,18 +522,11 @@ export const realisticLoras = [
         url: 'civitai:718932@803900'
     },
     {
-        id: 'nightmare-thin',
-        name: '🌚 Nightmare Skinny',
+        id: 'sexy-robots',
+        name: '🚀 Sorayama chrome',
         defaultWeight: 1.0,
-        url: 'civitai:1164450@1309935'
+        url: 'civitai:812057@908077'
     },
-    {
-        id: 'nightmare-cyber',
-        name: '🌚 Nightmare cyber',
-        defaultWeight: 1.0,
-        url: 'civitai:1132814@1273566'
-    },
-    
 ];
 
 const loraExamples = {
@@ -940,9 +927,7 @@ const loraExamples = {
         '/examples/loras/new-fantasy-core/new-fantasy-core3.webp',
         '/examples/loras/new-fantasy-core/new-fantasy-core4.webp'
     ],
-    /////////////////////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////
-    'future-fashion': [ //////////////////////////////////////////////////////////////////////////////////
+    'future-fashion': [ 
         '/examples/loras/future-fashion/future-fashion1.webp',
         '/examples/loras/future-fashion/future-fashion2.webp',
         '/examples/loras/future-fashion/future-fashion3.webp',
@@ -1068,20 +1053,7 @@ const loraExamples = {
         '/examples/loras/biotacean/biotacean3.webp',
         '/examples/loras/biotacean/biotacean4.webp'
     ],
-    'nightmare-thin': [
-        '/examples/loras/nightmare-thin/nightmare-thin1.webp',
-        '/examples/loras/nightmare-thin/nightmare-thin2.webp',
-        '/examples/loras/nightmare-thin/nightmare-thin3.webp',
-        '/examples/loras/nightmare-thin/nightmare-thin4.webp'
-    ],
-    'nightmare-cyber': [
-        '/examples/loras/nightmare-cyber/nightmare-cyber1.webp',
-        '/examples/loras/nightmare-cyber/nightmare-cyber2.webp',
-        '/examples/loras/nightmare-cyber/nightmare-cyber3.webp',
-        '/examples/loras/nightmare-cyber/nightmare-cyber4.webp'
-    ],
 };
-
 // component for preview modal
 const PreviewModal = ({ examples, isOpen, onClose, loraName, initialImage }) => {
     const [currentImage, setCurrentImage] = useState(initialImage);
@@ -1092,6 +1064,22 @@ const PreviewModal = ({ examples, isOpen, onClose, loraName, initialImage }) => 
             setCurrentImage(initialImage);
         }
     }, [isOpen, initialImage]);
+
+    // Preload next and previous images
+    useEffect(() => {
+        if (!examples) return;
+        
+        const preloadImage = (src) => {
+            const img = new Image();
+            img.src = src;
+        };
+
+        const nextIndex = (currentImage + 1) % examples.length;
+        const prevIndex = currentImage === 0 ? examples.length - 1 : currentImage - 1;
+        
+        preloadImage(examples[nextIndex]);
+        preloadImage(examples[prevIndex]);
+    }, [currentImage, examples]);
 
     if (!isOpen || !examples) return null;
 
@@ -1172,7 +1160,7 @@ const LoraItem = ({ lora, isSelected, onToggle, onWeightChange, weight, onPrevie
             )}
             <div className="thumbnail-strip" onClick={e => e.stopPropagation()}>
                 {loraExamples[lora.id]?.map((img, idx) => (
-                    <img 
+                    <LazyThumbnail 
                         key={idx}
                         src={img}
                         alt="Thumbnail"
@@ -1407,6 +1395,43 @@ const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
             />
         </div>
     );
+};
+
+const LazyThumbnail = ({ src, alt, className, onClick }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const imageRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          imageRef.current.src = src;
+          observer.unobserve(imageRef.current);
+        }
+      },
+      { rootMargin: '50px' }
+    );
+
+    if (imageRef.current) {
+      observer.observe(imageRef.current);
+    }
+
+    return () => {
+      if (imageRef.current) {
+        observer.unobserve(imageRef.current);
+      }
+    };
+  }, [src]);
+
+  return (
+    <img
+      ref={imageRef}
+      alt={alt}
+      className={`${className} ${isLoaded ? 'loaded' : 'loading'}`}
+      onLoad={() => setIsLoaded(true)}
+      onClick={onClick}
+    />
+  );
 };
 
 export default LoraSelector;
