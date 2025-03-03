@@ -1485,49 +1485,47 @@ const preloadNearbyImages = (currentIndex, loraExamples) => {
 
 // Update the LazyThumbnail component
 const LazyThumbnail = ({ src, alt, className, onClick }) => {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const imageRef = useRef(null);
-
-  useEffect(() => {
-    if (imageRef.current && imageRef.current.complete) {
-      setIsLoaded(true);
-      return;
-    }
-
-    const loadImage = () => {
-      const img = new Image();
-      img.onload = () => {
-        setIsLoaded(true);
-        if (imageRef.current) {
-          imageRef.current.src = src;
+    const [isLoaded, setIsLoaded] = useState(false);
+    const imageRef = useRef(null);
+  
+    useEffect(() => {
+      // Set src immediately to start loading
+      if (imageRef.current) {
+        imageRef.current.src = src;
+      }
+  
+      const checkIfLoaded = () => {
+        if (imageRef.current?.complete) {
+          setIsLoaded(true);
         }
       };
-      img.src = src;
+  
+      // Check if already loaded
+      checkIfLoaded();
+  
+      // Add load event listener
+      const image = imageRef.current;
+      if (image) {
+        image.addEventListener('load', checkIfLoaded);
+        return () => image.removeEventListener('load', checkIfLoaded);
+      }
+    }, [src]);
+
+    return (
+        <div className="thumbnail-container">
+          {!isLoaded && <div className="thumbnail-placeholder" />}
+          <img
+            ref={imageRef}
+            alt={alt}
+            className={`${className} ${isLoaded ? 'loaded' : ''}`}
+            onClick={onClick}
+            style={{
+              opacity: isLoaded ? 1 : 0,
+              transition: 'opacity 0.3s ease-in-out'
+            }}
+          />
+        </div>
+      );
     };
-
-    // Use setTimeout as a simpler fallback
-    setTimeout(loadImage, 0);
-
-    return () => {
-      // Cleanup if needed
-    };
-  }, [src]);
-
-  return (
-    <div className="thumbnail-container">
-      {!isLoaded && <div className="thumbnail-placeholder" />}
-      <img
-        ref={imageRef}
-        alt={alt}
-        className={`${className} ${isLoaded ? 'loaded' : ''}`}
-        onClick={onClick}
-        style={{
-          opacity: isLoaded ? 1 : 0,
-          display: isLoaded ? 'block' : 'none'
-        }}
-      />
-    </div>
-  );
-};
 
 export default LoraSelector;
