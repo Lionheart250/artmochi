@@ -23,6 +23,21 @@ const useImagePreloader = () => {
 // Add this at the top of your file with other imports
 const imageCache = new Map();
 
+// Add this polyfill at the top of your file
+const requestIdleCallback = window.requestIdleCallback || function(cb) {
+  const start = Date.now();
+  return setTimeout(() => {
+    cb({
+      didTimeout: false,
+      timeRemaining: () => Math.max(0, 50 - (Date.now() - start))
+    });
+  }, 1);
+};
+
+const cancelIdleCallback = window.cancelIdleCallback || function(id) {
+  clearTimeout(id);
+};
+
 export const artisticLoras = [
     {
         id: 'gothic-lines',
@@ -1470,32 +1485,31 @@ const preloadNearbyImages = (currentIndex, loraExamples) => {
 
 // Update the LazyThumbnail component
 const LazyThumbnail = ({ src, alt, className, onClick }) => {
-  const [isLoaded, setIsLoaded] = useState(imageCache.has(src));
-  const imgRef = useRef(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const imageRef = useRef(null);
 
   useEffect(() => {
-    // If image is already cached, use it
-    if (imageCache.has(src)) {
-      if (imgRef.current) {
-        imgRef.current.src = src;
-      }
+    if (imageRef.current && imageRef.current.complete) {
+      setIsLoaded(true);
       return;
     }
 
-    const img = new Image();
-    
-    img.onload = () => {
-      imageCache.set(src, true);
-      setIsLoaded(true);
-      if (imgRef.current) {
-        imgRef.current.src = src;
-      }
+    const loadImage = () => {
+      const img = new Image();
+      img.onload = () => {
+        setIsLoaded(true);
+        if (imageRef.current) {
+          imageRef.current.src = src;
+        }
+      };
+      img.src = src;
     };
 
-    img.src = src;
+    // Use setTimeout as a simpler fallback
+    setTimeout(loadImage, 0);
 
     return () => {
-      img.onload = null;
+      // Cleanup if needed
     };
   }, [src]);
 
@@ -1503,9 +1517,9 @@ const LazyThumbnail = ({ src, alt, className, onClick }) => {
     <div className="thumbnail-container">
       {!isLoaded && <div className="thumbnail-placeholder" />}
       <img
-        ref={imgRef}
+        ref={imageRef}
         alt={alt}
-        className={`mini-thumbnail ${isLoaded ? 'loaded' : ''}`}
+        className={`${className} ${isLoaded ? 'loaded' : ''}`}
         onClick={onClick}
         style={{
           opacity: isLoaded ? 1 : 0,
