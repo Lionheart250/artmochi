@@ -1443,8 +1443,8 @@ const styles = `
 
 .mini-thumbnail {
   position: relative;
-  width: 60px;
-  height: 60px;
+  width: 100%;
+  height: 100%;
   background: #282828;
   opacity: 0;
   transition: opacity 0.3s ease-in;
@@ -1456,8 +1456,8 @@ const styles = `
 
 .thumbnail-container {
   position: relative;
-  width: 60px;
-  height: 60px;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   border-radius: 4px;
 }
