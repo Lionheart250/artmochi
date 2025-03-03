@@ -702,3 +702,10 @@
 .lora-pill {
     background: rgba(44, 182, 254, 0.1);
 }
+
+@media screen and (max-width: 768px) {
+   .gallery-container {
+    margin-left: 0;
+   }
+
+}

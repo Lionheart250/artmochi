@@ -25,6 +25,13 @@ const Header = () => {
     const moreMenuRef = useRef(null);
     const moreButtonRef = useRef(null);
 
+    // Add this after your existing state variables
+    const mobileNavItems = [
+        { path: '/gallery', icon: <ExploreIcon />, text: 'Explore' },
+        { path: '/imagegenerator', icon: <CreateIcon />, text: 'Create' },
+        { path: '/following', icon: <FollowingIcon />, text: 'Following' }
+    ];
+
     // Log user object to check structure
     useEffect(() => {
         console.log('Current user object:', user);
@@ -55,11 +62,27 @@ const Header = () => {
         }
     }, [profilePicture]);
 
-    // Header position effect
+    // Update the header position effect
     useEffect(() => {
-        const topHeaderPages = ['/'];
-        const shouldBeTop = topHeaderPages.includes(location.pathname);
-        setHeaderPosition(shouldBeTop ? 'top' : 'side');
+        const updateHeaderPosition = () => {
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                setHeaderPosition('top');
+            } else {
+                const topHeaderPages = ['/'];
+                const shouldBeTop = topHeaderPages.includes(location.pathname);
+                setHeaderPosition(shouldBeTop ? 'top' : 'side');
+            }
+        };
+
+        // Initial check
+        updateHeaderPosition();
+
+        // Add resize listener
+        window.addEventListener('resize', updateHeaderPosition);
+
+        // Cleanup
+        return () => window.removeEventListener('resize', updateHeaderPosition);
     }, [location.pathname]);
 
     const handleLogout = ()  => {
@@ -139,7 +162,7 @@ const Header = () => {
                         </div>
                     </Link>
                     <nav className="nav-links">
-                        {headerPosition === 'top' && (
+                        {headerPosition === 'top' && window.innerWidth > 768 && (
                             <>
                                 <NavLink to="/gallery" end>Explore</NavLink>
                                 <NavLink to="/imagegenerator">Create</NavLink>
@@ -202,9 +225,18 @@ const Header = () => {
                                     <span className="header-username">{user?.username}</span>
                                     {isDropdownOpen && (
                                         <div className="dropdown-menu">
-                                            <NavLink to={`/profile/${user.userId}`} className="side-nav-link"> Profile </NavLink>
+                                            {window.innerWidth <= 768 && (
+                                                <div className="mobile-nav-items">
+                                                    {mobileNavItems.map(item => (
+                                                        <NavLink key={item.path} to={item.path}>
+                                                            {item.icon}
+                                                            <span>{item.text}</span>
+                                                        </NavLink>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            <NavLink to={`/profile/${user.userId}`}>Profile</NavLink>
                                             <NavLink to="/subscription">Upgrade</NavLink>
-                                           {/*} <NavLink to="/credits">Credits</NavLink> */}
                                             <NavLink to="/settings">Settings</NavLink>
                                             <button onClick={handleLogout} className="logout-btn">Log out</button>
                                         </div>

@@ -692,7 +692,7 @@ button:hover {
     }
     
     .thumbnail-strip {
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         height: 100%;
     }
     

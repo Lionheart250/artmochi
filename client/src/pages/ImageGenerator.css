@@ -927,22 +927,8 @@ img {
 
 @media screen and (max-width: 1024px) {
     .image-generator {
-        width: calc(100% - 60px); /* Account for collapsed side nav */
-        margin-left: 60px;
-        padding: 16px;
-    }
-
-    .image-generator-container {
-        gap: 16px;
-        
-    }
-}
-
-@media screen and (max-width: 768px) {
-    .image-generator {
-        width: 100%;
         margin-left: 70px;
-        width: 80%;
+        width: 90%;
         margin-bottom: 60px; /* Space for bottom nav */
         padding: 12px;
     }
@@ -960,7 +946,7 @@ img {
         
     }
     .image-generator-preview-container { 
-        width: 87.5%;
+        width: 94%;
         margin-top: 40px;
     }
 
@@ -1012,7 +998,7 @@ img {
 }
 
 /* For very small screens */
-@media screen and (max-width: 480px) {
+@media screen and (max-width: 768px) {
     .image-generator {
         padding: 8px;
     }
@@ -1039,11 +1025,11 @@ img {
 }
 
 /* Add these mobile-specific fixes at the end of your file */
-@media screen and (max-width: 480px) {
+@media screen and (max-width: 768px) {
     .image-generator {
-        width: 80%;
-        margin-left: 3.75rem;
-
+        width: 84%;
+        margin-left: 0;
+        margin-top: 60px;
         padding: 8px;
         min-height: auto;
         margin-bottom: 60px;
@@ -1060,14 +1046,14 @@ img {
     .image-generator-form-container {
         position: relative;
         order: 1;
-        width: 90%;
+        width: 100%;
         height: auto;
         overflow: visible;
     }
 
     .image-generator-preview-container {
         order: 2;
-        width: 90%;
+        width: 100%;
         height: 400px;
         margin-top: 16px;
     }
