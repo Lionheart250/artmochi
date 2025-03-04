@@ -43,19 +43,41 @@ const ImageModal = ({
 }) => {
   const navigate = useNavigate();
   const [isClosing, setIsClosing] = useState(false);
+  const [isBodyLocked, setIsBodyLocked] = useState(false);
 
-  // Add effect to disable body scrolling when modal is open
+  // Add a proper effect to handle body scrolling
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !isBodyLocked) {
+      // Save the current scroll position
+      const scrollY = window.scrollY;
+      
+      // Apply styles to lock the body scroll in place
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      document.body.style.overflow = 'hidden';
       document.body.classList.add('modal-open');
-    } else {
-      document.body.classList.remove('modal-open');
+      
+      setIsBodyLocked(true);
     }
-
+    
     return () => {
-      document.body.classList.remove('modal-open');
+      if (isBodyLocked) {
+        // Restore scrolling when component unmounts
+        const scrollY = document.body.style.top;
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
+        document.body.classList.remove('modal-open');
+        
+        // Restore scroll position
+        window.scrollTo(0, parseInt(scrollY || '0', 10) * -1);
+        
+        setIsBodyLocked(false);
+      }
     };
-  }, [isOpen]);
+  }, [isOpen, isBodyLocked]);
 
   // Add keyboard event handlers
   useEffect(() => {
@@ -89,8 +111,13 @@ const ImageModal = ({
 
   const handleClose = () => {
     setIsClosing(true);
-    // Add slight delay to allow animation to complete
+    
+    // Remove modal-open class immediately
+    // But DON'T reset other body styles, we'll do that in the cleanup function
+    
+    // Wait for animation to complete before actually closing
     setTimeout(() => {
+      setIsClosing(false); // Reset the closing state before calling onClose
       onClose();
     }, 300);
   };

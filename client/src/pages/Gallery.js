@@ -424,31 +424,30 @@ const Gallery = () => {
         }
     };
 
-    const openModal = async (image) => {
-        // Start the fetch first
-        const loadingPromise = fetchImageDetails(image.id);
+    const openModal = (image) => {
+        // Set state for this modal instance
+        setSelectedImage(image.image_url);
+        setActiveImageId(image.id);
+        setModalOpen(true);
         
-        // Update the image state atomically
-        await Promise.all([
-            new Promise(resolve => {
-                setSelectedImage(image.image_url);  // Use selectedImage instead of modalImage
-                setActiveImageId(image.id);
-                setModalOpen(true);  // Make sure to set this
-                navigate(`?id=${image.id}`, { replace: true });
-                resolve();
-            }),
-            loadingPromise // Wait for fetch to complete
-        ]);
+        // Fetch data for this image
+        fetchImageDetails(image.id);
+        
+        // Add modal-open class to body
+        document.body.classList.add('modal-open');
     };
-        
-    
+
     const closeModal = () => {
-        setSelectedImage(null);  // Use selectedImage instead of modalImage
+        // Just set modalOpen to false - the ImageModal component 
+        // will handle the animation and body class cleanup
         setModalOpen(false);
-        setActiveImageId(null);
-        setImageUserDetails({}); // Clear the details when closing
-        setComments({}); 
-        navigate('', { replace: true });
+        
+        // After animation completes, reset other states
+        setTimeout(() => {
+            setSelectedImage(null);
+            setActiveImageId(null);
+            // But DON'T manipulate body styles here - let ImageModal handle it
+        }, 350);
     };
 
     // Add effect to watch image loading
@@ -482,19 +481,12 @@ const Gallery = () => {
     
     // Add this useEffect near your other effects
     useEffect(() => {
-        if (selectedImage) {
-            // Disable scrolling on body when modal is open
-            document.body.style.overflow = 'hidden';
-        } else {
-            // Re-enable scrolling when modal is closed
-            document.body.style.overflow = 'unset';
-        }
-
-        // Cleanup function to ensure scrolling is re-enabled
+        // We'll let the ImageModal component handle the body styles
+        // This is just a safety measure
         return () => {
-            document.body.style.overflow = 'unset';
+            // Ensure scrolling is restored when component unmounts
         };
-    }, [selectedImage]);
+    }, []);
 
     // Add this utility function
     const formatTimestamp = (timestamp) => {
