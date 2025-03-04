@@ -999,3 +999,596 @@ textarea.profile-edit-input {
         height: 36px;
     }
 }
+
+/* ========= Enhanced Professional Modal Experience ========= */
+
+/* Disable background scrolling when modal is open */
+body.modal-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+
+/* Polished Modal Animation */
+.profile-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.92);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  opacity: 0;
+  animation: profileFadeIn 0.35s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
+
+/* Refined modal animations */
+@keyframes profileFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes profileScaleIn {
+  from { 
+    transform: scale(0.97);
+    opacity: 0.8;
+  }
+  to { 
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.profile-modal-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #121212;
+  border-radius: 0;
+  overflow: hidden;
+  transform: scale(0.7);
+  animation: profileScaleIn 0.4s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Enhanced image container */
+.profile-modal-image-container {
+  flex: 2;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: linear-gradient(to bottom, #000000, #0a0a0a);
+  overflow: hidden;
+}
+
+/* Beautiful image loading effect */
+.profile-modal-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  animation: imageReveal 0.6s ease-out 0.2s forwards;
+  filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.3));
+  transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+@keyframes imageReveal {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.profile-modal-image:hover {
+  transform: scale(1.02);
+}
+
+/* Elegant modal info section */
+.profile-modal-info {
+  flex: 1;
+  color: white;
+  background: #1a1a1a;
+  background: linear-gradient(135deg, #1a1a1a, #141414);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  border-left: 1px solid rgba(255, 255, 255, 0.03);
+  box-shadow: -5px 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.profile-modal-info::-webkit-scrollbar {
+  width: 6px;
+}
+
+.profile-modal-info::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.profile-modal-info::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+}
+
+.profile-modal-info::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Enhanced user profile section */
+.profile-user-info {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  background: linear-gradient(to bottom, rgba(30, 30, 30, 0.95), rgba(26, 26, 26, 0.95));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.profile-user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 14px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  object-fit: cover;
+}
+
+.profile-user-avatar:hover {
+  border-color: #fe2c55;
+  transform: scale(1.05);
+  box-shadow: 0 0 12px rgba(254, 44, 85, 0.4);
+}
+
+.profile-user-details h4 {
+  color: white;
+  margin: 0;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+  transition: color 0.2s ease;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.profile-user-details h4:hover {
+  color: #fe2c55;
+}
+
+/* Stylized buttons */
+.profile-close-button {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  color: white;
+  font-size: 16px;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  cursor: pointer;
+  z-index: 1001;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s cubic-bezier(0.19, 1, 0.22, 1);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.profile-close-button:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: scale(1.1) rotate(90deg);
+}
+
+/* Navigation buttons with subtle hover effects */
+.profile-modal-nav-left,
+.profile-modal-nav-right {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 1001;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s cubic-bezier(0.19, 1, 0.22, 1);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0.7;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.profile-modal-nav-left {
+  left: 20px;
+}
+
+.profile-modal-nav-right {
+  right: 20px;
+}
+
+.profile-modal-nav-left:hover,
+.profile-modal-nav-right:hover {
+  color: white;
+  background: rgba(254, 44, 85, 0.8);
+  transform: translateY(-50%) scale(1.1);
+  opacity: 1;
+  box-shadow: 0 0 15px rgba(254, 44, 85, 0.4);
+  border-color: rgba(254, 44, 85, 0.6);
+}
+
+/* Refined title and content areas */
+.profile-modal-title {
+  font-size: 1.5rem;
+  margin: 20px 20px 12px;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+/* Like section with slick animation */
+.profile-likes-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.profile-like-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  font-size: 14px;
+  transition: all 0.25s cubic-bezier(0.19, 1, 0.22, 1);
+  border-radius: 20px;
+}
+
+.profile-like-button:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
+}
+
+.profile-likes-section span {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Heart animation */
+@keyframes heartPulse {
+  0% { transform: scale(1); }
+  15% { transform: scale(1.3); }
+  30% { transform: scale(0.95); }
+  45% { transform: scale(1.2); }
+  60% { transform: scale(1); }
+}
+
+.profile-like-heart {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: white;
+  stroke-width: 2;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.profile-like-button.liked .profile-like-heart {
+  fill: #fe2c55;
+  stroke: #fe2c55;
+  filter: drop-shadow(0 0 3px rgba(254, 44, 85, 0.5));
+  animation: heartPulse 0.6s ease-out;
+}
+
+.profile-like-button:hover .profile-like-heart {
+  transform: scale(1.1);
+}
+
+/* Enhanced comments section */
+.profile-comments-section {
+  padding: 20px;
+  background-color: transparent;
+  position: relative;
+}
+
+.profile-comments-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20px;
+  right: 20px;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.1), transparent);
+}
+
+.profile-comments-heading {
+  color: white;
+  margin-bottom: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.profile-comments-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Comment styling with refined layout */
+.profile-comment-item {
+  display: flex;
+  margin-bottom: 16px;
+  transition: transform 0.2s ease;
+}
+
+.profile-comment-item:hover {
+  transform: translateX(2px);
+}
+
+.profile-comment-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 12px;
+}
+
+.profile-comment-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.profile-comment-avatar img:hover {
+  transform: scale(1.1);
+}
+
+.profile-comment-content {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 12px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  transition: background 0.2s ease;
+}
+
+.profile-comment-content:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.profile-comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.profile-comment-username {
+  font-weight: 600;
+  color: white;
+  font-size: 14px;
+  transition: color 0.2s ease;
+}
+
+.profile-comment-username:hover {
+  color: #fe2c55;
+}
+
+.profile-comment-time {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.profile-comment-text {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+  word-break: break-word;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Comment interactions */
+.profile-comment-actions {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile-comment-like-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.profile-comment-like-btn svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease;
+}
+
+.profile-comment-like-btn:hover {
+  color: #fe2c55;
+}
+
+.profile-comment-like-btn:hover svg {
+  transform: scale(1.2);
+}
+
+.profile-comment-like-btn.liked {
+  color: #fe2c55;
+}
+
+/* Sleek comment form */
+.profile-comment-form {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background: linear-gradient(to bottom, rgba(26, 26, 26, 0.95), rgba(22, 22, 22, 0.95));
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  position: sticky;
+  bottom: 0;
+}
+
+.profile-comment-input {
+  flex: 1;
+  padding: 12px 16px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  color: white;
+  font-size: 14px;
+  transition: all 0.25s ease;
+  resize: none;
+}
+
+.profile-comment-input:focus {
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(254, 44, 85, 0.4);
+  box-shadow: 0 0 0 2px rgba(254, 44, 85, 0.15);
+}
+
+.profile-comment-submit {
+  padding: 10px 20px;
+  background: linear-gradient(45deg, #fe2c55, #ff5277);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.25s cubic-bezier(0.19, 1, 0.22, 1);
+  font-size: 14px;
+  min-width: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(254, 44, 85, 0.3);
+}
+
+.profile-comment-submit:hover {
+  background: linear-gradient(45deg, #ff405e, #ff6b8b);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(254, 44, 85, 0.4);
+}
+
+.profile-comment-submit:active {
+  transform: translateY(0);
+}
+
+/* Elegant delete button */
+.profile-delete-section {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  padding: 0;
+  z-index: 3;
+}
+
+.profile-delete-button {
+  padding: 10px 20px;
+  background: rgba(255, 44, 85, 0.9);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(254, 44, 85, 0.35);
+}
+
+.profile-delete-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.profile-delete-button:hover {
+  background: rgba(255, 31, 71, 1);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(254, 44, 85, 0.5);
+}
+
+/* Media query refinements */
+@media screen and (max-width: 1024px) {
+  .profile-modal-main {
+    flex-direction: column;
+  }
+
+  .profile-modal-image-container {
+    height: 50vh;
+  }
+
+  .profile-modal-info {
+    height: 50vh;
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .profile-modal-image-container {
+    height: 40vh;
+  }
+  
+  .profile-modal-info {
+    height: 60vh;
+  }
+  
+  .profile-close-button,
+  .profile-modal-nav-left,
+  .profile-modal-nav-right {
+    width: 38px;
+    height: 38px;
+  }
+  
+  .profile-comment-form {
+    padding: 12px 16px;
+  }
+  
+  .profile-comment-submit {
+    min-width: 80px;
+    padding: 8px 16px;
+  }
+}

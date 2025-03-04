@@ -426,6 +426,7 @@ const Profile = () => {
         setModalImage(null);
         setActiveImageId(null);
         fetchUserStats();
+        document.body.classList.remove('modal-open');
     };
 
     const fetchAllData = async (imageId) => {
@@ -510,6 +511,7 @@ const Profile = () => {
             setActiveImageId(image.id);
             await fetchImageDetails(image.id);
             navigate(`?id=${image.id}`, { replace: true });
+            document.body.classList.add('modal-open');
         } catch (error) {
             console.error('Error fetching image details:', error);
         }
