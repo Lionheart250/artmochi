@@ -913,7 +913,7 @@ transition: all 0.2s ease;
   border-bottom: 1px solid var(--border-color);
   margin: 0;
   display: flex;
-  justify-content: end;
+  justify-content: space-between;
   align-items: center;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
@@ -929,7 +929,6 @@ transition: all 0.2s ease;
 }
 
 .loraselector-popup-header h3::before {
-  content: '✨';
   font-size: 16px;
   color: var(--primary);
 }
@@ -1371,11 +1370,12 @@ transition: all 0.2s ease;
       margin: auto;
   }
 
-  .loraselector-popup-header h3 {
+  .loraselector-popup-header  {
          font-size: 1.2rem;
           display: flex;
           justify-content: center;
           align-items: center;
+          
       }
   
 
@@ -1570,4 +1570,191 @@ left: 0;
 to {
   background-position-x: -200%;
 }
+}
+
+/* ========= Enhanced Professional Aesthetics ========= */
+
+/* Apply consistent shadow depth */
+.lora-item, .loraselector-popup, .loraselector-close-button, .lora-action-btn, .thumbnail-container {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.lora-item:hover, .thumbnail-container:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* Refine selected item state */
+.lora-item.selected {
+  background: rgba(254, 44, 85, 0.06);
+  border-color: rgba(254, 44, 85, 0.3);
+  box-shadow: 0 0 15px rgba(254, 44, 85, 0.15);
+}
+
+/* Add subtle hover indicator for all interactive elements */
+.lora-item:hover, .lora-action-btn:hover, .preset-button:hover, .loraselector-close-button:hover {
+  transform: translateY(-2px);
+}
+
+/* More professional typography */
+.section-header h3 {
+  font-family: 'SF Pro Display', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+  color: var(--tiktok-cyan); 
+  text-shadow: 0 0 10px rgba(37, 244, 238, 0.15);
+}
+
+/* Clean buttons with consistent styling */
+.lora-action-btn {
+  border-radius: 8px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  padding: 10px 18px;
+  transition: all 0.2s cubic-bezier(0.215, 0.61, 0.355, 1); /* Refined easing */
+}
+
+.lora-action-btn.primary {
+  background: linear-gradient(45deg, #fe2c55, #ff5277);
+  box-shadow: 0 4px 12px rgba(254, 44, 85, 0.25);
+}
+
+.lora-action-btn.primary:hover {
+  box-shadow: 0 6px 16px rgba(254, 44, 85, 0.35);
+  background: linear-gradient(45deg, #ff405e, #ff6b8b);
+}
+
+/* Refined checkbox */
+.lora-item input[type="checkbox"]:checked::after {
+  content: "✓";
+  position: absolute;
+  color: white;
+  font-size: 14px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+/* Polish range slider */
+.lora-item input[type="range"]::-webkit-slider-thumb {
+  box-shadow: 0 0 6px rgba(254, 44, 85, 0.3);
+  background: linear-gradient(to top, #fe2c55, #ff5277);
+}
+
+.lora-item input[type="range"]::-moz-range-thumb {
+  box-shadow: 0 0 6px rgba(254, 44, 85, 0.3);
+  background: linear-gradient(to top, #fe2c55, #ff5277);
+}
+
+/* Consistent border-radius */
+.lora-item, .loraselector-popup, .preset-button, 
+.thumbnail-container, .lora-action-btn, .preview-modal, 
+.mini-thumbnail, .preview-thumbnails img {
+  border-radius: 8px;
+}
+
+/* Make column headers more prominent */
+.section-header {
+  background: linear-gradient(to right, rgba(26, 26, 26, 1), rgba(26, 26, 26, 0.98));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Enhanced scrollbars */
+.lora-column::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  border: 2px solid rgba(26, 26, 26, 0.5);
+}
+
+.lora-column::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* More professional hover animations */
+@keyframes softPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+.lora-item.selected {
+  animation: softPulse 3s infinite ease-in-out;
+}
+
+/* Fix for mobile aesthetic */
+@media (max-width: 768px) {
+  .lora-item label {
+    font-size: 12px; /* More readable font size compared to 7px */
+  }
+  
+  /* Properly align and style section headers */
+  .section-header {
+    background: linear-gradient(to bottom, rgba(21, 21, 21, 1), rgba(26, 26, 26, 0.98));
+    padding: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  }
+  
+  .section-header h3 {
+    font-size: 0.9rem;
+    text-align: center;
+    width: 100%;
+  }
+  
+  /* Make content fit better */
+  .lora-column {
+    min-width: 140px;
+    padding: 0 6px;
+  }
+  
+  /* Better action buttons */
+  .lora-action-buttons {
+    background: linear-gradient(to top, rgba(21, 21, 21, 0.98), rgba(26, 26, 26, 0.95));
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+  }
+  
+  .lora-action-btn {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Make thumbnail grid more aesthetically pleasing */
+.thumbnail-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.thumbnail-container {
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  transform-origin: center;
+}
+
+.mini-thumbnail {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.mini-thumbnail:hover {
+  transform: scale(1.08);
+}
+
+/* Refined loading animation */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.thumbnail-placeholder {
+  background: linear-gradient(90deg, 
+    rgba(40, 40, 40, 0.5) 0%, 
+    rgba(60, 60, 60, 0.5) 25%, 
+    rgba(40, 40, 40, 0.5) 50%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
 }

@@ -1447,8 +1447,8 @@ const preloadNearbyImages = (currentIndex, loraExamples) => {
         <div className="lora-overlay" onClick={handleOverlayClick}>
             <div className="loraselector-popup" onClick={e => e.stopPropagation()}>
                 <div className="loraselector-popup-header">
+                <h3>✨ Presets ✨</h3>
                     <div className="lora-actions">
-                        {/* <h3>✨ Style Presets ✨</h3> */}
                         <div className="lora-action-buttons">
                             <button type="button" onClick={handleRandom} className="lora-action-btn primary">
                                 🎲 Random Mix
