@@ -10,12 +10,13 @@ import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
 import { getImageUrl } from '../utils/imageUtils';
 import { artisticLoras, realisticLoras } from '../components/LoraSelector';
+import ImageModal from '../components/ImageModal';
 
 const Gallery = () => {
     const { user, profile } = useAuth();
     const { fetchUserProfile } = useProfile();
     const [images, setImages] = useState([]);
-    const [modalImage, setModalImage] = useState(null);
+    const [selectedImage, setSelectedImage] = useState(null); // Rename this from modalImage
     const [activeImageId, setActiveImageId] = useState(null);
     const [likes, setLikes] = useState({});
     const [comments, setComments] = useState({});
@@ -413,7 +414,7 @@ const Gallery = () => {
             // Update the image state atomically
             await Promise.all([
                 new Promise(resolve => {
-                    setModalImage(nextImage.image_url);
+                    setSelectedImage(nextImage.image_url);  // Use selectedImage instead of modalImage
                     setActiveImageId(nextImage.id);
                     navigate(`?id=${nextImage.id}`, { replace: true });
                     resolve();
@@ -430,8 +431,9 @@ const Gallery = () => {
         // Update the image state atomically
         await Promise.all([
             new Promise(resolve => {
-                setModalImage(image.image_url);
+                setSelectedImage(image.image_url);  // Use selectedImage instead of modalImage
                 setActiveImageId(image.id);
+                setModalOpen(true);  // Make sure to set this
                 navigate(`?id=${image.id}`, { replace: true });
                 resolve();
             }),
@@ -441,7 +443,8 @@ const Gallery = () => {
         
     
     const closeModal = () => {
-        setModalImage(null);
+        setSelectedImage(null);  // Use selectedImage instead of modalImage
+        setModalOpen(false);
         setActiveImageId(null);
         setImageUserDetails({}); // Clear the details when closing
         setComments({}); 
@@ -457,7 +460,7 @@ const Gallery = () => {
 
     useEffect(() => {
         const handleKeyDown = (e) => {
-            if (!modalImage) return;
+            if (!selectedImage) return;
             switch(e.key) {
                 case 'ArrowLeft':
                     navigateImage(-1);
@@ -475,11 +478,11 @@ const Gallery = () => {
     
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [modalImage]);
+    }, [selectedImage]);
     
     // Add this useEffect near your other effects
     useEffect(() => {
-        if (modalImage) {
+        if (selectedImage) {
             // Disable scrolling on body when modal is open
             document.body.style.overflow = 'hidden';
         } else {
@@ -491,7 +494,7 @@ const Gallery = () => {
         return () => {
             document.body.style.overflow = 'unset';
         };
-    }, [modalImage]);
+    }, [selectedImage]);
 
     // Add this utility function
     const formatTimestamp = (timestamp) => {
@@ -1158,193 +1161,40 @@ useEffect(() => {
                         ))}
                     </div>
 
-                    {modalImage && (
-                        <div className="gallery-modal">
-                            <div className="gallery-modal-content">
-                                <div className="gallery-modal-main">
-                                    <div className="gallery-modal-image-container">
-                                        <button className="gallery-close-button" onClick={closeModal}>×</button>
-                                        <button className="gallery-modal-nav-left" onClick={() => navigateImage(-1)}>
-                                            <span>‹</span>
-                                        </button>
-                                        <img className="gallery-modal-image" src={modalImage} alt="Enlarged" />
-                                        {isAdmin && (
-                                            <div className="gallery-delete-section">
-                                                <button 
-                                                    className="gallery-delete-button" 
-                                                    onClick={() => handleDeleteImage(activeImageId)}
-                                                >
-                                                    Delete Image
-                                                </button>
-                                            </div>
-                                        )}
-                                        <button className="gallery-modal-nav-right" onClick={() => navigateImage(1)}>
-                                            <span>›</span>
-                                        </button>
-                                    </div>
-                                    <div className="gallery-modal-info">
-                                        <div className="gallery-user-info">
-                                        {renderUserAvatar(imageUserDetails[activeImageId]?.user_id)}
-                                            <div className="gallery-user-details">
-                                                <h4 onClick={() => navigate(`/profile/${imageUserDetails[activeImageId]?.user_id}`)}>
-                                                    {imageUserDetails[activeImageId]?.username}
-                                                </h4>
-                                                {user && imageUserDetails[activeImageId] && user.userId !== parseInt(imageUserDetails[activeImageId].user_id) && (
-                                                    <button 
-                                                        className={`gallery-follow-btn ${isFollowing ? 'following' : ''}`}
-                                                        onClick={() => handleModalFollowToggle(imageUserDetails[activeImageId].user_id)}
-                                                    >
-                                                        {isFollowing ? 'Following' : 'Follow'}
-                                                    </button>
-                                                )}
-                                                <span className="gallery-creation-date">
-                                                    {formatDate(images.find(img => img.id === activeImageId)?.created_at)}
-                                                </span>
-                                            </div>
-                                            {user?.userId === imageUserDetails[activeImageId]?.user_id && (
-                                                <button 
-                                                    className={`privacy-toggle ${images.find(img => img.id === activeImageId)?.private ? 'private' : 'public'}`}
-                                                    onClick={() => handlePrivacyToggle(activeImageId)}
-                                                >
-                                                    {images.find(img => img.id === activeImageId)?.private ? '🔒 Private' : '🌐 Public'}
-                                                </button>
-                                            )}
-                                        </div>
-                                        
-                                        {/* Add title first */}
-                                        <div className="gallery-modal-title">
-                                            {images.find(img => img.id === activeImageId)?.title || 'Untitled'}
-                                        </div>
-                                        
-                                        {/* Then prompt */}
-                                        <div className="gallery-modal-prompt">
-                                            <div className={`prompt-text ${expandedPrompts.has(activeImageId) ? 'expanded' : ''}`}>
-                                                {images.find(img => img.id === activeImageId)?.prompt}
-                                            </div>
-                                            <button 
-                                                className="show-more-btn"
-                                                onClick={() => togglePrompt(activeImageId)}
-                                            >
-                                                {expandedPrompts.has(activeImageId) ? 'Show Less' : 'Show More'}
-                                            </button>
-                                        </div>
-                                        
-                                        {/* Then LoRAs */}
-                                        <div className="gallery-modal-loras">
-                                            <h4 className="metadata-heading">Styles Used:</h4>
-                                            <div className="lora-pills">
-                                                {images.find(img => img.id === activeImageId)?.loras_used && 
-                                                    (typeof images.find(img => img.id === activeImageId).loras_used === 'string' 
-                                                        ? JSON.parse(images.find(img => img.id === activeImageId).loras_used)
-                                                        : images.find(img => img.id === activeImageId).loras_used
-                                                    ).map((lora, index) => (
-                                                        <span key={index} className="lora-pill">
-                                                            {getLoraName(lora.model)} ({lora.weight})
-                                                        </span>
-                                                    ))
-                                                }
-                                            </div>
-                                        </div>
+                    <ImageModal
+                        isOpen={modalOpen}
+                        onClose={closeModal}
+                        modalImage={selectedImage}
+                        activeImageId={activeImageId}
+                        images={images}
+                        user={user}
+                        navigateImage={(direction) => navigateImage(direction === 'prev' ? -1 : 1)}
+                        canDelete={isAdmin}
+                        isAdmin={isAdmin}
+                        isOwnProfile={false}
+                        activeTab="gallery"
+                        onImageDelete={handleDeleteImage}
+                        imageUserDetails={imageUserDetails}
+                        comments={comments}
+                        likes={likes}
+                        userLikedImages={userLikedImages}
+                        commentLikes={commentLikes}
+                        isFollowing={isFollowing}
+                        handleLike={handleLike}
+                        handleCommentLike={handleCommentLike}
+                        handleCommentSubmit={handleCommentSubmit}
+                        handleModalFollowToggle={handleModalFollowToggle}
+                        handlePrivacyToggle={handlePrivacyToggle}
+                        handleImageEdit={handleImageEdit}
+                        togglePrompt={(id) => togglePrompt(id)}
+                        expandedPrompts={expandedPrompts}
+                        commentInput={commentInput}
+                        setCommentInput={setCommentInput}
+                        formatTimestamp={formatTimestamp}
+                        formatDate={formatDate}
+                        getLoraName={getLoraName}
+                    />
 
-                                        {/* Then the rest of your modal content */}
-                                        <div className="gallery-interaction-buttons">
-                                            <button onClick={() => handleLike(activeImageId)} className="gallery-action-btn">
-                                                <LikeIcon className={userLikedImages.has(activeImageId) ? 'liked' : ''} />
-                                                <span>{likes[activeImageId] || 0}</span>
-                                            </button>
-                                            <button className="gallery-action-btn">
-                                                <CommentIcon />
-                                                <span>{comments[activeImageId]?.length || 0}</span>
-                                            </button>
-                                            <button className="gallery-action-btn">
-                                                <ShareIcon />
-                                            </button>
-                                            <button className="gallery-action-btn">
-                                                <BookmarkIcon />
-                                            </button>
-                                            <button 
-                                                onClick={() => handleImageEdit('upscale', images.find(img => img.id === activeImageId))}
-                                                className="gallery-action-btn"
-                                            >
-                                                🔍 Upscale
-                                            </button>
-                                            <button 
-                                                onClick={() => handleImageEdit('remix', images.find(img => img.id === activeImageId))}
-                                                className="gallery-action-btn"
-                                            >
-                                                🎨 Remix
-                                            </button>
-                                        </div>
-
-                                        {/* Update category display */}
-                                        <div className="gallery-image-metadata">
-                                            <h4 className="metadata-heading">Categories:</h4>
-                                            <div className="category-pills">
-                                                {images.find(img => img.id === activeImageId)?.categories?.length > 0 
-                                                    ? images.find(img => img.id === activeImageId).categories.map((category, index) => (
-                                                        <span key={index} className="category-pill">
-                                                            {category && typeof category === 'string' 
-                                                                ? category.charAt(0).toUpperCase() + category.slice(1)
-                                                                : 'Unknown'}
-                                                        </span>
-                                                    ))
-                                                    : <span className="category-pill">Uncategorized</span>
-                                                }
-                                            </div>
-                                        </div>
-                                        {/* Existing comments section */}
-                                        <div className="gallery-comments-section">
-                                            <h4 className="gallery-comments-heading">Comments</h4>
-                                            <ul className="gallery-comments-list">
-                                                {(comments[activeImageId] || []).map((comment) => (
-                                                    <li key={`comment-${comment.id}-${comment.created_at}`} className="gallery-comment-item">
-                                                        <div className="gallery-comment-avatar">
-                                                            {renderCommentAvatar(comment)}
-                                                        </div>
-                                                        <div className="gallery-comment-content">
-                                                            <div className="gallery-comment-header">
-                                                                <span 
-                                                                    className="gallery-comment-username"
-                                                                    onClick={() => handleUsernameClick(comment.user_id)}
-                                                                    role="button"
-                                                                    tabIndex={0}
-                                                                >
-                                                                    {comment.username}
-                                                                </span>
-                                                                <span className="gallery-comment-time">
-                                                                    {formatTimestamp(comment.created_at)}
-                                                                </span>
-                                                            </div>
-                                                            <p className="gallery-comment-text">{comment.comment}</p>
-                                                            <div className="gallery-comment-actions">
-                                                                <button 
-                                                                    className="gallery-comment-like-btn"
-                                                                    onClick={() => handleCommentLike(comment.id)}
-                                                                >
-                                                                    ♥ {commentLikes[comment.id] || 0}
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                            <form onSubmit={handleCommentSubmit} className="gallery-comment-form">
-                                                <input
-                                                    className="gallery-comment-input"
-                                                    type="text"
-                                                    value={commentInput}
-                                                    onChange={(e) => setCommentInput(e.target.value)}
-                                                    placeholder="Add a comment..."
-                                                    required
-                                                />
-                                                <button type="submit" className="gallery-comment-submit">Post</button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
                     {hasMore && <div ref={loadingRef} style={{ height: '20px' }} />}
                     {loading && <div>Loading more images...</div>}
                 </>
