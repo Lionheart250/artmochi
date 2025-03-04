@@ -1,168 +1,321 @@
-.selected-loras {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin: 12px 0;
+/* ========= Variables & Base Styles ========= */
+:root {
+  --primary: #fe2c55;
+  --primary-hover: #ff4060;
+  --primary-light: rgba(254, 44, 85, 0.1);
+  --primary-medium: rgba(254, 44, 85, 0.2);
+  --primary-dark: rgba(254, 44, 85, 0.3);
+  --primary-shadow: rgba(254, 44, 85, 0.15);
+  --tiktok-cyan: #25f4ee;
+  --tiktok-cyan-light: rgba(37, 244, 238, 0.1);
+  --tiktok-cyan-medium: rgba(37, 244, 238, 0.15);
+  --tiktok-cyan-border: rgba(37, 244, 238, 0.2);
+  --tiktok-cyan-border-hover: rgba(37, 244, 238, 0.3);
+  --tiktok-cyan-shadow: rgba(37, 244, 238, 0.2);
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.8);
+  --text-tertiary: rgba(255, 255, 255, 0.5);
+  --bg-gradient: linear-gradient(45deg, var(--primary), #ff5277);
+  --transition-fast: 0.2s ease;
+  --transition-medium: 0.3s ease;
 }
 
+/* ========= Selected LoRAs Container ========= */
+.selected-loras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+/* ========= LoRA Pill Styling ========= */
 .lora-pill {
-    background: rgba(254, 44, 85, 0.2);
-    border-radius: 20px;
-    padding: 6px 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border: 1px solid rgba(254, 44, 85, 0.3);
-    backdrop-filter: blur(8px);
-    box-shadow: 0 2px 10px rgba(254, 44, 85, 0.15);
-    transition: all 0.2s ease;
+  background: rgba(254, 44, 85, 0.2);
+  border-radius: 20px;
+  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(254, 44, 85, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 10px rgba(254, 44, 85, 0.15);
+  transition: all var(--transition-fast);
+  position: relative;
+  overflow: hidden;
 }
 
 .lora-pill:hover {
-    background: rgba(254, 44, 85, 0.25);
-    border-color: rgba(254, 44, 85, 0.4);
-    box-shadow: 0 4px 15px rgba(254, 44, 85, 0.25);
-    transform: translateY(-1px);
+  background: rgba(254, 44, 85, 0.25);
+  border-color: rgba(254, 44, 85, 0.4);
+  box-shadow: 0 4px 15px rgba(254, 44, 85, 0.25);
+  transform: translateY(-1px);
+}
+
+.lora-pill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  opacity: 0;
+  transition: opacity var(--transition-medium);
+}
+
+.lora-pill:hover::after {
+  opacity: 1;
 }
 
 .lora-name {
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 1);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: color var(--transition-fast);
 }
 
+.lora-name:hover {
+  color: #ffffff;
+}
+
+/* ========= Remove Button ========= */
 .remove-lora {
-    background: none;
-    border: none;
-    color: rgba(255, 255, 255, 0.5);
-    cursor: pointer;
-    padding: 4px;
-    font-size: 18px;
-    transition: all 0.2s ease;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 4px;
+  font-size: 18px;
+  transition: all var(--transition-fast);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .remove-lora:hover {
-    color: var(--tiktok-pink);
-    background: rgba(254, 44, 85, 0.1);
+  color: var(--primary);
+  background: var(--primary-light);
+  transform: rotate(90deg);
 }
 
+/* ========= Weight Editor ========= */
 .weight-editor {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 4px;
-    background: rgba(254, 44, 85, 0.25);
-    border-radius: 16px;
-    padding: 6px 12px;
-    border: 1px solid rgba(254, 44, 85, 0.35);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(254, 44, 85, 0.25);
+  border-radius: 16px;
+  padding: 6px 12px;
+  border: 1px solid rgba(254, 44, 85, 0.35);
+  transition: all var(--transition-fast);
+}
+
+.weight-editor:hover {
+  background: rgba(254, 44, 85, 0.3);
+  border-color: rgba(254, 44, 85, 0.45);
+  box-shadow: 0 2px 12px rgba(254, 44, 85, 0.2);
 }
 
 .weight-editor input {
-    width: 100px;
+  width: 100px;
 }
 
+/* Slider Input Styling */
 .weight-editor input[type="range"] {
-    width: 120px;
-    height: 4px;
-    background: rgba(254, 44, 85, 0.3);
-    border-radius: 2px;
-    outline: none;
+  width: 120px;
+  height: 4px;
+  background: rgba(254, 44, 85, 0.3);
+  border-radius: 2px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .weight-editor input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 16px;
-    height: 16px;
-    background: var(--tiktok-cyan);
-    border-radius: 50%;
-    cursor: pointer;
-    border: 2px solid rgba(255, 255, 255, 0.9);
-    box-shadow: 0 2px 4px rgba(37, 244, 238, 0.2);
-    transition: all 0.2s ease;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--tiktok-cyan);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 4px rgba(37, 244, 238, 0.2);
+  transition: all var(--transition-fast);
+}
+
+.weight-editor input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--tiktok-cyan);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 4px rgba(37, 244, 238, 0.2);
+  transition: all var(--transition-fast);
 }
 
 .weight-editor input[type="range"]::-webkit-slider-thumb:hover {
-    transform: scale(1.1);
-    box-shadow: 0 2px 8px rgba(254, 44, 85, 0.5);
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(254, 44, 85, 0.5);
 }
 
+.weight-editor input[type="range"]::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(254, 44, 85, 0.5);
+}
+
+.weight-editor input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(37, 244, 238, 0.2);
+}
+
+.weight-editor input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(37, 244, 238, 0.2);
+}
+
+/* Weight Value Display */
 .weight-editor span {
-    min-width: 45px;
-    text-align: center;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 13px;
-    font-variant-numeric: tabular-nums;
+  min-width: 45px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: color var(--transition-fast);
 }
 
+/* Save Button */
 .weight-editor button {
-    background: rgba(37, 244, 238, 0.1);
-    border: 1px solid rgba(37, 244, 238, 0.2);
-    color: var(--tiktok-cyan);
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 14px;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  background: var(--tiktok-cyan-light);
+  border: 1px solid var(--tiktok-cyan-border);
+  color: var(--tiktok-cyan);
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 14px;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
 }
 
 .weight-editor button:hover {
-    background: rgba(37, 244, 238, 0.15);
-    border-color: rgba(37, 244, 238, 0.3);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(37, 244, 238, 0.2);
+  background: var(--tiktok-cyan-medium);
+  border-color: var(--tiktok-cyan-border-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px var(--tiktok-cyan-shadow);
 }
 
+.weight-editor button:active {
+  transform: translateY(0);
+}
+
+/* ========= Custom Slider ========= */
 .slider-container {
-    position: relative;
-    width: 100px;
-    height: 20px;
-    cursor: pointer;
-    user-select: none;
-    touch-action: none;
-    display: flex;
-    align-items: center;
+  position: relative;
+  width: 100px;
+  height: 20px;
+  cursor: pointer;
+  user-select: none;
+  touch-action: none;
+  display: flex;
+  align-items: center;
 }
 
 .slider-track {
-    position: absolute;
-    width: 100%;
-    height: 4px;
-    background: rgba(37, 244, 238, 0.1);
-    border-radius: 2px;
+  position: absolute;
+  width: 100%;
+  height: 4px;
+  background: rgba(37, 244, 238, 0.1);
+  border-radius: 2px;
 }
 
 .slider-fill {
-    position: absolute;
-    height: 4px;
-    background: #4CAF50;
-    border-radius: 2px;
+  position: absolute;
+  height: 4px;
+  background: linear-gradient(90deg, var(--tiktok-cyan), #4CDDFE);
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(37, 244, 238, 0.3);
 }
 
 .slider-handle {
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    background: white;
-    border-radius: 50%;
-    transform: translateX(-50%);
-    cursor: grab;
-    z-index: 2;
-    top: 50%;
-    margin-top: -8px;
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: var(--text-primary);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  cursor: grab;
+  z-index: 2;
+  top: 50%;
+  margin-top: -8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+  border: 2px solid var(--tiktok-cyan);
+}
+
+.slider-handle:hover {
+  transform: translateX(-50%) scale(1.1);
+  box-shadow: 0 2px 10px rgba(37, 244, 238, 0.4);
 }
 
 .slider-handle:active {
-    cursor: grabbing;
+  cursor: grabbing;
+  transform: translateX(-50%) scale(1.05);
+  box-shadow: 0 1px 4px rgba(37, 244, 238, 0.3);
+}
+
+/* ========= Animation Effects ========= */
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(37, 244, 238, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(37, 244, 238, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(37, 244, 238, 0); }
+}
+
+@keyframes slide-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Apply animation to new pills */
+.lora-pill.new {
+  animation: slide-in var(--transition-medium) forwards;
+}
+
+/* ========= Responsive Styles ========= */
+@media screen and (max-width: 768px) {
+  .weight-editor {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 10px;
+    gap: 10px;
+  }
+  
+  .weight-editor input[type="range"] {
+    width: 100%;
+  }
+  
+  .weight-editor button {
+    align-self: flex-end;
+  }
+  
+  .lora-pill {
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  
+  .slider-container {
+    width: 100%;
+  }
 }

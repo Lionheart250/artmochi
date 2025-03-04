@@ -1,4 +1,17 @@
-/* ========= Base Header Styles ========= */
+/* ========= Base Header Styles - TikTok Inspired ========= */
+
+:root {
+  --primary: #fe2c55;
+  --primary-hover: #ff405e;
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.8);
+  --text-tertiary: rgba(255, 255, 255, 0.6);
+  --bg-primary: #000000;
+  --bg-secondary: #121212;
+  --bg-tertiary: #1a1a1a;
+  --overlay-light: rgba(255, 255, 255, 0.1);
+  --border-color: rgba(255, 255, 255, 0.12);
+}
 
 header,
 .header {
@@ -6,8 +19,8 @@ header,
   top: 0;
   left: 0;
   width: 100%;
-  background: #000000;
-  color: white;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   z-index: 1000;
   transition: all 0.3s ease;
 }
@@ -27,20 +40,28 @@ header,
   font-size: 24px;
   font-weight: 700;
   letter-spacing: 0.5px;
-  color: #fe2c55;
+  color: var(--primary);
   padding: 16px;
 }
+
 .logo h1 {
   margin: 0;
+  background: linear-gradient(90deg, var(--primary) 0%, #ff6b8b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
+
 .logo-link {
   text-decoration: none;
   color: inherit;
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: transform 0.2s ease, color 0.2s ease;
 }
+
 .logo-link:hover {
-  color: #ff425f;
+  color: var(--primary-hover);
+  transform: scale(1.02);
 }
 
 /* Navigation Links */
@@ -49,8 +70,9 @@ header,
   align-items: center;
   gap: 24px;
 }
+
 .nav-links a {
-  color: #ffffff;
+  color: var(--text-primary);
   text-decoration: none;
   font-size: 15px;
   font-weight: 500;
@@ -61,15 +83,18 @@ header,
   width: 90%;
   display: flex;
   align-items: center;
+  position: relative;
 }
+
 .nav-links a.active {
-  color: #fe2c55;
+  color: var(--primary);
   font-weight: 600;
   background-color: rgba(254, 44, 85, 0.1);
 }
+
 .nav-links a:hover,
 .nav-links a.active:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--overlay-light);
 }
 
 /* ========= Top Header Specific ========= */
@@ -77,15 +102,19 @@ header,
 .top-header {
   width: 100%;
   height: 60px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
+
 .top-header .header-container {
   justify-content: space-between;
 }
+
 .top-header .nav-links {
   margin: 0 auto;
   gap: 24px;
 }
+
 .top-header .header-nav {
   display: flex;
   flex-direction: row;
@@ -100,74 +129,98 @@ header,
   gap: 6px;
   padding: 4px 18px;
   border-radius: 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border-color);
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
   margin-right: 2em;
 }
+
 .profile-dropdown:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--overlay-light);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
+
 .header-profile-pic {
   width: 32px;
   height: 32px;
   border-radius: 50%;
   object-fit: cover;
+  border: 2px solid transparent;
+  transition: border-color 0.2s ease;
 }
+
+.profile-dropdown:hover .header-profile-pic {
+  border-color: var(--primary);
+}
+
 .header-username {
   font-size: 14px;
   margin-left: 10px;
   font-weight: 500;
 }
+
 .auth-link {
   padding: 6px 16px;
   font-size: 16px;
   font-weight: 600;
   border-radius: 4px;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 100px;
 }
+
 .auth-link:not(.register) {
   color: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border-color);
 }
+
 .auth-link:not(.register):hover {
   background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
 }
+
 .auth-link.register {
-  background-color: #fe2c55;
+  background-color: var(--primary);
   color: #fff;
   margin-left: 16px;
   border: none;
+  box-shadow: 0 2px 8px rgba(254, 44, 85, 0.3);
 }
+
 .auth-link.register:hover {
-  background-color: #ef2950;
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(254, 44, 85, 0.4);
 }
 
 /* ========= Side Header Specific ========= */
 
 .side-header {
-  width: 240px;
+  width: 180px;
   height: 100vh;
-  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  border-right: 1px solid var(--border-color);
   left: 0;
   top: 0;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
 }
+
 .side-header .header-container {
   flex-direction: column;
   padding: 20px 25px;
   align-items: flex-start;
 }
+
 .side-header .nav-links {
   flex-direction: column;
   gap: 8px;
   padding: 16px 8px;
   width: 100%;
 }
+
 .side-nav-link {
   display: flex;
   align-items: center;
@@ -175,12 +228,31 @@ header,
   padding: 8px 12px;
   text-decoration: none;
   color: white;
-  width: 100%;
+  width: calc(100% - 16px);
+  margin: 0 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
 }
+
+.side-nav-link:hover {
+  background-color: var(--overlay-light);
+  transform: translateX(2px);
+}
+
+.side-nav-link.active {
+  color: var(--primary);
+  background-color: rgba(254, 44, 85, 0.1);
+}
+
 .nav-icon {
   width: 24px;
   height: 24px;
   flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.side-nav-link:hover .nav-icon {
+  transform: scale(1.1);
 }
 
 /* Side Header Logo */
@@ -192,6 +264,7 @@ header,
   max-width: calc(12.5rem - 32px);
   font-size: 14px;
 }
+
 .side-header.drawer-open .logo {
   width: 24px;
   height: 24px;
@@ -199,52 +272,46 @@ header,
 }
 
 .more-dropdown-menu {
-    position: static;
-    width: 100%;
-    height: 36px;
-    background: transparent;
-    box-shadow: none;
-    padding-top: 95px;
-    display: flex;
-    flex-direction: column;
+  position: static;
+  width: 100%;
+  height: 36px;
+  background: transparent;
+  box-shadow: none;
+  padding-top: 95px;
+  display: flex;
+  flex-direction: column;
 }
 
 .more-dropdown-menu a {
-    padding: 12px 16px;
-    color: #ffffff;
-    text-decoration: none;
-    transition: background-color 0.2s;
-    text-align: left;
+  padding: 12px 16px;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: background-color 0.2s;
+  text-align: left;
 }
 
 .more-dropdown-menu a:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--overlay-light);
+  color: var(--primary);
 }
 
-.logout-button {
-    width: 100%;
-    padding: 12px 16px;
-    text-align: left;
-    background: transparent;
-    border: none;
-    color: #fe2c55;
-    font-size: 14px;
-    cursor: pointer;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    margin-top: 8px;
+.logout-button, .logout-btn {
+  width: 100%;
+  padding: 12px 16px;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: var(--primary);
+  font-size: 14px;
+  cursor: pointer;
+  border-top: 1px solid var(--border-color);
+  margin-top: 8px;
+  transition: all 0.2s ease;
+  font-weight: 600;
 }
 
-.logout-btn {
-    width: 100%;
-    padding: 12px 16px;
-    text-align: left;
-    background: transparent;
-    border: none;
-    color: #fe2c55;
-    font-size: 14px;
-    cursor: pointer;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    margin-top: 8px;
+.logout-button:hover, .logout-btn:hover {
+  background-color: rgba(254, 44, 85, 0.08);
 }
 
 /* ========= Dropdown & More Menu ========= */
@@ -253,27 +320,39 @@ header,
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  background: #1a1a1a;
+  background: var(--bg-tertiary);
   border-radius: 8px;
   min-width: 200px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-color);
   z-index: 1001;
   display: flex;
   flex-direction: column;
   padding: 8px 0;
+  animation: fadeIn 0.2s forwards;
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .dropdown-menu a,
 .dropdown-menu button {
   padding: 12px 16px;
-  color: #ffffff;
+  color: var(--text-primary);
   text-decoration: none;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
   text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
+
 .dropdown-menu a:hover,
 .dropdown-menu button:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--overlay-light);
+  color: var(--primary);
 }
 
 .more-drawer-container {
@@ -282,18 +361,21 @@ header,
   position: fixed;
   left: 4.5rem;
   top: 0;
-  background-color: #121212;
-  border-right: 1px solid rgba(255, 255, 255, 0.12);
-  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  background-color: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  border-left: 1px solid var(--border-color);
   transform: translateX(-100%);
-  transition: transform 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
   z-index: 1000;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
 }
+
 .more-drawer-container.open {
   transform: translateX(0);
 }
+
 .more-menu-button {
   width: 100%;
   padding: 12px 16px;
@@ -302,6 +384,12 @@ header,
   border: none;
   color: white;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.more-menu-button:hover {
+  color: var(--primary);
+  background-color: var(--overlay-light);
 }
 
 /* ========= Footer & User Info ========= */
@@ -309,17 +397,21 @@ header,
 .side-footer-links {
   margin-top: auto;
   padding: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid var(--border-color);
   align-items: flex-start;
 }
+
 .side-footer-links a {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-tertiary);
   text-decoration: none;
   font-size: 10px;
+  transition: color 0.2s ease;
 }
+
 .side-footer-links a:hover {
-  color: #fe2c55;
+  color: var(--primary);
 }
+
 .user-info {
   color: white;
   padding: 10px;
@@ -327,6 +419,7 @@ header,
   transition: background-color 0.3s ease;
   cursor: pointer;
 }
+
 .user-info:hover {
   background-color: rgba(255, 255, 255, 0.2);
 }
@@ -353,6 +446,11 @@ header,
 
   .logo {
     padding: 0px;
+  }
+  
+  .side-header .side-nav-link {
+    justify-content: center;
+    padding: 10px;
   }
 }
 
@@ -401,7 +499,7 @@ header,
     gap: 6px;
     padding: 4px 9px;
     border-radius: 8px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--border-color);
     cursor: pointer;
     transition: background-color 0.2s;
     margin-right: 0.5em;
@@ -411,9 +509,10 @@ header,
     min-width: 100px;
     margin-top: 0px;
     right: 0;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
   }
   .mobile-nav-items {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--border-color);
     padding: 8px 0;
     margin-bottom: 8px;
   }
@@ -422,11 +521,13 @@ header,
     align-items: center;
     gap: 12px;
     padding: 12px 16px;
-    color: #ffffff;
+    color: var(--text-primary);
     text-decoration: none;
+    transition: all 0.2s ease;
   }
   .mobile-nav-items a:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--overlay-light);
+    color: var(--primary);
   }
   .mobile-nav-items .nav-icon {
     width: 20px;
@@ -434,6 +535,6 @@ header,
   }
 }
 
-/* ========= End of Consolidated Header.css ========= */
+/* ========= End of TikTok-inspired Header.css ========= */
 
 
