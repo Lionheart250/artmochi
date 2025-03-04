@@ -1141,6 +1141,7 @@ const Profile = () => {
                                 </button>
                             </div>
                             <div className="profile-modal-info">
+                                {/* User profile info - stays sticky at the top */}
                                 <div className="profile-user-info">
                                     <img 
                                         src={imageUserDetails[activeImageId]?.profile_picture || '/default-avatar.png'} 
@@ -1167,74 +1168,85 @@ const Profile = () => {
                                         )}
                                     </div>
                                 </div>
-                                <div className="profile-modal-title">
-                                    {(activeTab === 'likes' ? likedImages : images).find(img => img.id === activeImageId)?.prompt}
-                                </div>
-                                <div className="profile-interaction-buttons">
-                                    <button onClick={() => handleLike(activeImageId)} className="profile-action-btn">
-                                        <LikeIcon className={userLikedImages.has(activeImageId) ? 'liked' : ''} />
-                                        <span>{likes[activeImageId] || 0}</span>
-                                    </button>
-                                    <button className="profile-action-btn">
-                                        <CommentIcon />
-                                        <span>{comments[activeImageId]?.length || 0}</span>
-                                    </button>
-                                    <button className="profile-action-btn">
-                                        <ShareIcon />
-                                    </button>
-                                    <button className="profile-action-btn">
-                                        <BookmarkIcon />
-                                    </button>
-                                </div>
-                                <div className="profile-comments-section">
-                                    <h4 className="profile-comments-heading">Comments</h4>
-                                    <ul className="profile-comments-list">
-                                        {(comments[activeImageId] || []).map((comment) => (
-                                            <li key={`comment-${comment.id}-${comment.created_at}`} className="profile-comment-item">
-                                                <div className="profile-comment-avatar">
-                                                    <img 
-                                                        src={getImageUrl(comment.profile_picture, 'profile')} 
-                                                        alt={comment.username}
-                                                        onError={(e) => e.target.src = '/default-avatar.png'}
-                                                    />
-                                                </div>
-                                                <div className="profile-comment-content">
-                                                    <div className="profile-comment-header">
-                                                        <span 
-                                                            className="profile-comment-username"
-                                                            onClick={() => handleUsernameClick(comment.user_id)}
-                                                        >
-                                                            {comment.username}
-                                                        </span>
-                                                        <span className="profile-comment-time">
-                                                            {formatTimestamp(comment.created_at)}
-                                                        </span>
+                                
+                                {/* New wrapper for scrollable content */}
+                                <div className="profile-modal-info-content">
+                                    {/* Title */}
+                                    <div className="profile-modal-title">
+                                        {(activeTab === 'likes' ? likedImages : images).find(img => img.id === activeImageId)?.prompt}
+                                    </div>
+                                    
+                                    {/* Interaction buttons */}
+                                    <div className="profile-interaction-buttons">
+                                        <button onClick={() => handleLike(activeImageId)} className="profile-action-btn">
+                                            <LikeIcon className={userLikedImages.has(activeImageId) ? 'liked' : ''} />
+                                            <span>{likes[activeImageId] || 0}</span>
+                                        </button>
+                                        <button className="profile-action-btn">
+                                            <CommentIcon />
+                                            <span>{comments[activeImageId]?.length || 0}</span>
+                                        </button>
+                                        <button className="profile-action-btn">
+                                            <ShareIcon />
+                                        </button>
+                                        <button className="profile-action-btn">
+                                            <BookmarkIcon />
+                                        </button>
+                                    </div>
+                                    
+                                    {/* Scrollable comments section */}
+                                    <div className="profile-comments-section">
+                                        <h4 className="profile-comments-heading">Comments</h4>
+                                        <ul className="profile-comments-list">
+                                            {(comments[activeImageId] || []).map((comment) => (
+                                                <li key={`comment-${comment.id}-${comment.created_at}`} className="profile-comment-item">
+                                                    <div className="profile-comment-avatar">
+                                                        <img 
+                                                            src={getImageUrl(comment.profile_picture, 'profile')} 
+                                                            alt={comment.username}
+                                                            onError={(e) => e.target.src = '/default-avatar.png'}
+                                                        />
                                                     </div>
-                                                    <p className="profile-comment-text">{comment.comment}</p>
-                                                    <div className="profile-comment-actions">
-                                                        <button 
-                                                            className="profile-comment-like-btn"
-                                                            onClick={() => handleCommentLike(comment.id)}
-                                                        >
-                                                            ♥ {commentLikes[comment.id] || 0}
-                                                        </button>
+                                                    <div className="profile-comment-content">
+                                                        <div className="profile-comment-header">
+                                                            <span 
+                                                                className="profile-comment-username"
+                                                                onClick={() => handleUsernameClick(comment.user_id)}
+                                                            >
+                                                                {comment.username}
+                                                            </span>
+                                                            <span className="profile-comment-time">
+                                                                {formatTimestamp(comment.created_at)}
+                                                            </span>
+                                                        </div>
+                                                        <p className="profile-comment-text">{comment.comment}</p>
+                                                        <div className="profile-comment-actions">
+                                                            <button 
+                                                                className="profile-comment-like-btn"
+                                                                onClick={() => handleCommentLike(comment.id)}
+                                                            >
+                                                                ♥ {commentLikes[comment.id] || 0}
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                    <form onSubmit={handleCommentSubmit} className="profile-comment-form">
-                                        <input
-                                            className="profile-comment-input"
-                                            type="text"
-                                            value={commentInput}
-                                            onChange={(e) => setCommentInput(e.target.value)}
-                                            placeholder="Add a comment..."
-                                            required
-                                        />
-                                        <button type="submit" className="profile-comment-submit">Post</button>
-                                    </form>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
                                 </div>
+                                
+                                {/* Comment form - stays sticky at the bottom */}
+                                <form onSubmit={handleCommentSubmit} className="profile-comment-form">
+                                    <input
+                                        className="profile-comment-input"
+                                        type="text"
+                                        value={commentInput}
+                                        onChange={(e) => setCommentInput(e.target.value)}
+                                        placeholder="Add a comment..."
+                                        required
+                                    />
+                                    <button type="submit" className="profile-comment-submit">Post</button>
+                                </form>
                             </div>
                         </div>
                     </div>
