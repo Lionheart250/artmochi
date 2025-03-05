@@ -9,6 +9,8 @@ import './Following.css';
 import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
 import { getImageUrl } from '../utils/imageUtils';
+import ImageModal from '../components/ImageModal';
+import { artisticLoras, realisticLoras } from '../components/LoraSelector';
 
 const Following = () => {
     const { user } = useAuth();
@@ -26,17 +28,11 @@ const Following = () => {
     const [userLikedComments, setUserLikedComments] = useState(new Set());
     const [commentLikes, setCommentLikes] = useState({});
     const [isFollowing, setIsFollowing] = useState(false);
+    const [expandedPrompts, setExpandedPrompts] = useState(new Set());
     const navigate = useNavigate();
 
-    const handleImageClick = async (image) => {
-        try {
-            setModalImage(image);
-            setActiveImageId(image.id);
-            setModalOpen(true);
-            await fetchImageDetails(image.id);
-        } catch (error) {
-            console.error('Error opening modal:', error);
-        }
+    const handleImageClick = (image) => {
+        openModal(image);
     };
 
     const closeModal = () => {
@@ -84,51 +80,61 @@ const Following = () => {
     };
 
     const handleCommentSubmit = async (e) => {
-                e.preventDefault();
-                const token = localStorage.getItem('token');
-                if (!token) return;
-            
-                try {
-                    const decoded = jwtDecode(token);
-                    const userId = decoded.userId;
-            
-                    // Post the new comment
-                    const response = await fetch(`${process.env.REACT_APP_API_URL}/add_comment`, {                        
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            Authorization: `Bearer ${token}`,
-                        },
-                        body: JSON.stringify({ userId, imageId: activeImageId, comment: commentInput }),
-                    });
-            
-                    if (response.ok) {
-                        // After adding the comment, fetch all comments again
-                        const commentsResponse = await fetch(`${process.env.REACT_APP_API_URL}/fetch_comments?id=${activeImageId}`, {                            
-                            headers: {
-                                Authorization: `Bearer ${token}`,
-                            },
-                        });
-            
-                        if (commentsResponse.ok) {
-                            const commentsData = await commentsResponse.json();
-                            // Update comments state with the latest comments
-                            setComments((prev) => ({
-                                ...prev,
-                                [activeImageId]: commentsData.comments, // Use the fetched comments
-                            }));
-                            setCommentInput(''); // Clear the comment input
-                        } else {
-                            console.error('Error fetching comments:', await commentsResponse.json());
-                        }
-                    } else {
-                        console.error('Error adding comment:', await response.json());
-                    }
-                } catch (error) {
-                    console.error('Error adding comment:', error);
-                }
-            };
-    
+        e.preventDefault();
+        const token = localStorage.getItem('token');
+        if (!token || !commentInput.trim()) return;
+      
+        try {
+          // Get user ID from token
+          const decoded = jwtDecode(token);
+          const userId = decoded.userId;
+      
+          // Post the new comment - include userId like Gallery.js does
+          const response = await fetch(`${process.env.REACT_APP_API_URL}/add_comment`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({ 
+              userId,  // Include userId as Gallery.js does
+              imageId: activeImageId, 
+              comment: commentInput 
+            }),
+          });
+      
+          if (response.ok) {
+            // After adding comment, fetch updated comments
+            const commentsResponse = await fetch(`${process.env.REACT_APP_API_URL}/fetch_comments?id=${activeImageId}`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              },
+            });
+      
+            if (commentsResponse.ok) {
+              const commentsData = await commentsResponse.json();
+              
+              // Set the comments first
+              setComments((prev) => ({
+                ...prev,
+                [activeImageId]: commentsData.comments,
+              }));
+              
+              setCommentInput(''); // Clear input
+              
+              // Instead of trying to update individual comment, just refetch all data
+              // This is what Gallery.js does
+              fetchImageDetails(activeImageId);
+            } else {
+              console.error('Error fetching comments:', await commentsResponse.text());
+            }
+          } else {
+            console.error('Error adding comment:', await response.text());
+          }
+        } catch (error) {
+          console.error('Error in comment submission process:', error);
+        }
+      };
 
     const fetchFollowingPosts = async () => {
         const token = localStorage.getItem('token');
@@ -476,7 +482,95 @@ const fetchImageDetails = async (imageId) => {
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [modalOpen, modalImage]);
+
+    const togglePrompt = (imageId) => {
+        setExpandedPrompts(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(imageId)) {
+                newSet.delete(imageId);
+            } else {
+                newSet.add(imageId);
+            }
+            return newSet;
+        });
+    };
+
+    const getLoraName = (url) => {
+        // First check artistic loras
+        const artisticLora = artisticLoras.find(lora => lora.url === url);
+        if (artisticLora) return artisticLora.name;
+        
+        // Then check realistic loras
+        const realisticLora = realisticLoras.find(lora => lora.url === url);
+        if (realisticLora) return realisticLora.name;
+        
+        // Fallback to model ID if not found
+        return url?.split(':')[1] || url;
+    };
+
+    const formatTimestamp = (timestamp) => {
+        if (!timestamp) return '';
+        
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diffInSeconds = Math.floor((now - date) / 1000);
+        
+        if (diffInSeconds < 60) {
+            return `${diffInSeconds}s ago`;
+        }
+        
+        const diffInMinutes = Math.floor(diffInSeconds / 60);
+        if (diffInMinutes < 60) {
+            return `${diffInMinutes}m ago`;
+        }
+        
+        const diffInHours = Math.floor(diffInMinutes / 60);
+        if (diffInHours < 24) {
+            return `${diffInHours}h ago`;
+        }
+        
+        const diffInDays = Math.floor(diffInHours / 24);
+        if (diffInDays < 7) {
+            return `${diffInDays}d ago`;
+        }
+        
+        // For older dates, show the actual date
+        const options = { year: 'numeric', month: 'short', day: 'numeric' };
+        return date.toLocaleDateString(undefined, options);
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return '';
+        
+        const date = new Date(dateString);
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        return date.toLocaleDateString(undefined, options);
+    };
     
+    // Add this function to your Following component
+    const openModal = (image) => {
+        // Set state for this modal instance
+        setModalImage(image);
+        setActiveImageId(image.id);
+        setModalOpen(true);
+        
+        // Fetch data for this image
+        fetchImageDetails(image.id);
+        
+        // Add modal-open class to body
+        document.body.classList.add('modal-open');
+    };
+
+    // Add these functions
+    const handlePrivacyToggle = async () => {
+        // This is not needed for Following page but included for compatibility
+        console.log("Privacy toggle not applicable in Following view");
+    };
+
+    const handleImageEdit = () => {
+        // This is not needed for Following page but included for compatibility
+        console.log("Image edit not applicable in Following view");
+    };
 
     return (
         <div className="following-container">
@@ -523,111 +617,41 @@ const fetchImageDetails = async (imageId) => {
             </div>
     
             {modalOpen && modalImage && (
-    <div className="profile-modal">
-        <div className="profile-modal-content">
-            <div className="profile-modal-main">
-                <div className="profile-modal-image-container">
-                    <button className="profile-close-button" onClick={closeModal}>×</button>
-                    <button className="profile-modal-nav-left" onClick={() => navigateImage('prev')}>
-                        &lt;
-                    </button>
-                    <img className="profile-modal-image" src={modalImage.image_url} alt="Enlarged" />
-                    <button className="profile-modal-nav-right" onClick={() => navigateImage('next')}>
-                        &gt;
-                    </button>
-                </div>
-                <div className="profile-modal-info">
-                    <div className="profile-user-info">
-                        <img 
-                            src={imageUserDetails[activeImageId]?.profile_picture || '/default-avatar.png'}
-                            alt={imageUserDetails[activeImageId]?.username || 'Profile'}
-                            className="following-user-avatar"
-                            onError={(e) => {
-                                if (!imageUserDetails[activeImageId]?.profile_picture) {
-                                    fetchImageDetails(activeImageId);
-                                }
-                                e.target.src = '/default-avatar.png';
-                            }}
-                            onClick={() => navigate(`/profile/${imageUserDetails[activeImageId]?.user_id}`)}
-                        />
-                        <div className="profile-user-details">
-                            <h4 onClick={() => navigate(`/profile/${imageUserDetails[activeImageId]?.user_id}`)}>
-                                {imageUserDetails[activeImageId]?.username}
-                            </h4>
-                            {user && user.userId !== parseInt(imageUserDetails[activeImageId]?.user_id) && (
-                                <button 
-                                    className={`profile-follow-btn ${isFollowing ? 'following' : ''}`}
-                                    onClick={() => handleModalFollowToggle(imageUserDetails[activeImageId]?.user_id)}
-                                >
-                                    {isFollowing ? 'Following' : 'Follow'}
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                    <div className="profile-image-prompt">{modalImage.prompt}</div>
-                    <div className="profile-interaction-buttons">
-                        <button onClick={() => handleLike(activeImageId)} className="profile-action-btn">
-                            <LikeIcon className={userLikedImages.has(activeImageId) ? 'liked' : ''} />
-                            <span>{likes[activeImageId] || 0}</span>
-                            </button>
-                        <button className="profile-action-btn">
-                            <CommentIcon />
-                            <span>{(comments[activeImageId] || []).length}</span>
-                        </button>
-                        <button className="profile-action-btn">
-                            <ShareIcon />
-                        </button>
-                        <button className="profile-action-btn">
-                            <BookmarkIcon />
-                        </button>
-                    </div>
-                    <div className="profile-comments-section">
-                        {comments[activeImageId]?.map((comment) => (
-                            <div key={comment.id} className="profile-comment">
-                                <img 
-                                    src={getImageUrl(comment.profile_picture, 'profile')}
-                                    alt=""
-                                    className="profile-comment-avatar"
-                                    onError={(e) => e.target.src = '/default-avatar.png'}
-                                    onClick={() => navigate(`/profile/${comment.user_id}`)}
-                                />
-                                <div className="profile-comment-content">
-                                    <span 
-                                        className="profile-comment-username"
-                                        onClick={() => navigate(`/profile/${comment.user_id}`)}
-                                    >
-                                        {comment.username}
-                                    </span>
-                                    <p>{comment.comment}</p>
-                                    <div className="profile-comment-actions">
-                                        <button 
-                                            onClick={() => handleCommentLike(comment.id)}
-                                            className={`profile-comment-like-btn ${userLikedComments.has(comment.id) ? 'liked' : ''}`}
-                                        >
-                                            <LikeIcon />
-                                            <span>{commentLikes[comment.id] || 0}</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                        <form onSubmit={handleCommentSubmit} className="profile-comment-form">
-                            <input
-                                type="text"
-                                value={commentInput}
-                                onChange={(e) => setCommentInput(e.target.value)}
-                                placeholder="Add a comment..."
-                                className="profile-comment-input"
-                            />
-                            <button type="submit" className="profile-comment-submit">Post</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+                <ImageModal
+                    isOpen={modalOpen && !!modalImage}
+                    onClose={closeModal}
+                    modalImage={modalImage?.image_url}
+                    activeImageId={activeImageId}
+                    images={images}
+                    user={user}
+                    navigateImage={(direction) => navigateImage(direction)}
+                    canDelete={false}
+                    isAdmin={user?.role === 'admin'}
+                    isOwnProfile={false}
+                    activeTab="following"
+                    onImageDelete={() => {}} // Not applicable in Following view
+                    imageUserDetails={imageUserDetails}
+                    comments={comments}
+                    likes={likes}
+                    userLikedImages={userLikedImages}
+                    commentLikes={commentLikes}
+                    isFollowing={isFollowing}
+                    handleLike={handleLike}
+                    handleCommentLike={handleCommentLike}
+                    handleCommentSubmit={handleCommentSubmit}
+                    handleModalFollowToggle={handleModalFollowToggle}
+                    handlePrivacyToggle={handlePrivacyToggle}
+                    handleImageEdit={handleImageEdit}
+                    togglePrompt={togglePrompt}
+                    expandedPrompts={expandedPrompts}
+                    commentInput={commentInput}
+                    setCommentInput={setCommentInput}
+                    formatTimestamp={formatTimestamp}
+                    formatDate={formatDate}
+                    getLoraName={getLoraName}
+                />
+            )}
         </div>
-    </div>
-)}
- </div>
     );
 };
 

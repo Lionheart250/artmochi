@@ -1,31 +1,4 @@
-/* ========= Variables & Base Styles ========= */
-:root {
-  --primary: #fe2c55;
-  --primary-hover: #ff4060;
-  --primary-light: rgba(254, 44, 85, 0.1);
-  --primary-medium: rgba(254, 44, 85, 0.2);
-  --primary-dark: rgba(254, 44, 85, 0.3);
-  --primary-shadow: rgba(254, 44, 85, 0.25);
-  --tiktok-cyan: #25f4ee;
-  --tiktok-cyan-light: rgba(37, 244, 238, 0.1);
-  --tiktok-cyan-medium: rgba(37, 244, 238, 0.2);
-  --text-primary: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.8);
-  --text-tertiary: rgba(255, 255, 255, 0.5);
-  --bg-primary: #000000;
-  --bg-secondary: #121212;
-  --bg-tertiary: #1a1a1a;
-  --bg-quaternary: #222222;
-  --border-color: rgba(255, 255, 255, 0.1);
-  --border-hover: rgba(255, 255, 255, 0.2);
-  --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.1);
-  --shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.2);
-  --shadow-strong: 0 6px 30px rgba(0, 0, 0, 0.3);
-  --transition-fast: 0.2s ease;
-  --transition-medium: 0.3s ease;
-  --glow-primary: 0 0 15px rgba(254, 44, 85, 0.2);
-  --glow-cyan: 0 0 10px rgba(37, 244, 238, 0.2);
-}
+
 
 /* ========= Keeping your original layout with enhanced visuals ========= */
 button.lora-selector {
@@ -419,7 +392,7 @@ button.lora-selector span {
 /* Add responsive styles */
 @media screen and (max-width: 1024px) {
   .lora-grid {
-    grid-template-columns: 1fr; /* Single column on mobile */
+    grid-template-columns: repeat(4, 1fr);/* Single column on mobile */
     gap: 0.1rem;
   }
 
@@ -657,10 +630,11 @@ transition: all 0.2s ease;
 }
 
 @media (max-width: 1024px) {
-  .lora-popup {
-    width: 95vw;
+  .loraselector-popup {
+    width: 90vw;
     height: 90vh;
-    margin: 5vh auto;
+    margin-left: 70px;
+    z-index: 1000000000;
   }
 
   .preview-modal {
@@ -705,7 +679,7 @@ transition: all 0.2s ease;
 }
 
 @media (max-width: 768px) {
-  .lora-popup {
+  .loraselector-popup {
     width: 95vw;
     height: 90vh;
     margin: auto;
@@ -1724,7 +1698,7 @@ to {
 /* Make thumbnail grid more aesthetically pleasing */
 .thumbnail-strip {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
   margin-top: 12px;
 }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import ReactDOM from 'react-dom';
 import './LoraSelector.css';
 
 // Add this hook at the top of the file after imports
@@ -1443,7 +1444,7 @@ const preloadNearbyImages = (currentIndex, loraExamples) => {
         );
     };
 
-    return (
+    return ReactDOM.createPortal(
         <div className="lora-overlay" onClick={handleOverlayClick}>
             <div className="loraselector-popup" onClick={e => e.stopPropagation()}>
                 <div className="loraselector-popup-header">
@@ -1479,7 +1480,8 @@ const preloadNearbyImages = (currentIndex, loraExamples) => {
                 loraName={previewModal.loraName}
                 initialImage={previewModal.initialImage} // Pass the initial image index
             />
-        </div>
+        </div>,
+        document.body // Render directly to body to avoid z-index issues
     );
 };
 

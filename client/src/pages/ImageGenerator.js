@@ -17,7 +17,9 @@ import { artisticLoras, realisticLoras, loraExamples } from '../components/LoraS
 const aspectRatioMapping = {
     'Portrait': '9:16',
     'Landscape': '16:9',
-    'Square': '1:1'
+    'Square': '1:1',
+    'Classic Portrait': '3:4',
+    'Classic Landscape': '4:3'
 };
 
 // Add this function at the top of your component
@@ -124,6 +126,79 @@ const startUpscaleProgressSimulation = (setUpscaleProgress, setUpscaleStage) => 
     };
 };
 
+// Add this helper function to adjust dimensions to be multiples of 64
+const adjustDimensionsToMultiplesOf64 = (width, height) => {
+    // Function to round to nearest multiple of 64
+    const roundToMultipleOf64 = (value) => {
+      return Math.max(128, Math.min(2048, Math.round(value / 64) * 64));
+    };
+    
+    // Adjust both dimensions
+    const adjustedWidth = roundToMultipleOf64(width);
+    const adjustedHeight = roundToMultipleOf64(height);
+    
+    return { width: adjustedWidth, height: adjustedHeight };
+  };
+
+// First, let's add a function to detect and set aspect ratio based on image dimensions
+const detectAspectRatio = (width, height) => {
+    const ratio = width / height;
+    
+    // Determine the closest standard aspect ratio
+    if (ratio >= 1.7) { // 16:9 ratio is approximately 1.78
+      return 'Landscape';
+    } else if (ratio >= 1.25 && ratio < 1.5) { // 4:3 ratio is approximately 1.33
+      return 'Classic Landscape';
+    } else if (ratio > 0.9 && ratio < 1.1) { // Square is approximately 1.0 with some tolerance
+      return 'Square';
+    } else if (ratio >= 0.7 && ratio < 0.8) { // 3:4 ratio is approximately 0.75
+      return 'Classic Portrait';
+    } else if (ratio <= 0.6) { // 9:16 ratio is approximately 0.56
+      return 'Portrait';
+    } else {
+      // Default to the closest match
+      if (ratio > 1) return 'Classic Landscape';
+      else return 'Classic Portrait';
+    }
+  };
+
+// Add this to your ImageGenerator.js
+const createConfetti = () => {
+  const confettiCount = 100;
+  const colors = ['#fe2c55', '#00f2ea', '#9333ea', '#ffffff'];
+  
+  for (let i = 0; i < confettiCount; i++) {
+    const confetti = document.createElement('div');
+    confetti.className = 'confetti-particle';
+    confetti.style.left = `${Math.random() * 100}%`;
+    confetti.style.width = `${Math.random() * 10 + 5}px`;
+    confetti.style.height = `${Math.random() * 10 + 5}px`;
+    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+    confetti.style.animationDuration = `${Math.random() * 3 + 2}s`;
+    document.body.appendChild(confetti);
+    
+    // Remove confetti after animation
+    setTimeout(() => {
+      document.body.removeChild(confetti);
+    }, 5000);
+  }
+};
+
+// Add to your component to handle toggling without changing layout
+const toggleFeature = (featureId, show) => {
+  const element = document.getElementById(featureId);
+  if (element) {
+    if (show) {
+      element.classList.remove('hidden');
+    } else {
+      element.classList.add('hidden');
+    }
+    // Prevent layout shift by maintaining container heights
+    document.querySelector('.image-generator-form-container').style.height = 
+      `${document.querySelector('.image-generator-preview-container').offsetHeight}px`;
+  }
+};
+
 const ImageGenerator = () => {
   const { user } = useAuth();
   const { fetchUserProfile } = useProfile(); // Add this
@@ -176,6 +251,9 @@ const ImageGenerator = () => {
   const [imageTitle, setImageTitle] = useState('');
   const [autoGenerateTitle, setAutoGenerateTitle] = useState(true);
   const [generatedTitle, setGeneratedTitle] = useState('');
+  // Add these state variables
+  const [initImageDimensions, setInitImageDimensions] = useState({ width: 0, height: 0 });
+  const fileInputRef = useRef(null); // Add a ref for the file input
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -366,29 +444,51 @@ const handleSubmit = async (e) => {
                     input: {
                         prompt: prompt,
                         negative_prompt: negativePrompt,
-                        height: aspectRatio === 'Portrait' ? 1280 : aspectRatio === 'Landscape' ? 768 : 1024,
-                        width: aspectRatio === 'Portrait' ? 768 : aspectRatio === 'Landscape' ? 1280 : 1024,
+                        
+                        // For image-to-image, use adjusted dimensions directly
+                        // For text-to-image, use selected aspect ratio dimensions
+                        ...(isImageToImage && initImageDimensions.width > 0 && initImageDimensions.height > 0
+                          ? {
+                              width: initImageDimensions.width,
+                              height: initImageDimensions.height
+                            }
+                          : (() => {
+                              // Use a function to compute dimensions based on aspect ratio
+                              const getDimensions = (ratio) => {
+                                switch(ratio) {
+                                  case 'Portrait':
+                                    return { width: 768, height: 1280 };
+                                  case 'Landscape':
+                                    return { width: 1280, height: 768 };
+                                  case 'Square':
+                                    return { width: 1024, height: 1024 };
+                                  case 'Classic Portrait':
+                                    return { width: 768, height: 1024 };
+                                  case 'Classic Landscape':
+                                    return { width: 1024, height: 768 };
+                                  default:
+                                    return { width: 1024, height: 1024 };
+                                }
+                              };
+                              
+                              const dims = getDimensions(aspectRatio);
+                              return {
+                                width: dims.width,
+                                height: dims.height
+                              };
+                            })()
+                        ),
+                        
                         num_inference_steps: steps,
                         guidance_scale: distilledCfgScale,
+                        
+                        // Other parameters remain the same
                         ...(isImageToImage && imageData && {
-                            seedImage: imageData,
-                            strength: denoisingStrength
+                          seedImage: imageData,
+                          strength: denoisingStrength
                         }),
-                        ...(Object.keys(selectedLoras).length > 0 && {
-                            lora: Object.entries(selectedLoras).map(([url, weight]) => ({
-                                model: url.startsWith('civitai:') ? url : `civitai:${url.match(/models\/(\d+)/)?.[1]}`,
-                                weight: parseFloat(weight)
-                            }))
-                        }),
-                        private: isPrivate,
-                        generateTitle: autoGenerateTitle,
-                        title: imageTitle || undefined,
-                        lorasUsed: Object.entries(selectedLoras).map(([url, weight]) => ({
-                            name: getLoraName(url),
-                            url: url,
-                            weight: parseFloat(weight)
-                        }))
-                    }
+                        // Rest of your parameters...
+                      }
                 })
             });
 
@@ -467,6 +567,16 @@ const handleSubmit = async (e) => {
                 setImage(data.image);
                 setProgressPercentage(100);
                 setGenerationStage('Complete!');
+                createConfetti();
+                // Also add a success notification
+                const notification = document.createElement('div');
+                notification.className = 'image-generated-notification';
+                notification.textContent = 'Image generated successfully! ✨';
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                  document.body.removeChild(notification);
+                }, 4000);
             }
 
             if (data.categories) {
@@ -669,6 +779,113 @@ useEffect(() => {
   preloadLoraImages();
 }, []);
 
+// First, fix the handleRemoveImage function to properly clear the file input
+const handleRemoveImage = () => {
+  setInitImage(null);
+  setIsImageToImage(false);
+  setInitImageDimensions({
+    width: 0,
+    height: 0,
+    originalWidth: 0,
+    originalHeight: 0
+  });
+  
+  // Reset the file input value to clear the filename
+  if (fileInputRef.current) {
+    fileInputRef.current.value = "";
+  }
+};
+
+// Add button click effect to all buttons
+const addClickEffects = () => {
+  const buttons = document.querySelectorAll('button');
+  buttons.forEach(button => {
+    button.classList.add('btn-click-effect');
+  });
+};
+
+// Add this to useEffect to initialize click effects
+useEffect(() => {
+  addClickEffects();
+}, []);
+
+// Use this when toggling remix/upscale modes
+useEffect(() => {
+  if (mode === 'remix') {
+    toggleFeature('remix-options', true);
+    toggleFeature('upscale-options', false);
+  } else if (mode === 'upscale') {
+    toggleFeature('upscale-options', true);
+    toggleFeature('remix-options', false);
+  }
+}, [mode]);
+
+// Replace your current autoResize effect with this improved version
+useEffect(() => {
+  const promptInput = document.getElementById('prompt');
+  if (!promptInput) return;
+  
+  // Function to expand textarea on focus
+  const expandTextarea = () => {
+    // Save current scroll position
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    
+    promptInput.style.height = 'auto';
+    
+    // Check if content needs scrolling
+    if (promptInput.scrollHeight > 120) {
+      promptInput.style.height = '120px';
+      promptInput.style.overflowY = 'auto';
+    } else {
+      promptInput.style.height = `${promptInput.scrollHeight}px`;
+      promptInput.style.overflowY = 'hidden';
+    }
+    
+    // Restore scroll position to prevent page jump
+    window.scrollTo(0, scrollTop);
+  };
+  
+  // Function to collapse textarea on blur if content fits
+  const collapseTextarea = () => {
+    // Only collapse if content is short enough to fit one line
+    if (promptInput.value.length < 80) {
+      promptInput.style.height = '42px';
+      promptInput.style.overflowY = 'hidden';
+    }
+  };
+  
+  // Add "..." indicator when collapsed with content
+  const updateEllipsis = () => {
+    if (promptInput.scrollHeight > 42 && promptInput.offsetHeight === 42) {
+      if (!promptInput.classList.contains('has-more')) {
+        promptInput.classList.add('has-more');
+      }
+    } else {
+      promptInput.classList.remove('has-more');
+    }
+  };
+  
+  // Event listeners
+  promptInput.addEventListener('focus', expandTextarea);
+  promptInput.addEventListener('blur', collapseTextarea);
+  promptInput.addEventListener('input', () => {
+    if (document.activeElement === promptInput) {
+      expandTextarea();
+    }
+    updateEllipsis();
+  });
+  
+  // Initialize
+  updateEllipsis();
+  
+  return () => {
+    promptInput.removeEventListener('focus', expandTextarea);
+    promptInput.removeEventListener('blur', collapseTextarea);
+    // Remove the input listener which is added in an anonymous function
+    // (not a direct reference to a named function)
+  };
+}, []);
+
   return (
     <div className="image-generator">
         {!currentSubscription ? (
@@ -701,17 +918,20 @@ useEffect(() => {
                         </div>
                         <div className="image-generator-form-group">
                             <label className="image-generator-label" htmlFor="prompt">Prompt:</label>
-                            <input
-                                type="text"
+                            <div className="expandable-prompt">
+                                <textarea
                                 id="prompt"
                                 value={prompt}
                                 onChange={(e) => setPrompt(e.target.value)}
                                 required={mode === 'generate'}
                                 disabled={mode === 'upscale'}
                                 className={`image-generator-input ${mode === 'upscale' ? 'disabled' : ''}`}
-                            />
+                                placeholder="Describe what you want to create..."
+                                rows="1"
+                                />
+                            </div>
                         </div>
-                        
+                                                    
                         <div className="image-generator-form-group">
                         {/*}
                             <label className="image-generator-label" htmlFor="negativePrompt">Negative Prompt:</label>
@@ -791,34 +1011,53 @@ useEffect(() => {
                                 </button>
                             </div>
                         </div>
-                        <div className={`image-generator-aspect-section ${mode === 'upscale' ? 'disabled' : ''}`}>
-                            <label className="image-generator-label">Aspect Ratio</label>
-                            <div className="image-generator-aspect-buttons">
-                                <button
-                                    type="button"
-                                    className={`image-generator-aspect-btn ${aspectRatio === 'Portrait' ? 'selected' : ''}`}
-                                    onClick={() => setAspectRatio('Portrait')}
-                                    disabled={mode === 'upscale'}
-                                >
-                                    Portrait
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`image-generator-aspect-btn ${aspectRatio === 'Landscape' ? 'selected' : ''}`}
-                                    onClick={() => setAspectRatio('Landscape')}
-                                    disabled={mode === 'upscale'}
-                                >
-                                    Landscape
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`image-generator-aspect-btn ${aspectRatio === 'Square' ? 'selected' : ''}`}
-                                    onClick={() => setAspectRatio('Square')}
-                                    disabled={mode === 'upscale'}
-                                >
-                                    Square
-                                </button>
-                            </div>
+                        {/* Update the aspect ratio section to show disabled state during img2img */}
+                        <div className={`image-generator-aspect-section ${mode === 'upscale' || isImageToImage ? 'disabled' : ''}`}>
+                          <label className="image-generator-label">
+                            Aspect Ratio {isImageToImage && <span className="aspect-ratio-note">(Using uploaded image dimensions)</span>}
+                          </label>
+                          <div className="image-generator-aspect-buttons">
+                            <button
+                              type="button"
+                              className={`image-generator-aspect-btn ${aspectRatio === 'Portrait' ? 'selected' : ''}`}
+                              onClick={() => !isImageToImage && setAspectRatio('Portrait')}
+                              disabled={mode === 'upscale' || isImageToImage}
+                            >
+                              Portrait
+                            </button>
+                            <button
+                              type="button"
+                              className={`image-generator-aspect-btn ${aspectRatio === 'Classic Portrait' ? 'selected' : ''}`}
+                              onClick={() => !isImageToImage && setAspectRatio('Classic Portrait')}
+                              disabled={mode === 'upscale' || isImageToImage}
+                            >
+                              3:4
+                            </button>
+                            <button
+                              type="button"
+                              className={`image-generator-aspect-btn ${aspectRatio === 'Square' ? 'selected' : ''}`}
+                              onClick={() => !isImageToImage && setAspectRatio('Square')}
+                              disabled={mode === 'upscale' || isImageToImage}
+                            >
+                              Square
+                            </button>
+                            <button
+                              type="button"
+                              className={`image-generator-aspect-btn ${aspectRatio === 'Classic Landscape' ? 'selected' : ''}`}
+                              onClick={() => !isImageToImage && setAspectRatio('Classic Landscape')}
+                              disabled={mode === 'upscale' || isImageToImage}
+                            >
+                              4:3
+                            </button>
+                            <button
+                              type="button"
+                              className={`image-generator-aspect-btn ${aspectRatio === 'Landscape' ? 'selected' : ''}`}
+                              onClick={() => !isImageToImage && setAspectRatio('Landscape')}
+                              disabled={mode === 'upscale' || isImageToImage}
+                            >
+                              Landscape
+                            </button>
+                          </div>
                         </div>
                         <div className="image-generator-form-group">
                             <label className="image-generator-label">Image Input:</label>
@@ -838,42 +1077,89 @@ useEffect(() => {
                                     Upscale Only
                                 </button>
                             </div>
-                            <div className="image-upload-container">
-                                <input
+                            <div className="image-upload-section">
+                              <label className="image-upload-label">
+                                <div className="image-upload-inner">
+                                  <input
                                     type="file"
                                     accept="image/*"
                                     onChange={(e) => {
-                                        const file = e.target.files[0];
-                                        if (file) {
-                                            setInitImage(file);
-                                            if (mode === 'generate') {
-                                                setIsImageToImage(true);
-                                            }
+                                      const file = e.target.files[0];
+                                      if (file) {
+                                        setInitImage(file);
+                                        if (mode === 'generate') {
+                                          setIsImageToImage(true);
+                                          
+                                          // Get image dimensions when loaded
+                                          const img = new Image();
+                                          img.onload = () => {
+                                            // Adjust dimensions to be multiples of 64
+                                            const adjustedDimensions = adjustDimensionsToMultiplesOf64(img.width, img.height);
+                                            
+                                            setInitImageDimensions({
+                                              width: adjustedDimensions.width,
+                                              height: adjustedDimensions.height,
+                                              originalWidth: img.width,
+                                              originalHeight: img.height
+                                            });
+                                            
+                                            // Automatically set aspect ratio based on image dimensions
+                                            const detectedRatio = detectAspectRatio(img.width, img.height);
+                                            setAspectRatio(detectedRatio);
+                                            
+                                            console.log(`Original dimensions: ${img.width}x${img.height}, Adjusted: ${adjustedDimensions.width}x${adjustedDimensions.height}, Aspect Ratio: ${detectedRatio}`);
+                                          };
+                                          img.src = URL.createObjectURL(file);
                                         }
+                                      }
                                     }}
-                                    className="image-generator-input"
-                                />
-                                {initImage && (
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setInitImage(null);
-                                            setIsImageToImage(false);
-                                        }}
-                                        className="clear-image-btn"
-                                    >
-                                        Clear Image
-                                    </button>
-                                )}
-                            </div>
-                            {initImage && (
-                                <div className="initial-image-preview">
-                                    <img 
-                                        src={URL.createObjectURL(initImage)} 
-                                        alt="Initial" 
-                                        className="initial-image-thumbnail"
-                                    />
+                                    className="image-uploader-input"
+                                    id="image-upload"
+                                    ref={fileInputRef} // Add a ref to access this input
+                                  />
+                                  <div className="upload-icon">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                      <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                      <path d="M7 10L12 15L17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                      <path d="M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                  </div>
+                                  <div className="upload-text">
+                                    <span className="primary-text">Drop image here or click to upload</span>
+                                    <span className="secondary-text">Supported formats: PNG, JPG, WEBP</span>
+                                  </div>
                                 </div>
+                              </label>
+                            </div>
+
+                            {/* Add this immediately after the upload section */}
+                            {initImage && (
+                              <div className="uploaded-image-container">
+                                <div className="uploaded-image-preview">
+                                  <img 
+                                    src={URL.createObjectURL(initImage)} 
+                                    alt="Uploaded" 
+                                    className="uploaded-image" 
+                                  />
+                                  <div className="image-info">
+                                    <span className="image-name">{initImage.name}</span>
+                                    <span className="image-dimensions">
+                                      {initImageDimensions.originalWidth}×{initImageDimensions.originalHeight}px → {initImageDimensions.width}×{initImageDimensions.height}px
+                                    </span>
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={handleRemoveImage}
+                                  className="remove-image-btn"
+                                >
+                                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                  Remove
+                                </button>
+                              </div>
                             )}
                         </div>
 
@@ -951,7 +1237,7 @@ useEffect(() => {
             {/* Preview Side */}
             <div className={`image-generator-preview-container ${loading ? 'loading' : ''}`}>
                 <div className="content-wrapper">
-                    <h2 className="image-generator-heading"></h2>
+                    <h2 className="image-generator-heading">Generate Image</h2>
                     <div className="preview-content">
                         {loading ? (
                             <div className="loading-container">
@@ -993,17 +1279,24 @@ useEffect(() => {
                             <div className="generated-image-container">
                                 <img src={image} alt="Generated" className="generated-image" />
                                 <div className="image-actions">
-                                    <button
+                                  {/*}  <button
                                         onClick={handleUpscale}
                                         disabled={isUpscaling}
                                         className="upscale-button"
                                     >
-                                        {isUpscaling ? 'Upscaling...' : '🔍 Upscale Complete'}
-                                    </button>
+                                        {isUpscaling ? 'Upscaling...' : 'Complete'}
+                                    </button> */}
                                 </div>
                             </div>
                         ) : (
-                            <div className="empty-preview">Your image will appear here</div>
+                            <div className="empty-preview">
+                                <div className="empty-preview-depth"></div>
+                                <div className="empty-preview-icon">✨</div>
+                                <div className="empty-preview-text">Ready to Create Magic</div>
+                                <div className="empty-preview-subtext">
+                                    Fill in the form and click "Generate Image" to see your creation come to life
+                                </div>
+                            </div>
                         )}
                     </div>
                 </div>

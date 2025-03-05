@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
 import debounce from 'lodash.debounce';
 import { getImageUrl } from '../utils/imageUtils';
+import ImageModal from '../components/ImageModal';
+import { artisticLoras, realisticLoras } from '../components/LoraSelector';
 
 import './Profile.css';
 import { ReactComponent as LikeIcon } from '../assets/icons/like.svg';
@@ -55,6 +57,21 @@ const Profile = () => {
     const [followersList, setFollowersList] = useState([]);
     const [followingList, setFollowingList] = useState([]);
     const [imageDetailsLoading, setImageDetailsLoading] = useState(false);
+
+    // Add the expandedPrompts state and togglePrompt function
+    const [expandedPrompts, setExpandedPrompts] = useState(new Set());
+
+    const togglePrompt = (imageId) => {
+        setExpandedPrompts(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(imageId)) {
+                newSet.delete(imageId);
+            } else {
+                newSet.add(imageId);
+            }
+            return newSet;
+        });
+    };
 
     const formatDate = (date) => {
         if (!date) return '';
@@ -378,56 +395,69 @@ const Profile = () => {
         const handleCommentSubmit = async (e) => {
             e.preventDefault();
             const token = localStorage.getItem('token');
-            if (!token) return;
+            if (!token || !commentInput.trim()) return;
         
             try {
+                // Get user ID from token
                 const decoded = jwtDecode(token);
                 const userId = decoded.userId;
-        
-                // Post the new comment
+            
+                // Post the new comment - include userId like Gallery.js does
                 const response = await fetch(`${process.env.REACT_APP_API_URL}/add_comment`, {                    
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`,
+                        'Authorization': `Bearer ${token}`,
                     },
-                    body: JSON.stringify({ userId, imageId: activeImageId, comment: commentInput }),
+                    body: JSON.stringify({ 
+                        userId, // Include userId as Gallery.js does
+                        imageId: activeImageId, 
+                        comment: commentInput 
+                    }),
                 });
         
                 if (response.ok) {
-                    // After adding the comment, fetch all comments again
+                    // After adding comment, fetch updated comments
                     const commentsResponse = await fetch(`${process.env.REACT_APP_API_URL}/fetch_comments?id=${activeImageId}`, {                        
                         headers: {
-                            Authorization: `Bearer ${token}`,
+                            'Authorization': `Bearer ${token}`,
                         },
                     });
         
                     if (commentsResponse.ok) {
                         const commentsData = await commentsResponse.json();
-                        // Update comments state with the latest comments
+                        
+                        // Set the comments first
                         setComments((prev) => ({
                             ...prev,
-                            [activeImageId]: commentsData.comments, // Use the fetched comments
+                            [activeImageId]: commentsData.comments,
                         }));
-                        setCommentInput(''); // Clear the comment input
+                        
+                        setCommentInput(''); // Clear input
+                        
+                        // Just like Gallery.js does, refetch all data for the image
+                        fetchImageDetails(activeImageId);
                     } else {
-                        console.error('Error fetching comments:', await commentsResponse.json());
+                        console.error('Error fetching comments:', await commentsResponse.text());
                     }
                 } else {
-                    console.error('Error adding comment:', await response.json());
+                    console.error('Error adding comment:', await response.text());
                 }
             } catch (error) {
-                console.error('Error adding comment:', error);
+                console.error('Error in comment submission process:', error);
             }
         };
 
-    const closeModal = () => {
-        setModalOpen(false);
-        setModalImage(null);
-        setActiveImageId(null);
-        fetchUserStats();
-        document.body.classList.remove('modal-open');
-    };
+// Update your closeModal function to match Gallery.js pattern
+const closeModal = () => {
+    setModalImage(null);
+    setActiveImageId(null);
+    
+    // Just like Gallery.js - let the ImageModal handle body class cleanup
+    
+    // Refetch stats to reflect any changes from the modal
+    fetchUserStats();
+};
 
     const fetchAllData = async (imageId) => {
         const token = localStorage.getItem('token');
@@ -536,29 +566,6 @@ const Profile = () => {
             fetchImageDetails(nextImage.id);
         }
     };
-
-    useEffect(() => {
-            const handleKeyDown = (e) => {
-                if (!modalImage) return;
-    
-                switch(e.key) {
-                    case 'ArrowLeft':
-                        navigateImage('prev');
-                        break;
-                    case 'ArrowRight':
-                        navigateImage('next');
-                        break;
-                    case 'Escape':
-                        closeModal();
-                        break;
-                    default:
-                        break;
-                }
-            };
-    
-            window.addEventListener('keydown', handleKeyDown);
-            return () => window.removeEventListener('keydown', handleKeyDown);
-        }, [modalImage, activeImageId]);
 
     const isAdmin = user && user.role === 'admin';
 
@@ -981,6 +988,78 @@ const Profile = () => {
     // Add this check near the top of the component
     const isOwnProfile = user && user.userId === parseInt(id);
 
+    // Add this function to your Profile component
+
+const handlePrivacyToggle = async () => {
+  const token = localStorage.getItem('token');
+  if (!token || !activeImageId) return;
+
+  try {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/images/${activeImageId}/privacy`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      
+      // Update the images state with the new privacy status
+      setImages(prevImages => prevImages.map(img => 
+        img.id === activeImageId ? { ...img, private: data.private } : img
+      ));
+      
+      // Update image user details as well for consistency
+      setImageUserDetails(prev => ({
+        ...prev,
+        [activeImageId]: {
+          ...prev[activeImageId],
+          private: data.private
+        }
+      }));
+    }
+  } catch (error) {
+    console.error('Error toggling privacy:', error);
+  }
+};
+
+    // Add the getLoraName function (import the lora lists if needed)
+    const getLoraName = (url) => {
+        // First check artistic loras
+        const artisticLora = artisticLoras.find(lora => lora.url === url);
+        if (artisticLora) return artisticLora.name;
+        
+        // Then check realistic loras
+        const realisticLora = realisticLoras.find(lora => lora.url === url);
+        if (realisticLora) return realisticLora.name;
+        
+        // Fallback to model ID if not found
+        return url.split(':')[1];
+    };
+
+    // Make sure you have a proper handleImageEdit function defined
+const handleImageEdit = (type, image) => {
+  try {
+    const imageData = {
+      url: image.image_url,
+      prompt: image.prompt,
+      mode: type === 'upscale' ? 'upscale' : 'generate',
+      isImageToImage: type === 'remix'
+    };
+
+    // Close the modal before navigating
+    closeModal();
+    
+    // Store data and navigate
+    localStorage.setItem('editImageData', JSON.stringify(imageData));
+    navigate('/imagegenerator');
+  } catch (error) {
+    console.error('Error preparing image for edit:', error);
+  }
+};
+
     return (
         <div className="profile-container">
             <div className="profile-header-wrapper">
@@ -1113,145 +1192,39 @@ const Profile = () => {
                 </div>
             )}
 
-            {modalImage && (
-                <div className="profile-modal">
-                    <div className="profile-modal-content">
-                        <div className="profile-modal-main">
-                            <div className="profile-modal-image-container">
-                                <button className="profile-close-button" onClick={closeModal}>×</button>
-                                <button 
-                                    className="profile-modal-nav-left" 
-                                    onClick={() => navigateImage('prev')}
-                                >
-                                    &lt;
-                                </button>
-                                <img className="profile-modal-image" src={modalImage} alt="Enlarged" />
-                                {isAdmin && (
-                                    <div className="profile-delete-section">
-                                        <button className="profile-delete-button" onClick={handleDeleteImage}>
-                                            Delete Image
-                                        </button>
-                                    </div>
-                                )}
-                                <button 
-                                    className="profile-modal-nav-right" 
-                                    onClick={() => navigateImage('next')}
-                                >
-                                    &gt;
-                                </button>
-                            </div>
-                            <div className="profile-modal-info">
-                                {/* User profile info - stays sticky at the top */}
-                                <div className="profile-user-info">
-                                    <img 
-                                        src={imageUserDetails[activeImageId]?.profile_picture || '/default-avatar.png'} 
-                                        alt={imageUserDetails[activeImageId]?.username || 'Profile'}
-                                        className="profile-user-avatar"
-                                        onError={(e) => {
-                                            if (!imageUserDetails[activeImageId]?.profile_picture) {
-                                                fetchImageDetails(activeImageId);
-                                            }
-                                            e.target.src = '/default-avatar.png';
-                                        }}
-                                    />
-                                    <div className="profile-user-details">
-                                        <h4 onClick={() => navigate(`/profile/${imageUserDetails[activeImageId]?.user_id}`)}>
-                                            {imageUserDetails[activeImageId]?.username}
-                                        </h4>
-                                        {user && user.userId !== parseInt(imageUserDetails[activeImageId]?.user_id) && (
-                                            <button 
-                                                className={`profile-follow-btn ${isFollowing ? 'following' : ''}`}
-                                                onClick={() => handleModalFollowToggle(imageUserDetails[activeImageId]?.user_id)}
-                                            >
-                                                {isFollowing ? 'Following' : 'Follow'}
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                                
-                                {/* New wrapper for scrollable content */}
-                                <div className="profile-modal-info-content">
-                                    {/* Title */}
-                                    <div className="profile-modal-title">
-                                        {(activeTab === 'likes' ? likedImages : images).find(img => img.id === activeImageId)?.prompt}
-                                    </div>
-                                    
-                                    {/* Interaction buttons */}
-                                    <div className="profile-interaction-buttons">
-                                        <button onClick={() => handleLike(activeImageId)} className="profile-action-btn">
-                                            <LikeIcon className={userLikedImages.has(activeImageId) ? 'liked' : ''} />
-                                            <span>{likes[activeImageId] || 0}</span>
-                                        </button>
-                                        <button className="profile-action-btn">
-                                            <CommentIcon />
-                                            <span>{comments[activeImageId]?.length || 0}</span>
-                                        </button>
-                                        <button className="profile-action-btn">
-                                            <ShareIcon />
-                                        </button>
-                                        <button className="profile-action-btn">
-                                            <BookmarkIcon />
-                                        </button>
-                                    </div>
-                                    
-                                    {/* Scrollable comments section */}
-                                    <div className="profile-comments-section">
-                                        <h4 className="profile-comments-heading">Comments</h4>
-                                        <ul className="profile-comments-list">
-                                            {(comments[activeImageId] || []).map((comment) => (
-                                                <li key={`comment-${comment.id}-${comment.created_at}`} className="profile-comment-item">
-                                                    <div className="profile-comment-avatar">
-                                                        <img 
-                                                            src={getImageUrl(comment.profile_picture, 'profile')} 
-                                                            alt={comment.username}
-                                                            onError={(e) => e.target.src = '/default-avatar.png'}
-                                                        />
-                                                    </div>
-                                                    <div className="profile-comment-content">
-                                                        <div className="profile-comment-header">
-                                                            <span 
-                                                                className="profile-comment-username"
-                                                                onClick={() => handleUsernameClick(comment.user_id)}
-                                                            >
-                                                                {comment.username}
-                                                            </span>
-                                                            <span className="profile-comment-time">
-                                                                {formatTimestamp(comment.created_at)}
-                                                            </span>
-                                                        </div>
-                                                        <p className="profile-comment-text">{comment.comment}</p>
-                                                        <div className="profile-comment-actions">
-                                                            <button 
-                                                                className="profile-comment-like-btn"
-                                                                onClick={() => handleCommentLike(comment.id)}
-                                                            >
-                                                                ♥ {commentLikes[comment.id] || 0}
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                </div>
-                                
-                                {/* Comment form - stays sticky at the bottom */}
-                                <form onSubmit={handleCommentSubmit} className="profile-comment-form">
-                                    <input
-                                        className="profile-comment-input"
-                                        type="text"
-                                        value={commentInput}
-                                        onChange={(e) => setCommentInput(e.target.value)}
-                                        placeholder="Add a comment..."
-                                        required
-                                    />
-                                    <button type="submit" className="profile-comment-submit">Post</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <ImageModal
+                isOpen={!!modalImage} // Convert to boolean
+                onClose={closeModal}
+                modalImage={modalImage}
+                activeImageId={activeImageId}
+                images={activeTab === 'likes' ? likedImages : images}
+                user={user}
+                navigateImage={navigateImage}
+                canDelete={(isAdmin || isOwnProfile)}
+                isAdmin={isAdmin}
+                isOwnProfile={isOwnProfile}
+                activeTab={activeTab}
+                onImageDelete={handleDeleteImage}
+                imageUserDetails={imageUserDetails}
+                comments={comments}
+                likes={likes}
+                userLikedImages={userLikedImages}
+                commentLikes={commentLikes}
+                isFollowing={isFollowing}
+                handleLike={handleLike}
+                handleCommentLike={handleCommentLike}
+                handleCommentSubmit={handleCommentSubmit}
+                handleModalFollowToggle={handleModalFollowToggle}
+                handlePrivacyToggle={handlePrivacyToggle}
+                handleImageEdit={handleImageEdit} // Add if you have this function
+                togglePrompt={togglePrompt}
+                expandedPrompts={expandedPrompts}
+                commentInput={commentInput}
+                setCommentInput={setCommentInput}
+                formatTimestamp={formatTimestamp}
+                formatDate={formatDate || formatTimestamp}
+                getLoraName={getLoraName}
+            />
 
             {isEditing && (
                 <div className="profile-edit-modal">

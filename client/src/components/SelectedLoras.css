@@ -1,25 +1,3 @@
-/* ========= Variables & Base Styles ========= */
-:root {
-  --primary: #fe2c55;
-  --primary-hover: #ff4060;
-  --primary-light: rgba(254, 44, 85, 0.1);
-  --primary-medium: rgba(254, 44, 85, 0.2);
-  --primary-dark: rgba(254, 44, 85, 0.3);
-  --primary-shadow: rgba(254, 44, 85, 0.15);
-  --tiktok-cyan: #25f4ee;
-  --tiktok-cyan-light: rgba(37, 244, 238, 0.1);
-  --tiktok-cyan-medium: rgba(37, 244, 238, 0.15);
-  --tiktok-cyan-border: rgba(37, 244, 238, 0.2);
-  --tiktok-cyan-border-hover: rgba(37, 244, 238, 0.3);
-  --tiktok-cyan-shadow: rgba(37, 244, 238, 0.2);
-  --text-primary: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.8);
-  --text-tertiary: rgba(255, 255, 255, 0.5);
-  --bg-gradient: linear-gradient(45deg, var(--primary), #ff5277);
-  --transition-fast: 0.2s ease;
-  --transition-medium: 0.3s ease;
-}
-
 /* ========= Selected LoRAs Container ========= */
 .selected-loras {
   display: flex;
@@ -30,25 +8,22 @@
 
 /* ========= LoRA Pill Styling ========= */
 .lora-pill {
-  background: rgba(254, 44, 85, 0.2);
-  border-radius: 20px;
+  background: rgba(15, 15, 20, 0.7);
+  border-radius: var(--radius-md);
   padding: 6px 14px;
   display: flex;
   align-items: center;
   gap: 10px;
-  border: 1px solid rgba(254, 44, 85, 0.3);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 2px 10px rgba(254, 44, 85, 0.15);
+  border: 1px solid rgba(254, 44, 85, 0.2);
+  box-shadow: var(--shadow-sm);
   transition: all var(--transition-fast);
   position: relative;
-  overflow: hidden;
 }
 
 .lora-pill:hover {
-  background: rgba(254, 44, 85, 0.25);
-  border-color: rgba(254, 44, 85, 0.4);
-  box-shadow: 0 4px 15px rgba(254, 44, 85, 0.25);
+  background: rgba(20, 20, 25, 0.8);
+  border-color: rgba(254, 44, 85, 0.3);
+  box-shadow: var(--shadow-md);
   transform: translateY(-1px);
 }
 
@@ -73,35 +48,34 @@
   font-size: 14px;
   font-weight: 500;
   color: var(--text-primary);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   transition: color var(--transition-fast);
 }
 
 .lora-name:hover {
-  color: #ffffff;
+  color: var(--primary);
 }
 
 /* ========= Remove Button ========= */
 .remove-lora {
-  background: none;
-  border: none;
-  color: var(--text-tertiary);
+  background: rgba(254, 44, 85, 0.1);
+  border: 1px solid rgba(254, 44, 85, 0.2);
+  color: var(--text-secondary);
   cursor: pointer;
   padding: 4px;
-  font-size: 18px;
+  font-size: 14px;
   transition: all var(--transition-fast);
   width: 24px;
   height: 24px;
-  border-radius: 50%;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .remove-lora:hover {
-  color: var(--primary);
-  background: var(--primary-light);
-  transform: rotate(90deg);
+  color: white;
+  background: var(--primary);
+  border-color: var(--primary);
 }
 
 /* ========= Weight Editor ========= */
@@ -109,112 +83,115 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: rgba(254, 44, 85, 0.25);
-  border-radius: 16px;
+  background: rgba(15, 15, 20, 0.7);
+  border-radius: var(--radius-md);
   padding: 6px 12px;
-  border: 1px solid rgba(254, 44, 85, 0.35);
+  border: 1px solid rgba(254, 44, 85, 0.2);
   transition: all var(--transition-fast);
 }
 
 .weight-editor:hover {
-  background: rgba(254, 44, 85, 0.3);
-  border-color: rgba(254, 44, 85, 0.45);
-  box-shadow: 0 2px 12px rgba(254, 44, 85, 0.2);
+  background: rgba(20, 20, 25, 0.8);
+  border-color: rgba(254, 44, 85, 0.3);
+  box-shadow: var(--shadow-sm);
 }
 
 .weight-editor input {
   width: 100px;
 }
 
-/* Slider Input Styling */
+/* Slider Input Styling to match ImageGenerator sliders */
 .weight-editor input[type="range"] {
-  width: 120px;
-  height: 4px;
-  background: rgba(254, 44, 85, 0.3);
-  border-radius: 2px;
-  outline: none;
   -webkit-appearance: none;
   appearance: none;
+  width: 120px;
+  height: 6px;
+  background: linear-gradient(90deg, var(--primary), #ff5277);
+  border-radius: 3px;
+  outline: none;
+  position: relative;
+  margin: 10px 0;
 }
 
 .weight-editor input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
-  background: var(--tiktok-cyan);
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: white;
+  border: 1px solid rgba(254, 44, 85, 0.8);
   border-radius: 50%;
   cursor: pointer;
-  border: 2px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 2px 4px rgba(37, 244, 238, 0.2);
-  transition: all var(--transition-fast);
+  margin-top: -6px;
+  box-shadow: 0 0 10px rgba(254, 44, 85, 0.4);
+  transition: all 0.2s ease;
+  position: relative;
 }
 
 .weight-editor input[type="range"]::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  background: var(--tiktok-cyan);
+  width: 18px;
+  height: 18px;
+  background: white;
+  border: 1px solid rgba(254, 44, 85, 0.8);
   border-radius: 50%;
   cursor: pointer;
-  border: 2px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 2px 4px rgba(37, 244, 238, 0.2);
-  transition: all var(--transition-fast);
+  box-shadow: 0 0 10px rgba(254, 44, 85, 0.4);
+  transition: all 0.2s ease;
 }
 
+/* Add glow effect to slider thumb on hover to match ImageGenerator */
 .weight-editor input[type="range"]::-webkit-slider-thumb:hover {
   transform: scale(1.1);
-  box-shadow: 0 2px 8px rgba(254, 44, 85, 0.5);
+  box-shadow: 0 0 15px rgba(254, 44, 85, 0.6);
 }
 
 .weight-editor input[type="range"]::-moz-range-thumb:hover {
   transform: scale(1.1);
-  box-shadow: 0 2px 8px rgba(254, 44, 85, 0.5);
+  box-shadow: 0 0 15px rgba(254, 44, 85, 0.6);
 }
 
 .weight-editor input[type="range"]::-webkit-slider-runnable-track {
-  height: 4px;
-  border-radius: 2px;
-  background: rgba(37, 244, 238, 0.2);
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(254, 44, 85, 0.2);
 }
 
 .weight-editor input[type="range"]::-moz-range-track {
-  height: 4px;
-  border-radius: 2px;
-  background: rgba(37, 244, 238, 0.2);
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(254, 44, 85, 0.2);
 }
 
 /* Weight Value Display */
 .weight-editor span {
   min-width: 45px;
   text-align: center;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-primary);
   font-size: 13px;
   font-variant-numeric: tabular-nums;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-  transition: color var(--transition-fast);
 }
 
-/* Save Button */
+/* Save Button to match ImageGenerator buttons */
 .weight-editor button {
-  background: var(--tiktok-cyan-light);
-  border: 1px solid var(--tiktok-cyan-border);
-  color: var(--tiktok-cyan);
+  background: linear-gradient(135deg, var(--primary) 0%, #ff5277 100%);
+  border: none;
+  color: white;
   cursor: pointer;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 14px;
+  padding: 5px 12px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
   transition: all var(--transition-fast);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 500;
+  box-shadow: 0 2px 10px rgba(254, 44, 85, 0.3);
 }
 
 .weight-editor button:hover {
-  background: var(--tiktok-cyan-medium);
-  border-color: var(--tiktok-cyan-border-hover);
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px var(--tiktok-cyan-shadow);
+  box-shadow: 0 4px 15px rgba(254, 44, 85, 0.4);
 }
 
 .weight-editor button:active {
