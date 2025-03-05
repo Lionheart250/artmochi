@@ -19,14 +19,7 @@ import Subscription from './pages/Subscription';
 import './App.css';
 import './styles/theme.css';
 
-useEffect(() => {
-  // Set the background when the app loads
-  document.body.classList.add('themed-background');
-  
-  return () => {
-    document.body.classList.remove('themed-background');
-  };
-}, []);
+
 
 function App() {
   return (

@@ -1095,39 +1095,62 @@ export const loraExamples = {
 // component for preview modal
 const PreviewModal = ({ examples, isOpen, onClose, loraName, initialImage }) => {
     const [currentImage, setCurrentImage] = useState(initialImage);
+    const modalRef = useRef(null);
 
     // Reset currentImage when modal opens with new initialImage
     useEffect(() => {
         if (isOpen) {
             setCurrentImage(initialImage);
+            
+            // Add entrance animation class
+            if (modalRef.current) {
+                modalRef.current.classList.add('animate-in');
+            }
         }
     }, [isOpen, initialImage]);
 
-    // Preload next and previous images
+    // Handle keyboard navigation
     useEffect(() => {
-        if (!examples) return;
-        
-        const preloadImage = (src) => {
-            const img = new Image();
-            img.src = src;
+        const handleKeyDown = (e) => {
+            if (!isOpen) return;
+            
+            if (e.key === 'Escape') {
+                onClose();
+            } else if (e.key === 'ArrowRight') {
+                setCurrentImage(prev => (prev + 1) % examples.length);
+            } else if (e.key === 'ArrowLeft') {
+                setCurrentImage(prev => prev === 0 ? examples.length - 1 : prev - 1);
+            }
         };
-
-        const nextIndex = (currentImage + 1) % examples.length;
-        const prevIndex = currentImage === 0 ? examples.length - 1 : currentImage - 1;
         
-        preloadImage(examples[nextIndex]);
-        preloadImage(examples[prevIndex]);
-    }, [currentImage, examples]);
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isOpen, examples, onClose]);
 
     if (!isOpen || !examples) return null;
 
     return (
         <div className="preview-modal-overlay" onClick={onClose}>
-            <div className="preview-modal" onClick={e => e.stopPropagation()}>
+            <div 
+                className="preview-modal" 
+                onClick={e => e.stopPropagation()}
+                ref={modalRef}
+            >
+                <button 
+                    className="preview-close-button" 
+                    onClick={onClose}
+                    aria-label="Close preview"
+                >
+                    ×
+                </button>
                 <h4>{loraName}</h4>
                 <div className="preview-modal-content">
                     <div className="preview-main-image">
-                        <img src={examples[currentImage]} alt="Style example" />
+                        <img 
+                            src={examples[currentImage]} 
+                            alt={`${loraName} example`} 
+                            className="preview-image"
+                        />
                     </div>
                     <div className="preview-thumbnails">
                         {examples.map((img, idx) => (
@@ -1136,7 +1159,10 @@ const PreviewModal = ({ examples, isOpen, onClose, loraName, initialImage }) => 
                                 src={img}
                                 alt={`Thumbnail ${idx + 1}`}
                                 className={currentImage === idx ? 'active' : ''}
-                                onClick={() => setCurrentImage(idx)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCurrentImage(idx);
+                                }}
                             />
                         ))}
                     </div>
@@ -1172,6 +1198,7 @@ const LoraItem = ({ lora, isSelected, onToggle, onWeightChange, weight, onPrevie
             onClick={handleClick}
             role="button"
             tabIndex={0}
+            data-lora-id={lora.id}  // Add this attribute
         >
             <div className="lora-item-header">
                 <label onClick={e => e.stopPropagation()}>
@@ -1296,16 +1323,32 @@ const LoraSelector = ({ selectedLoras, setSelectedLoras, isOpen, onClose }) => {
     };
 
     const toggleLora = (loraId, loraArray) => {
+        // Find the DOM element for this lora
+        const loraElement = document.querySelector(`[data-lora-id="${loraId}"]`);
+        
         setSelectedLoras(prev => {
             const lora = loraArray.find(l => l.id === loraId);
             const newState = { ...prev };
             
             if (prev[lora.url]) {
-                // Remove the lora completely instead of setting to 0
+                // Remove the lora completely
                 delete newState[lora.url];
+                
+                // Remove selection animation class if present
+                if (loraElement) {
+                    loraElement.classList.remove('particle-effect');
+                }
             } else {
                 // Add new lora with default weight
                 newState[lora.url] = lora.defaultWeight;
+                
+                // Add particle effect on selection
+                if (loraElement) {
+                    loraElement.classList.add('particle-effect');
+                    setTimeout(() => {
+                        loraElement.classList.remove('particle-effect');
+                    }, 600);
+                }
             }
             
             return newState;
@@ -1458,7 +1501,7 @@ const preloadNearbyImages = (currentIndex, loraExamples) => {
                                 Clear All
                             </button>
                             <button type="button" className="loraselector-close-button" onClick={onClose}>
-                                Close
+                                
                             </button>
                         </div>
                     </div>
@@ -1488,46 +1531,79 @@ const preloadNearbyImages = (currentIndex, loraExamples) => {
 // Update the LazyThumbnail component
 const LazyThumbnail = ({ src, alt, className, onClick }) => {
     const [isLoaded, setIsLoaded] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
     const imageRef = useRef(null);
+    const containerRef = useRef(null);
   
     useEffect(() => {
-      // Set src immediately to start loading
-      if (imageRef.current) {
-        imageRef.current.src = src;
-      }
-  
-      const checkIfLoaded = () => {
-        if (imageRef.current?.complete) {
-          setIsLoaded(true);
+        // Set src immediately to start loading
+        if (imageRef.current) {
+            imageRef.current.src = src;
         }
-      };
-  
-      // Check if already loaded
-      checkIfLoaded();
-  
-      // Add load event listener
-      const image = imageRef.current;
-      if (image) {
-        image.addEventListener('load', checkIfLoaded);
-        return () => image.removeEventListener('load', checkIfLoaded);
-      }
+    
+        const checkIfLoaded = () => {
+            if (imageRef.current?.complete) {
+                setIsLoaded(true);
+            }
+        };
+    
+        // Check if already loaded
+        checkIfLoaded();
+    
+        // Add load event listener
+        const image = imageRef.current;
+        if (image) {
+            image.addEventListener('load', checkIfLoaded);
+            return () => image.removeEventListener('load', checkIfLoaded);
+        }
     }, [src]);
 
-    return (
-        <div className="thumbnail-container">
-          {!isLoaded && <div className="thumbnail-placeholder" />}
-          <img
-            ref={imageRef}
-            alt={alt}
-            className={`${className} ${isLoaded ? 'loaded' : ''}`}
-            onClick={onClick}
-            style={{
-              opacity: isLoaded ? 1 : 0,
-              transition: 'opacity 0.3s ease-in-out'
-            }}
-          />
-        </div>
-      );
+    // Add ripple effect on click
+    const addRippleEffect = (e) => {
+        if (!containerRef.current) return;
+        
+        const container = containerRef.current;
+        const rect = container.getBoundingClientRect();
+        
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        const ripple = document.createElement('div');
+        ripple.className = 'ripple-effect';
+        ripple.style.top = `${y}px`;
+        ripple.style.left = `${x}px`;
+        
+        container.appendChild(ripple);
+        
+        setTimeout(() => {
+            ripple.remove();
+        }, 600);
     };
+
+    return (
+        <div 
+            className={`thumbnail-container ${isHovered ? 'hovered' : ''}`}
+            ref={containerRef}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            onClick={(e) => {
+                addRippleEffect(e);
+                onClick(e);
+            }}
+        >
+            {!isLoaded && <div className="thumbnail-loading-indicator" />}
+            <img
+                ref={imageRef}
+                alt={alt}
+                className={`${className} ${isLoaded ? 'loaded' : ''}`}
+                style={{
+                    opacity: isLoaded ? 1 : 0,
+                    transition: 'opacity 0.3s ease-in-out, transform 0.3s cubic-bezier(0.17, 0.84, 0.44, 1.2)'
+                }}
+            />
+            <div className="preview-icon">👁️</div>
+        </div>
+    );
+};
 
 export default LoraSelector;

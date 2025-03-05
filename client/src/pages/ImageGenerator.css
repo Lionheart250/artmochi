@@ -296,6 +296,8 @@ body {
   gap: 5px;
   margin-bottom: 0;
   position: relative;
+  overflow: hidden;
+  width: 100%;
 }
 
 /* Make sections more compact */
@@ -498,6 +500,567 @@ body {
   font-size: 18px;
   font-weight: bold;
   pointer-events: none;
+}
+
+/* Fix for steps slider length */
+.steps-container,
+.steps-slider,
+.image-generator-form-group input[type="range"].steps-slider {
+  width: 100% !important; 
+  max-width: 100% !important;
+  box-sizing: border-box;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Ensure slider stays within its container */
+.image-generator-form-group {
+  overflow: hidden;
+  width: 100%;
+}
+
+/* Match all sliders to same width */
+.image-generator-input[type="range"],
+input[type="range"].cfg-slider,
+input[type="range"].steps-slider {
+  width: 100% !important;
+  min-width: unset;
+  max-width: 100%;
+}
+
+/* Enhanced dynamic range slider styling */
+input[type="range"],
+input.slider[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  max-width: 100%;
+  height: 6px;
+  background: linear-gradient(90deg, var(--primary), var(--teal));
+  border-radius: 3px;
+  box-sizing: border-box;
+  margin: 12px 0;
+  position: relative;
+  cursor: pointer;
+  overflow: visible;
+}
+
+/* Create energetic track that changes color based on value */
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, 
+    var(--primary) 0%, 
+    var(--accent-purple) 50%, 
+    var(--teal) 100%);
+}
+
+input[type="range"]::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, 
+    var(--primary) 0%, 
+    var(--accent-purple) 50%, 
+    var(--teal) 100%);
+}
+
+/* Create dynamic thumb that pulses more energetically near 50 */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border: 2px solid white;
+  border-radius: 50%;
+  margin-top: -8px; /* Center vertically */
+  cursor: pointer;
+  background: radial-gradient(
+    circle at center,
+    white 0%, 
+    var(--primary) 100%
+  );
+  box-shadow: 
+    0 0 0 4px rgba(254, 44, 85, 0.2),
+    0 0 15px rgba(254, 44, 85, 0.4);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 2;
+  filter: brightness(1);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border: 2px solid white;
+  border-radius: 50%;
+  cursor: pointer;
+  background: radial-gradient(
+    circle at center,
+    white 0%, 
+    var(--primary) 100%
+  );
+  box-shadow: 
+    0 0 0 4px rgba(254, 44, 85, 0.2),
+    0 0 15px rgba(254, 44, 85, 0.4);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Add energetic glow on hover and focus */
+input[type="range"]:hover::-webkit-slider-thumb,
+input[type="range"]:focus::-webkit-slider-thumb {
+  transform: scale(1.2);
+  box-shadow: 
+    0 0 0 4px rgba(254, 44, 85, 0.3),
+    0 0 20px rgba(254, 44, 85, 0.6);
+}
+
+input[type="range"]:hover::-moz-range-thumb,
+input[type="range"]:focus::-moz-range-thumb {
+  transform: scale(1.2);
+  box-shadow: 
+    0 0 0 4px rgba(254, 44, 85, 0.3),
+    0 0 20px rgba(254, 44, 85, 0.6);
+}
+
+/* Add cool digital ticks under the slider */
+input[type="range"]::before {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background-image: 
+    repeating-linear-gradient(
+      to right,
+      transparent,
+      transparent 9%,
+      rgba(254, 44, 85, 0.4) 10%,
+      transparent 11%
+    );
+  opacity: 0.6;
+  pointer-events: none;
+  border-radius: 1px;
+}
+
+/* Add futuristic value indicator that follows the thumb */
+input[type="range"]::after {
+  content: attr(value);
+  position: absolute;
+  bottom: -25px;
+  left: var(--value-position, 50%);
+  transform: translateX(-50%);
+  background: var(--bg-tertiary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+  font-weight: 600;
+  border: 1px solid var(--primary);
+  box-shadow: 0 0 8px rgba(254, 44, 85, 0.4);
+}
+
+input[type="range"]:hover::after,
+input[type="range"]:focus::after {
+  opacity: 1;
+}
+
+/* Add special energy effect when near value 50 */
+input[type="range"].near-50::-webkit-slider-thumb {
+  background: radial-gradient(
+    circle at center,
+    white 0%, 
+    var(--accent-purple) 70%,
+    var(--primary) 100%
+  );
+  animation: pulse-near-50 1.5s infinite;
+  box-shadow: 
+    0 0 0 4px rgba(173, 0, 255, 0.3),
+    0 0 20px rgba(173, 0, 255, 0.6);
+}
+
+input[type="range"].near-50::-moz-range-thumb {
+  background: radial-gradient(
+    circle at center,
+    white 0%, 
+    var(--accent-purple) 70%,
+    var(--primary) 100%
+  );
+  animation: pulse-near-50 1.5s infinite;
+  box-shadow: 
+    0 0 0 4px rgba(173, 0, 255, 0.3),
+    0 0 20px rgba(173, 0, 255, 0.6);
+}
+
+/* Special track styling for near 50 values */
+input[type="range"].near-50::-webkit-slider-runnable-track {
+  background: linear-gradient(90deg, 
+    var(--primary) 0%, 
+    var(--accent-purple) 50%, 
+    var(--teal) 100%);
+  animation: glow-track 2s infinite alternate;
+}
+
+input[type="range"].near-50::-moz-range-track {
+  background: linear-gradient(90deg, 
+    var(--primary) 0%, 
+    var(--accent-purple) 50%, 
+    var(--teal) 100%);
+  animation: glow-track 2s infinite alternate;
+}
+
+/* Add pulsing animation for near 50 values */
+@keyframes pulse-near-50 {
+  0% {
+    transform: scale(1);
+    box-shadow: 
+      0 0 0 4px rgba(173, 0, 255, 0.2),
+      0 0 15px rgba(173, 0, 255, 0.4);
+  }
+  50% {
+    transform: scale(1.3);
+    box-shadow: 
+      0 0 0 6px rgba(173, 0, 255, 0.3),
+      0 0 25px rgba(173, 0, 255, 0.7);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 
+      0 0 0 4px rgba(173, 0, 255, 0.2),
+      0 0 15px rgba(173, 0, 255, 0.4);
+  }
+}
+
+@keyframes glow-track {
+  0% { filter: brightness(1); }
+  100% { filter: brightness(1.3); }
+}
+
+/* Add JavaScript to dynamically add the near-50 class and set the value position */
+/* Add this script to your component or mount function:
+
+function setupRangeSliders() {
+  const sliders = document.querySelectorAll('input[type="range"]');
+  
+  sliders.forEach(slider => {
+    const updateSlider = () => {
+      const value = parseFloat(slider.value);
+      const max = parseFloat(slider.max) || 100;
+      const position = (value / max) * 100;
+      
+      // Set custom property for the value position
+      slider.style.setProperty('--value-position', `${position}%`);
+      
+      // Add or remove near-50 class
+      const nearMidpoint = Math.abs(value - max/2) < max * 0.1; // Within 10% of midpoint
+      slider.classList.toggle('near-50', nearMidpoint);
+      
+      // Update the value attribute for the ::after content
+      slider.setAttribute('value', value);
+    };
+    
+    // Set initial state
+    updateSlider();
+    
+    // Update on change and input events
+    slider.addEventListener('input', updateSlider);
+    slider.addEventListener('change', updateSlider);
+  });
+}
+
+// Call the function when component mounts
+setupRangeSliders();
+*/
+
+/* Enhanced steps slider styling specifically for steps slider */
+input[type="range"].steps-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: linear-gradient(90deg, var(--primary), var(--teal));
+  border-radius: 3px;
+  box-sizing: border-box;
+  margin: 12px 0;
+  position: relative;
+  cursor: pointer;
+  overflow: visible;
+}
+
+/* Enhanced track styling based on steps value */
+input[type="range"].steps-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, 
+    var(--primary) 0%, 
+    var(--accent-purple) 50%, 
+    var(--teal) 100%);
+}
+
+input[type="range"].steps-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, 
+    var(--primary) 0%, 
+    var(--accent-purple) 50%, 
+    var(--teal) 100%);
+}
+
+/* Enhanced thumb styling */
+input[type="range"].steps-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid white;
+  border-radius: 50%;
+  margin-top: -7px;
+  cursor: pointer;
+  background: radial-gradient(
+    circle at center,
+    white 0%, 
+    var(--primary) 100%
+  );
+  box-shadow: 
+    0 0 0 3px rgba(255, 46, 135, 0.2),
+    0 0 10px rgba(255, 46, 135, 0.4);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 2;
+}
+
+input[type="range"].steps-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 2px solid white;
+  border-radius: 50%;
+  cursor: pointer;
+  background: radial-gradient(
+    circle at center,
+    white 0%, 
+    var(--primary) 100%
+  );
+  box-shadow: 
+    0 0 0 3px rgba(255, 46, 135, 0.2),
+    0 0 10px rgba(255, 46, 135, 0.4);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Enhanced hover and focus states */
+input[type="range"].steps-slider:hover::-webkit-slider-thumb,
+input[type="range"].steps-slider:focus::-webkit-slider-thumb {
+  transform: scale(1.2);
+  box-shadow: 
+    0 0 0 4px rgba(255, 46, 135, 0.3),
+    0 0 15px rgba(255, 46, 135, 0.6);
+}
+
+input[type="range"].steps-slider:hover::-moz-range-thumb,
+input[type="range"].steps-slider:focus::-moz-range-thumb {
+  transform: scale(1.2);
+  box-shadow: 
+    0 0 0 4px rgba(255, 46, 135, 0.3),
+    0 0 15px rgba(255, 46, 135, 0.6);
+}
+
+/* Special styling for near 50 steps */
+input[type="range"].steps-slider.max-power::-webkit-slider-thumb {
+  background: radial-gradient(
+    circle at center,
+    white 0%, 
+    var(--accent-purple) 50%,
+    var(--primary) 100%
+  );
+  animation: steps-pulse 1.5s infinite;
+  box-shadow: 
+    0 0 0 4px rgba(173, 0, 255, 0.3),
+    0 0 20px rgba(173, 0, 255, 0.6);
+}
+
+input[type="range"].steps-slider.max-power::-moz-range-thumb {
+  background: radial-gradient(
+    circle at center,
+    white 0%, 
+    var(--accent-purple) 50%,
+    var(--primary) 100%
+  );
+  animation: steps-pulse 1.5s infinite;
+  box-shadow: 
+    0 0 0 4px rgba(173, 0, 255, 0.3),
+    0 0 20px rgba(173, 0, 255, 0.6);
+}
+
+/* Track styling for high steps values */
+input[type="range"].steps-slider.max-power::-webkit-slider-runnable-track {
+  background: linear-gradient(90deg, 
+    var(--primary) 0%, 
+    var(--accent-purple) 50%, 
+    var(--teal) 100%);
+  animation: glow-steps-track 2s infinite alternate;
+}
+
+input[type="range"].steps-slider.max-power::-moz-range-track {
+  background: linear-gradient(90deg, 
+    var(--primary) 0%, 
+    var(--accent-purple) 50%, 
+    var(--teal) 100%);
+  animation: glow-steps-track 2s infinite alternate;
+}
+
+/* Enhanced styling for the steps counter display */
+.steps-value {
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.steps-value.max-power {
+  color: var(--primary);
+  text-shadow: 0 0 8px rgba(255, 46, 135, 0.8);
+  animation: steps-text-pulse 1.5s infinite alternate;
+  font-weight: 700;
+}
+
+/* Animations for high steps values */
+@keyframes steps-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 
+      0 0 0 4px rgba(173, 0, 255, 0.2),
+      0 0 15px rgba(173, 0, 255, 0.4);
+  }
+  50% {
+    transform: scale(1.3);
+    box-shadow: 
+      0 0 0 6px rgba(173, 0, 255, 0.3),
+      0 0 25px rgba(173, 0, 255, 0.7);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 
+      0 0 0 4px rgba(173, 0, 255, 0.2),
+      0 0 15px rgba(173, 0, 255, 0.4);
+  }
+}
+
+@keyframes glow-steps-track {
+  0% { filter: brightness(1); }
+  100% { filter: brightness(1.3); }
+}
+
+@keyframes steps-text-pulse {
+  0% { opacity: 0.8; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1.15); }
+}
+
+/* Enhanced steps slider styling */
+input[type="range"].steps-slider,
+.steps-container .slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  max-width: 100%;
+  height: 6px;
+  /* Reverse the gradient: blue to purple to pink (cool to hot) */
+  background: linear-gradient(90deg, var(--teal), var(--accent-purple), var(--primary));
+  border-radius: 3px;
+  box-sizing: border-box;
+  margin: 12px 0;
+  position: relative;
+  cursor: pointer;
+  overflow: visible;
+}
+
+/* Create energetic track that changes color based on value - reversed */
+input[type="range"]::-webkit-slider-runnable-track,
+input[type="range"].steps-slider::-webkit-slider-runnable-track,
+.steps-container .slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, 
+    var(--teal) 0%, 
+    var(--accent-purple) 50%, 
+    var(--primary) 100%);
+}
+
+input[type="range"]::-moz-range-track,
+input[type="range"].steps-slider::-moz-range-track,
+.steps-container .slider::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, 
+    var(--teal) 0%, 
+    var(--accent-purple) 50%, 
+    var(--primary) 100%);
+}
+
+/* Track styling for high steps values - reversed */
+input[type="range"].steps-slider.max-power::-webkit-slider-runnable-track {
+  background: linear-gradient(90deg, 
+    var(--teal) 0%, 
+    var(--accent-purple) 50%, 
+    var(--primary) 100%);
+  animation: glow-steps-track 2s infinite alternate;
+}
+
+input[type="range"].steps-slider.max-power::-moz-range-track {
+  background: linear-gradient(90deg, 
+    var(--teal) 0%, 
+    var(--accent-purple) 50%, 
+    var(--primary) 100%);
+  animation: glow-steps-track 2s infinite alternate;
+}
+
+/* Remove the redundant hover counter */
+input[type="range"]::after {
+  content: none;
+}
+
+input[type="range"]:hover::after,
+input[type="range"]:focus::after {
+  opacity: 0;
+}
+
+/* Enhanced styling for the steps counter display */
+.steps-value {
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.steps-value.max-power {
+  color: var(--primary);
+  text-shadow: 0 0 8px rgba(255, 46, 135, 0.8);
+  animation: steps-text-pulse 1.5s infinite alternate;
+  font-weight: 700;
+}
+
+/* Keep special animation for near 50 steps value but update colors to match new gradient direction */
+input[type="range"].steps-slider.high-steps::-webkit-slider-thumb,
+input[type="range"].steps-slider.max-power::-webkit-slider-thumb {
+  background: radial-gradient(
+    circle at center,
+    white 0%, 
+    var(--primary) 70%,
+    var(--primary) 100%
+  );
+  animation: steps-pulse 1.5s infinite;
+  box-shadow: 
+    0 0 0 4px rgba(255, 46, 135, 0.3),
+    0 0 20px rgba(255, 46, 135, 0.6);
+}
+
+input[type="range"].steps-slider.high-steps::-moz-range-thumb,
+input[type="range"].steps-slider.max-power::-moz-range-thumb {
+  background: radial-gradient(
+    circle at center,
+    white 0%, 
+    var(--primary) 70%,
+    var(--primary) 100%
+  );
+  animation: steps-pulse 1.5s infinite;
+  box-shadow: 
+    0 0 0 4px rgba(255, 46, 135, 0.3),
+    0 0 20px rgba(255, 46, 135, 0.6);
 }
 
 /* ========= Button Styles ========= */
@@ -1374,13 +1937,13 @@ input[type="checkbox"]:hover {
 }
 
 /* Enhance range slider styling */
-input[type="range"] {
+input.slider[type="range"] {
   -webkit-appearance: none;
   width: 100%;
-  height: 6px;
-  background: linear-gradient(90deg, var(--primary), var(--teal));
-  border-radius: 3px;
-  outline: none;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 input[type="range"]::-webkit-slider-thumb {

@@ -886,6 +886,125 @@ useEffect(() => {
   };
 }, []);
 
+// Add this useEffect to your ImageGenerator component
+useEffect(() => {
+  // Function to update slider visual effects based on steps value
+  const updateStepsSlider = () => {
+    const slider = document.querySelector('.steps-container .slider');
+    if (!slider) return;
+    
+    // Update slider classes based on steps value
+    const stepsValue = parseInt(slider.value);
+    
+    // Remove existing classes
+    slider.classList.remove('high-steps', 'max-steps');
+    
+    // Add appropriate classes based on value
+    if (stepsValue >= 45) {
+      slider.classList.add('high-steps');
+      
+      // Add special effect for maximum value
+      if (stepsValue === 50) {
+        slider.classList.add('max-steps');
+        
+        // Add visual feedback when max is reached
+        if (slider.dataset.wasMax !== 'true') {
+          const controlGroup = slider.closest('.control-group');
+          
+          // Create a flash effect
+          const flash = document.createElement('div');
+          flash.className = 'max-steps-flash';
+          flash.style.cssText = `
+            position: absolute;
+            inset: -20px;
+            background: radial-gradient(circle, rgba(173, 0, 255, 0.2), transparent 70%);
+            border-radius: 8px;
+            z-index: -1;
+            opacity: 0;
+            pointer-events: none;
+            animation: flash-fade 0.8s ease-out;
+          `;
+          
+          if (controlGroup) {
+            controlGroup.style.position = 'relative';
+            controlGroup.appendChild(flash);
+            
+            // Add max-steps class to parent for label styling
+            controlGroup.classList.add('high-steps');
+            
+            // Remove after animation completes
+            setTimeout(() => {
+              if (flash && flash.parentNode) {
+                flash.parentNode.removeChild(flash);
+              }
+            }, 800);
+          }
+        }
+        
+        // Mark that we've seen max value to prevent repeated animations
+        slider.dataset.wasMax = 'true';
+      } else {
+        slider.dataset.wasMax = 'false';
+      }
+      
+      // Add high-steps class to parent for label styling
+      const controlGroup = slider.closest('.control-group');
+      if (controlGroup) {
+        controlGroup.classList.add('high-steps');
+      }
+    } else {
+      // Reset wasMax flag
+      slider.dataset.wasMax = 'false';
+      
+      // Remove high-steps class from parent
+      const controlGroup = slider.closest('.control-group');
+      if (controlGroup) {
+        controlGroup.classList.remove('high-steps');
+      }
+    }
+  };
+  
+  // Add event listeners
+  const slider = document.querySelector('.steps-container .slider, input[type="range"].steps-slider');
+  if (slider) {
+    slider.addEventListener('input', updateStepsSlider);
+    // Initialize on mount
+    updateStepsSlider();
+  }
+  
+  // Clean up event listeners
+  return () => {
+    const slider = document.querySelector('.steps-container .slider, input[type="range"].steps-slider');
+    if (slider) {
+      slider.removeEventListener('input', updateStepsSlider);
+    }
+  };
+}, [steps]); // Depend on steps state to re-run when it changes
+
+// Add keyframe animation to your component
+useEffect(() => {
+  // Add the keyframe rule if it doesn't exist
+  if (!document.querySelector('#steps-animations')) {
+    const styleSheet = document.createElement('style');
+    styleSheet.id = 'steps-animations';
+    styleSheet.textContent = `
+      @keyframes flash-fade {
+        0% { opacity: 0.8; transform: scale(0.9); }
+        100% { opacity: 0; transform: scale(1.2); }
+      }
+    `;
+    document.head.appendChild(styleSheet);
+  }
+  
+  return () => {
+    // Clean up added style
+    const styleElement = document.querySelector('#steps-animations');
+    if (styleElement) {
+      styleElement.parentNode.removeChild(styleElement);
+    }
+  };
+}, []);
+
   return (
     <div className="image-generator">
         {!currentSubscription ? (
@@ -1243,6 +1362,48 @@ useEffect(() => {
                             <div className="loading-container">
                                 {!isUpscalingPhase ? (
                                     <div className="generation-progress">
+                                        <div className="progress-bar">
+                                            <div 
+                                                className="progress-fill"
+                                                style={{ width: `${progressPercentage}%` }}
+                                            />
+                                        </div>
+                                        <div className="progress-text">
+                                            {generationStage}
+                                            <span className="progress-percentage">
+                                                {progressPercentage}%
+                                            </span>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="generation-progress">
+                                        <div className="progress-bar">
+                                            <div 
+                                                className="progress-fill"
+                                                style={{ width: `${upscaleProgress}%` }}
+                                            />
+                                        </div>
+                                        <div className="progress-text">
+                                            {upscaleStage}
+                                            <span className="progress-percentage">
+                                                {upscaleProgress}%
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ) : error ? (
+                            <div className="error-message">{error}</div>
+                        ) : image ? (
+                            <div className="generated-image-container">
+                                <img src={image} alt="Generated" className="generated-image" />
+                                <div className="image-actions">
+                                  {/*}  <button
+                                        onClick={handleUpscale}
+                                        disabled={isUpscaling}
+                                        className="upscale-button"
+                                    >
+                           
                                         <div className="progress-bar">
                                             <div 
                                                 className="progress-fill"
