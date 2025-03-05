@@ -1,44 +1,44 @@
 /* ========= Variables & Base Styles ========= */
 :root {
-  /* Main colors */
-  --primary: #fe2c55; /* Pink */
-  --primary-hover: #ff405e;
-  --primary-light: rgba(254, 44, 85, 0.1);
-  --primary-medium: rgba(254, 44, 85, 0.2);
-  --primary-gradient: linear-gradient(90deg, #fe2c55, #ff5277);
+  /* Main colors - more vivid and exciting */
+  --primary: #FF2E87; /* Brighter, more saturated hot pink */
+  --primary-hover: #FF54A0;
+  --primary-light: rgba(255, 46, 135, 0.1);
+  --primary-medium: rgba(255, 46, 135, 0.2);
+  --primary-gradient: linear-gradient(90deg, #FF2E87, #FF6EB5);
   
-  /* Accent colors */
-  --teal: #00f2ea;
-  --teal-light: rgba(0, 242, 234, 0.15);
-  --teal-hover: #1afff8;
-  --teal-gradient: linear-gradient(45deg, #00c2bd, #00f2ea);
+  /* Accent colors - more contrasting and vibrant */
+  --teal: #00E9FF; /* Electric cyan/blue - more vibrant than current teal */
+  --teal-light: rgba(0, 233, 255, 0.15);
+  --teal-hover: #55F1FF;
+  --teal-gradient: linear-gradient(45deg, #00B8ED, #00E9FF);
+  
+  /* New accent for triad color scheme */
+  --accent-tertiary: #FFCC00; /* Vibrant yellow/gold */
+  --accent-purple: #AD00FF; /* Rich purple */
   
   /* Text colors */
   --text-primary: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.8);
-  --text-tertiary: rgba(255, 255, 255, 0.6);
+  --text-secondary: rgba(255, 255, 255, 0.85); /* Slightly more visible */
+  --text-tertiary: rgba(255, 255, 255, 0.65);
   
-  /* Background colors */
-  --bg-primary: #000000;
-  --bg-secondary: #121212;
-  --bg-tertiary: #1a1a1a;
+  /* Background colors - deeper & more dramatic */
+  --bg-primary: #0D0221; /* Deep purple-black for depth */
+  --bg-secondary: #1A1025; /* Dark purple for containers */
+  --bg-tertiary: #251A35; /* Lighter purple for elevated elements */
   
-  /* Effects */
-  --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.15);
-  --shadow-medium: 0 6px 24px rgba(0, 0, 0, 0.25);
-  --shadow-strong: 0 8px 32px rgba(0, 0, 0, 0.35);
-  --glow-pink: 0 0 15px rgba(254, 44, 85, 0.5);
-  --glow-teal: 0 0 15px rgba(0, 242, 234, 0.5);
-  
-  /* Transitions */
-  --transition-fast: 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  --transition-medium: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  --transition-bounce: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-  
-  /* Borders */
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  /* Enhanced Effects */
+  --shadow-soft: 0 4px 15px rgba(255, 46, 135, 0.15);
+  --shadow-medium: 0 8px 25px rgba(0, 0, 0, 0.3);
+  --shadow-strong: 0 15px 40px rgba(0, 0, 0, 0.4);
+  --glow-pink: 0 0 20px rgba(255, 46, 135, 0.6);
+  --glow-cyan: 0 0 20px rgba(0, 233, 255, 0.6);
+  --glow-purple: 0 0 20px rgba(173, 0, 255, 0.6);
+
+  /* Enhanced gradients */
+  --cyberpunk-gradient: linear-gradient(135deg, #FF2E87 0%, #AD00FF 100%);
+  --futuristic-gradient: linear-gradient(135deg, #00E9FF 0%, #AD00FF 100%);
+  --creative-gradient: linear-gradient(45deg, #FFCC00, #FF2E87);
 }
 
 /* Custom scrollbar */
@@ -58,6 +58,16 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--primary);
+}
+
+/* Updated body background with more dynamic feel */
+body {
+  background-color: var(--bg-primary);
+  background-image: 
+    radial-gradient(circle at 10% 10%, rgba(173, 0, 255, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 90% 90%, rgba(255, 46, 135, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(0, 233, 255, 0.1) 0%, transparent 60%);
+  background-attachment: fixed;
 }
 
 /* ========= Main Layout ========= */
@@ -115,19 +125,20 @@
 
 /* Form container - FIXED PROPERLY */
 .image-generator-form-container {
-  background-color: #000000; /* Pure black background */
+  background-color: rgba(10, 2, 20, 0.9); /* Deep purple-black backdrop */
   padding-top: 0px;
   padding-right: 24px;
   padding-left: 24px;
   padding-bottom: 24px;
   position: relative;
   z-index: 1; /* Ensure content is above the glow */
-  border: 1px solid rgba(254, 44, 85, 0.2); /* Visible border */
+  border: 1px solid rgba(255, 46, 135, 0.2); /* Visible border */
   box-shadow: var(--shadow-medium);
-  overflow: visible; /* Show all content without scrolling */
-  height: auto; /* Allow height to adjust to content */
+  overflow: visible;
+  height: auto;
   display: flex;
   flex-direction: column;
+  backdrop-filter: blur(8px);
 }
 
 /* Improve scrollbar styling */
@@ -167,7 +178,7 @@
 
 /* Preview container */
 .image-generator-preview-container {
-  background-color: #000000;
+  background-color: rgba(10, 2, 20, 0.9);
   position: relative;
   z-index: 1;
   padding-top: 0px;
@@ -177,11 +188,12 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  border: 1px solid rgba(0, 242, 234, 0.2);
+  border: 1px solid rgba(0, 233, 255, 0.2);
   box-shadow: var(--shadow-medium);
-  height: auto; /* Set to auto height */
-  min-height: 750px; /* Maintain minimum height */
-  max-height: none; /* Remove max height constraint */
+  height: auto;
+  min-height: 750px;
+  max-height: none;
+  backdrop-filter: blur(8px);
 }
 
 /* Proper glowing border effect for preview */
@@ -592,30 +604,52 @@
   }
 }
 
-/* Enhanced generate button with pulse effect */
+/* Enhanced generate button with even more futuristic style */
 .generate-button {
-  background: linear-gradient(135deg, var(--primary) 0%, #ff5277 100%);
+  background: var(--cyberpunk-gradient);
   color: white;
-  border: none;
-  padding: 16px 24px;
-  border-radius: var(--radius-md);
-  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
   font-weight: 700;
-  cursor: pointer;
-  transition: all var(--transition-bounce);
+  padding: 18px 24px;
+  box-shadow: 
+    0 8px 25px rgba(255, 46, 135, 0.4),
+    0 0 0 2px rgba(255, 46, 135, 0.1),
+    0 0 40px rgba(255, 46, 135, 0.2);
   position: relative;
   overflow: hidden;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  width: 100%;
-  margin-top: auto; /* Push to bottom */
-  box-shadow: 
-    0 5px 20px rgba(254, 44, 85, 0.4),
-    0 0 30px rgba(254, 44, 85, 0.2);
   z-index: 1;
+  transition: all var(--transition-bounce);
+  border: none;
 }
 
-/* Enhanced shimmer effect */
+.generate-button::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, 
+    var(--teal) 0%, 
+    transparent 20%, 
+    transparent 80%, 
+    var(--primary) 100%);
+  z-index: -1;
+  opacity: 0.3;
+  animation: border-rotate 2s linear infinite;
+}
+
+.generate-button:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 
+    0 12px 30px rgba(255, 46, 135, 0.5),
+    0 0 0 2px rgba(255, 46, 135, 0.2),
+    0 0 60px rgba(255, 46, 135, 0.3);
+  letter-spacing: 3px;
+}
+
+/* Add shimmer effect */
 .generate-button::before {
   content: '';
   position: absolute;
@@ -955,27 +989,25 @@
   width: 400%; /* Much larger than container (4x) */
   height: 400%;
   background-image: 
-    /* Your existing star pattern */
+    /* Updated star pattern with new colors */
     radial-gradient(2px 2px at 20px 30px, var(--primary) 50%, transparent),
-    radial-gradient(2.5px 2.5px at 40px 70px, var (--teal) 50%, transparent),
+    radial-gradient(2.5px 2.5px at 40px 70px, var(--teal) 50%, transparent),
     radial-gradient(2px 2px at 60px 110px, var(--primary) 50%, transparent),
     radial-gradient(3px 3px at 80px 160px, var(--teal) 50%, transparent),
-    radial-gradient(2px 2px at 100px 220px, var(--primary) 50%, transparent),
+    radial-gradient(2px 2px at 100px 220px, var(--accent-purple) 50%, transparent),
     radial-gradient(2.5px 2.5px at 120px 30px, var(--teal) 50%, transparent),
     radial-gradient(2px 2px at 140px 70px, var(--primary) 50%, transparent),
-    radial-gradient(3px 3px at 160px 110px, var(--teal) 50%, transparent),
+    radial-gradient(3px 3px at 160px 110px, var(--accent-tertiary) 50%, transparent),
     radial-gradient(2px 2px at 180px 160px, var(--primary) 50%, transparent),
     radial-gradient(2.5px 2.5px at 200px 220px, var(--teal) 50%, transparent),
     radial-gradient(3px 3px at 220px 30px, rgba(255, 255, 255, 0.9) 50%, transparent),
     radial-gradient(2px 2px at 240px 70px, rgba(255, 255, 255, 0.9) 50%, transparent),
-    radial-gradient(2.5px 2.5px at 260px 110px, rgba(255, 255, 255, 0.9) 50%, transparent);
+    radial-gradient(2.5px 2.5px at 260px 110px, var(--accent-tertiary) 50%, transparent);
   background-repeat: repeat;
   background-size: 300px 300px;
   opacity: 0.7;
   z-index: -1;
-  
-  /* Key change: Use CSS animation with steps() function for perfect looping */
-  animation: infinite-stars-1 30s steps(100) infinite;
+  animation: infinite-stars-1 10s steps(100) infinite;
   will-change: transform; /* Performance optimization */
 }
 
@@ -988,22 +1020,20 @@
   width: 400%;
   height: 400%;
   background-image:
-    /* Your existing star pattern */
+    /* Updated star pattern with new colors */
     radial-gradient(1.5px 1.5px at 10px 10px, var(--teal) 50%, transparent),
     radial-gradient(1px 1px at 50px 50px, var(--primary) 50%, transparent),
-    radial-gradient(1.5px 1.5px at 90px 90px, var(--teal) 50%, transparent),
+    radial-gradient(1.5px 1.5px at 90px 90px, var(--accent-purple) 50%, transparent),
     radial-gradient(1px 1px at 130px 130px, var(--primary) 50%, transparent),
     radial-gradient(1.5px 1.5px at 170px 170px, var(--teal) 50%, transparent),
     radial-gradient(2px 2px at 30px 40px, rgba(255, 255, 255, 0.8) 50%, transparent),
-    radial-gradient(1px 1px at 70px 80px, rgba(255, 255, 255, 0.8) 50%, transparent),
+    radial-gradient(1px 1px at 70px 80px, var(--accent-tertiary) 50%, transparent),
     radial-gradient(1.5px 1.5px at 110px 120px, rgba(255, 255, 255, 0.8) 50%, transparent);
   background-repeat: repeat;
   background-size: 200px 200px;
-  opacity: 0.5;
+  opacity: 0.6; /* Slightly more visible */
   z-index: -1;
-  
-  /* Different speed for parallax effect */
-  animation: infinite-stars-2 10s steps(100) infinite;
+  animation: infinite-stars-2 10s steps(100) infinite; /* Slightly faster */
   will-change: transform;
 }
 
