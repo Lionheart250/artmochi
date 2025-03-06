@@ -1,4 +1,4 @@
-/* ========= Keeping your original layout with enhanced visuals ========= */
+/* ========= Core Elements & Basic Styling ========= */
 button.lora-selector {
   background: rgba(26, 16, 37, 0.7);
   padding: 1rem;
@@ -42,15 +42,15 @@ button.lora-selector span {
   z-index: 1;
 }
 
-/* ========= CYBERNETIC ENTRANCE ANIMATIONS ========= */
+/* ========= Modal Overlay & Animation ========= */
 .lora-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0); /* Start fully transparent */
-  backdrop-filter: blur(0); /* Start with no blur */
+  background: rgba(0, 0, 0, 0);
+  backdrop-filter: blur(0);
   -webkit-backdrop-filter: blur(0);
   display: flex;
   justify-content: center;
@@ -77,6 +77,7 @@ button.lora-selector span {
   }
 }
 
+/* ========= Modal Container ========= */
 .loraselector-popup {
   width: 90%;
   max-width: 1200px;
@@ -88,22 +89,18 @@ button.lora-selector span {
   color: var(--text-primary);
   font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   border: 1px solid rgba(255, 46, 135, 0.3);
-  
-  /* Advanced cyber entrance animation */
   animation: cyber-entrance 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   transform: perspective(1200px) scale(0.9) translateY(20px);
   transform-origin: center;
   opacity: 0;
-  
-  /* Add dramatic shadow */
   box-shadow: 
     0 10px 40px rgba(0, 0, 0, 0.5),
     0 0 100px rgba(255, 46, 135, 0.2),
     0 0 200px rgba(0, 233, 255, 0.1);
 }
 
-/* Add cyberpunk-style scan line effect */
-.loraselector-popup::after {
+/* Scanline effect */
+.loraselector-popup::before {
   content: '';
   position: absolute;
   top: 0;
@@ -121,6 +118,26 @@ button.lora-selector span {
   z-index: 1;
   opacity: 0.3;
   animation: scanline 10s infinite linear;
+}
+
+/* Accent glow border */
+.loraselector-popup::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(135deg, 
+    rgba(0, 233, 255, 0.7) 0%, 
+    transparent 20%, 
+    transparent 80%, 
+    rgba(255, 46, 135, 0.7) 100%);
+  z-index: -1;
+  border-radius: var(--radius-lg);
+  opacity: 0.3;
+  animation: border-glow 8s linear infinite;
+  pointer-events: none;
 }
 
 @keyframes scanline {
@@ -158,26 +175,6 @@ button.lora-selector span {
   }
 }
 
-/* Add accent glow to the popup */
-.loraselector-popup::after {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: linear-gradient(135deg, 
-    rgba(0, 233, 255, 0.7) 0%, 
-    transparent 20%, 
-    transparent 80%, 
-    rgba(255, 46, 135, 0.7) 100%);
-  z-index: -1;
-  border-radius: var(--radius-lg);
-  opacity: 0.3;
-  animation: border-glow 8s linear infinite;
-  pointer-events: none;
-}
-
 @keyframes popIn {
   from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }
@@ -194,23 +191,18 @@ button.lora-selector span {
   position: relative;
   top: 0;
   background: rgba(21, 10, 40, 0.95);
-  z-index: 100; /* Higher than other content */
+  z-index: 100;
   padding: 16px;
   border-bottom: 1px solid rgba(255, 46, 135, 0.2);
   display: flex;
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
-  padding-right: 60px; /* Make sure there's room for the close button */
-  
-  /* Add circuit pattern background */
+  padding-right: 60px;
   background-image: 
     radial-gradient(circle at 10% 50%, rgba(0, 233, 255, 0.1) 0%, transparent 15%),
     radial-gradient(circle at 90% 50%, rgba(255, 46, 135, 0.1) 0%, transparent 15%),
     linear-gradient(90deg, rgba(21, 10, 40, 0.95), rgba(21, 10, 40, 0.98), rgba(21, 10, 40, 0.95));
-  
-  /* Animated gradient border */
-  position: relative;
   overflow: hidden;
 }
 
@@ -220,7 +212,7 @@ button.lora-selector span {
   align-items: center;
 }
 
-/* Animated rainbow scanline for header */
+/* Rainbow scanline animation for header */
 .loraselector-popup-header::after {
   content: '';
   position: absolute;
@@ -258,8 +250,6 @@ button.lora-selector span {
   text-transform: uppercase;
   letter-spacing: 1px;
   position: relative;
-  
-  /* Advanced text effect */
   background: linear-gradient(90deg, 
     var(--primary),
     var(--teal),
@@ -277,7 +267,7 @@ button.lora-selector span {
   100% { background-position: 100% 50%; }
 }
 
-/* High-tech close button with particle effect */
+/* High-tech close button */
 .loraselector-close-button {
   background: rgba(255, 46, 135, 0.15);
   border: none;
@@ -293,7 +283,7 @@ button.lora-selector span {
   font-size: 24px;
   position: absolute;
   top: 16px;
-  right: 16px;
+  right: -45px;
   z-index: 101;
   overflow: hidden;
 }
@@ -304,7 +294,7 @@ button.lora-selector span {
   z-index: 2;
 }
 
-/* Animated glow ring around close button */
+/* Animated glow ring */
 .loraselector-close-button::after {
   content: '';
   position: absolute;
@@ -343,16 +333,13 @@ button.lora-selector span {
 }
 
 /* ========= Content Layout ========= */
-/* ========= ENHANCED CONTENT LAYOUT WITH PARALLAX ========= */
 .lora-content {
   display: flex;
   gap: 16px;
-  height: calc(90vh - 140px); /* Account for header and footer */
+  height: calc(90vh - 140px);
   overflow: hidden;
   padding: 0;
   position: relative;
-  
-  /* Add subtle tech bg pattern */
   background-image: 
     radial-gradient(circle at 20% 80%, rgba(0, 233, 255, 0.03) 0%, transparent 50%),
     radial-gradient(circle at 80% 20%, rgba(255, 46, 135, 0.03) 0%, transparent 50%);
@@ -366,12 +353,8 @@ button.lora-selector span {
   max-height: 100%;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 46, 135, 0.3) transparent;
-  
-  /* Optimize scrolling */
   overscroll-behavior: contain;
   scroll-behavior: smooth;
-  
-  /* Add subtle parallax effect to items on scroll */
   perspective: 1000px;
   transform-style: preserve-3d;
 }
@@ -396,7 +379,6 @@ button.lora-selector span {
 }
 
 /* ========= Section Headers ========= */
-/* ========= FUTURISTIC SECTION HEADERS ========= */
 .section-header {
   position: sticky;
   top: 0;
@@ -413,7 +395,7 @@ button.lora-selector span {
   overflow: hidden;
 }
 
-/* Add high-tech lines for section headers */
+/* Tech lines background */
 .section-header::before {
   content: '';
   position: absolute;
@@ -434,7 +416,7 @@ button.lora-selector span {
   transform: translateY(-1px);
 }
 
-/* Enhanced interactive hover state */
+/* Interactive hover state */
 .section-header:hover::after {
   content: '';
   position: absolute;
@@ -462,7 +444,7 @@ button.lora-selector span {
   transition: all 0.3s ease;
 }
 
-/* Add cyberpunk accent */
+/* Cyberpunk accent line */
 .section-header h3::before {
   content: '';
   position: absolute;
@@ -487,7 +469,6 @@ button.lora-selector span {
 }
 
 /* ========= LoRA Grid Items ========= */
-/* ========= ADVANCED LORA ITEMS WITH INTERACTION EFFECTS ========= */
 .lora-grid {
   display: flex;
   flex-direction: column;
@@ -522,7 +503,7 @@ button.lora-selector span {
 .lora-grid .lora-item:nth-child(9) { animation-delay: 0.5s; }
 .lora-grid .lora-item:nth-child(10) { animation-delay: 0.55s; }
 
-/* Advanced hover effects for items */
+/* Item styling */
 .lora-item {
   background: rgba(26, 16, 37, 0.7);
   border-radius: var(--radius-md);
@@ -538,13 +519,11 @@ button.lora-selector span {
   position: relative;
   overflow: hidden;
   box-shadow: var(--shadow-soft);
-  
-  /* Add holographic effect */
   background-image: 
     linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, transparent 50%, rgba(255, 255, 255, 0.02) 100%);
 }
 
-/* Create tech pattern background */
+/* Tech pattern background */
 .lora-item::before {
   content: '';
   position: absolute;
@@ -590,6 +569,7 @@ button.lora-selector span {
   100% { left: 100%; }
 }
 
+/* Selected state */
 .lora-item.selected {
   background: rgba(255, 46, 135, 0.1);
   border-color: rgba(255, 46, 135, 0.5);
@@ -599,7 +579,6 @@ button.lora-selector span {
   transform: translateY(-3px) scale(1.01);
 }
 
-/* Enhanced selected state with full border glow */
 .lora-item.selected::before {
   opacity: 0.6;
   background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h20v20H0V0zm2 2v16h16V2H2z' fill='%23FF2E87' fill-opacity='0.1'/%3E%3C/svg%3E");
@@ -627,7 +606,7 @@ button.lora-selector span {
   100% { opacity: 1; }
 }
 
-/* Add futuristic data processing animation to selection */
+/* Data processing animation */
 .lora-item.selected::after {
   content: '';
   position: absolute;
@@ -652,7 +631,6 @@ button.lora-selector span {
 }
 
 /* ========= Form Controls ========= */
-/* ========= FUTURISTIC FORM CONTROLS ========= */
 .lora-item label {
   display: flex;
   align-items: center;
@@ -672,7 +650,7 @@ button.lora-selector span {
   text-shadow: 0 0 10px rgba(255, 46, 135, 0.3);
 }
 
-/* High-tech checkbox with animated check mark */
+/* Custom checkbox */
 .lora-item input[type="checkbox"] {
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -695,7 +673,7 @@ button.lora-selector span {
   box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
 }
 
-/* Create custom checkmark with drawing animation */
+/* Animated checkmark */
 .lora-item input[type="checkbox"]:checked::after {
   content: "";
   position: absolute;
@@ -736,7 +714,7 @@ button.lora-selector span {
   box-shadow: 0 0 8px rgba(255, 46, 135, 0.2);
 }
 
-/* Advanced range slider with interactive value tooltip */
+/* Custom range slider */
 .lora-item input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
@@ -771,7 +749,7 @@ button.lora-selector span {
   box-shadow: 0 0 15px rgba(255, 46, 135, 0.6);
 }
 
-/* Add track highlight for better visual feedback */
+/* Track highlight */
 .lora-item input[type="range"]::before {
   content: '';
   position: absolute;
@@ -785,7 +763,6 @@ button.lora-selector span {
 }
 
 /* ========= Thumbnail Grid ========= */
-/* ========= ADVANCED THUMBNAIL GRID WITH HOVER EFFECTS ========= */
 .thumbnail-strip {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -805,8 +782,6 @@ button.lora-selector span {
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   transform-origin: center;
   cursor: pointer;
-  
-  /* Add hexagonal border mask for sci-fi look */
   clip-path: polygon(
     5% 0%,
     95% 0%,
@@ -819,7 +794,7 @@ button.lora-selector span {
   );
 }
 
-/* Create high-tech border glow */
+/* Border glow effect */
 .thumbnail-container::before {
   content: '';
   position: absolute;
@@ -846,6 +821,12 @@ button.lora-selector span {
 
 .thumbnail-container:hover::before {
   opacity: 0.8;
+}
+
+.thumbnail-container.active::before {
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) padding-box,
+    linear-gradient(#fff 0 0);
 }
 
 .mini-thumbnail {
@@ -880,84 +861,6 @@ button.lora-selector span {
   filter: brightness(1.1);
 }
 
-/* Add sci-fi corner accents */
-.thumbnail-container::after {
-  content: '';
-  position: absolute;
-  width: 15px;
-  height: 15px;
-  border-top: 2px solid var(--primary);
-  border-left: 2px solid var(--primary);
-  top: 0;
-  left: 0;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.thumbnail-container:hover::after {
-  opacity: 0.8;
-}
-
-.thumbnail-container.active {
-  transform: translateZ(0);
-}
-
-.thumbnail-container.active::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border: 2px solid transparent;
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--primary), var(--teal)) border-box;
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) padding-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  animation: border-rotate 2s linear infinite;
-}
-
-@keyframes border-rotate {
-  0% { filter: hue-rotate(0deg); }
-  100% { filter: hue-rotate(360deg); }
-}
-
-/* Add 3D transform to thumbnails on hover */
-.thumbnail-container:hover .mini-thumbnail {
-  transform: perspective(800px) rotateY(5deg) translateZ(20px);
-  filter: brightness(1.2) contrast(1.1);
-  transition: transform 0.3s ease, filter 0.3s ease;
-}
-
-.lora-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.lora-weight {
-  width: 100%;
-}
-
-.weight-value {
-  min-height: 1.2em;
-  text-align: center;
-  font-size: 0.9em;
-  color: var(--text-tertiary);
-  transition: color var(--transition-fast);
-}
-
-.lora-item:hover .weight-value {
-  color: var(--text-secondary);
-}
-
-.lora-weight-controls {
-  height: 40px;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-
 /* ========= Preview Modal ========= */
 .preview-modal-overlay {
   position: fixed;
@@ -973,6 +876,7 @@ button.lora-selector span {
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
   animation: fade-zoom-in 0.4s cubic-bezier(0.17, 0.84, 0.44, 1);
+  overflow: hidden;
 }
 
 @keyframes fade-zoom-in {
@@ -997,11 +901,31 @@ button.lora-selector span {
   border-radius: var(--radius-lg);
   max-width: 90vw;
   max-height: 90vh;
-  overflow: auto;
+  overflow-y: auto;
   animation: modalSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Add accent glow to the modal */
+.preview-modal.animate-in {
+  animation: modal-entrance 0.5s cubic-bezier(0.17, 0.84, 0.44, 1) forwards;
+}
+
+@keyframes modal-entrance {
+  0% { opacity: 0; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Accent glow */
 .preview-modal::after {
   content: '';
   position: absolute;
@@ -1021,15 +945,30 @@ button.lora-selector span {
   pointer-events: none;
 }
 
-@keyframes modalSlideUp {
-  from {
-    opacity: 0;
-    transform: scale(0.95) translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
+/* Close button */
+.preview-close-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 46, 135, 0.15);
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 1000;
+}
+
+.preview-close-button:hover {
+  transform: rotate(90deg);
+  background: rgba(255, 46, 135, 0.3);
+  box-shadow: 0 0 15px rgba(255, 46, 135, 0.4);
 }
 
 .preview-modal h4 {
@@ -1044,8 +983,10 @@ button.lora-selector span {
 }
 
 .preview-main-image {
-  margin: 20px 0;
-  text-align: center;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin: 24px 0;
   position: relative;
 }
 
@@ -1054,39 +995,49 @@ button.lora-selector span {
   max-height: 60vh;
   object-fit: contain;
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-medium);
-  transition: transform var(--transition-medium);
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.3),
+    0 0 30px rgba(255, 46, 135, 0.15);
+  transition: all 0.3s ease;
+}
+
+.preview-main-image img:hover {
+  transform: scale(1.02);
+  box-shadow: 
+    0 15px 35px rgba(0, 0, 0, 0.4),
+    0 0 40px rgba(255, 46, 135, 0.2);
 }
 
 .preview-thumbnails {
   display: flex;
-  gap: 10px;
-  justify-content: center;
+  gap: 12px;
   flex-wrap: wrap;
-  margin-top: 16px;
+  justify-content: center;
+  margin-top: 20px;
 }
 
 .preview-thumbnails img {
-  width: 60px;
-  height: 60px;
+  width: 70px;
+  height: 70px;
   object-fit: cover;
   border-radius: var(--radius-sm);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   cursor: pointer;
-  opacity: 0.6;
-  transition: all var(--transition-bounce);
+  opacity: 0.5;
   border: 2px solid transparent;
+  transform: scale(0.95);
+}
+
+.preview-thumbnails img:hover {
+  opacity: 0.8;
+  transform: translateY(-3px) scale(1);
 }
 
 .preview-thumbnails img.active {
   opacity: 1;
   border-color: var(--primary);
-  transform: translateY(-3px);
-  box-shadow: 0 4px 15px rgba(255, 46, 135, 0.3);
-}
-
-.preview-thumbnails img:hover:not(.active) {
-  opacity: 0.8;
-  transform: translateY(-2px);
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 5px 15px rgba(255, 46, 135, 0.4);
 }
 
 /* ========= Action Buttons ========= */
@@ -1124,6 +1075,29 @@ button.lora-selector span {
   color: white;
   border: none;
   box-shadow: 0 4px 15px rgba(255, 46, 135, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Shimmer effect */
+.lora-action-btn.primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.2), 
+    transparent);
+  animation: shimmer 3s infinite;
+  z-index: 1;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
 }
 
 .lora-action-btn.secondary {
@@ -1154,113 +1128,208 @@ button.lora-selector span {
   box-shadow: none;
 }
 
-/* Add shimmer effect to primary button */
-.lora-action-btn.primary {
-  position: relative;
-  overflow: hidden;
+/* ========= Navigation Elements ========= */
+.preview-nav-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 24px;
+  opacity: 0.5;
+  transition: all 0.3s ease;
 }
 
-.lora-action-btn.primary::before {
-  content: '';
+.preview-nav-arrow:hover {
+  opacity: 1;
+  background: rgba(255, 46, 135, 0.3);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.preview-nav-prev {
+  left: 10px;
+}
+
+.preview-nav-next {
+  right: 10px;
+}
+
+/* Keyboard navigation hint */
+.preview-modal::after {
+  content: 'Use arrow keys to navigate';
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: var(--text-tertiary);
+  opacity: 0.7;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* ========= Selection Animations ========= */
+.lora-item.particle-effect::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 46, 135, 0.5) 0%, rgba(255, 46, 135, 0) 70%);
+  z-index: 10;
+  pointer-events: none;
+  animation: particle-burst 0.6s cubic-bezier(0.17, 0.84, 0.44, 1) forwards;
+}
+
+@keyframes particle-burst {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3);
+    opacity: 0;
+  }
+}
+
+/* Ripple effect */
+.ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(0);
+  animation: ripple 0.6s linear;
+  pointer-events: none;
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* ========= Loading Indicators ========= */
+.thumbnail-loading-indicator {
   position: absolute;
   top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, 
-    transparent, 
-    rgba(255, 255, 255, 0.2), 
-    transparent);
-  animation: shimmer 3s infinite;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg,
+    rgba(15, 10, 30, 0.3),
+    rgba(37, 26, 53, 0.5),
+    rgba(15, 10, 30, 0.3)
+  );
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
   z-index: 1;
 }
 
-/* ========= Preset Buttons ========= */
-.presets-section {
-  margin-bottom: 20px;
-  padding: 12px;
-  border-bottom: 1px solid rgba(255, 46, 135, 0.1);
+@keyframes loading-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
-.preset-buttons {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+/* ========= Accessibility ========= */
+@media (prefers-reduced-motion: reduce) {
+  .preview-modal,
+  .preview-modal::before,
+  .preview-main-image img,
+  .preview-thumbnails img,
+  .loraselector-close-button,
+  .thumbnail-container,
+  .preview-icon {
+    transition-duration: 0.1s;
+    animation-duration: 0.1s;
+  }
+  
+  .preview-modal::after {
+    display: none;
+  }
+
+  .lora-grid .lora-item {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Disable other intensive animations */
+  .loraselector-popup::before,
+  .loraselector-popup::after,
+  .loraselector-popup-header::after,
+  .loraselector-close-button::after {
+    animation: none;
+  }
 }
 
-.preset-button {
-  background: rgba(26, 16, 37, 0.7);
-  color: var(--text-primary);
-  border: 1px solid rgba(255, 46, 135, 0.2);
-  padding: 8px 14px;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all var(--transition-bounce);
-  font-weight: 500;
-  -webkit-tap-highlight-color: transparent;
+/* Focus states for keyboard navigation */
+.lora-item:focus-visible,
+.thumbnail-container:focus-visible,
+.lora-action-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(255, 46, 135, 0.3);
 }
 
-.preset-button:hover {
-  background: rgba(37, 26, 53, 0.8);
-  border-color: rgba(255, 46, 135, 0.4);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-soft);
+/* ========= Touch Interactions ========= */
+.touch-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle, 
+    rgba(255, 46, 135, 0.4) 0%, 
+    rgba(0, 233, 255, 0.2) 70%, 
+    transparent 100%
+  );
+  transform: scale(0);
+  animation: ripple-effect 0.8s ease-out;
+  pointer-events: none;
+  z-index: 10;
 }
 
-/* ========= Style Categories ========= */
-.style-categories {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin: 16px 0;
+@keyframes ripple-effect {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
 }
 
-.category-badge {
-  padding: 10px 16px;
-  border-radius: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 150px;
-  transition: all var(--transition-bounce);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
+.lora-item:active,
+.preset-button:active,
+.lora-action-btn:active,
+.thumbnail-container:active {
+  transform: scale(0.98);
+  transition: transform 0.1s;
 }
 
-.category-badge span {
-  font-weight: 600;
-  font-size: 16px;
-  margin-bottom: 4px;
-}
+/* ============ media screen settings ============== */
 
-.category-badge small {
-  color: var(--text-tertiary);
-}
 
-.category-badge:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-medium);
-}
+@media (max-width: 1024px) {
+  .thumbnail-strip {
+    grid-template-columns: repeat(4, 1fr);
+  }
 
-.category-badge.artistic {
-  background: rgba(255, 87, 34, 0.15);
-  border: 1px solid rgba(255, 87, 34, 0.3);
-}
-
-.category-badge.artistic:hover {
-  background: rgba(255, 87, 34, 0.2);
-  border-color: rgba(255, 87, 34, 0.4);
-}
-
-.category-badge.realistic {
-  background: rgba(0, 233, 255, 0.15);
-  border: 1px solid rgba(0, 233, 255, 0.3);
-}
-
-.category-badge.realistic:hover {
-  background: rgba(0, 233, 255, 0.2);
-  border-color: rgba(0, 233, 255, 0.4);
+  .preview-modal {
+    max-width: 900px;
+    width: 80%;
+  }
+  
+  .loraselector-close-button {
+    top: 16px;
+    right: -45px;
+  }
 }
 
 /* ========= Responsive Adjustments ========= */
@@ -1294,84 +1363,6 @@ button.lora-selector span {
   }
 }
 
-@media (max-width: 768px) {
-  .loraselector-popup {
-    width: 95vw;
-    height: 90vh;
-    margin: auto;
-  }
-  
-  .loraselector-popup-header {
-    padding: 12px;
-  }
-  
-  .loraselector-popup-header h3 {
-    font-size: 18px;
-  }
-  
-  .lora-content {
-    gap: 8px;
-    height: calc(90vh - 180px); /* Adjust for mobile header/footer */
-  }
-  
-  .lora-item label {
-    font-size: 14px; /* Increased for better touch targeting */
-    padding: 4px 0;
-  }
-  
-  /* Increase all touch targets for better mobile UX */
-  .mini-thumbnail,
-  .lora-item input[type="checkbox"],
-  .loraselector-close-button,
-  .lora-action-btn,
-  .preset-button {
-    touch-action: manipulation;
-  }
-  
-  /* Add extra padding for all clickable elements */
-  .lora-item label,
-  .preset-button,
-  .lora-action-btn,
-  .loraselector-close-button {
-    padding: 8px 14px;
-  }
-  
-  .lora-actions {
-    flex-direction: row; /* Keep horizontal layout */
-    flex-wrap: wrap;
-    justify-content: space-evenly;
-    padding: 12px;
-    gap: 8px;
-  }
-  
-  .lora-action-btn {
-    flex: 1;
-    min-width: 0;
-    padding: 12px 8px;
-    font-size: 14px;
-    border-radius: 8px; /* Larger radius for better touch */
-  }
-  
-  /* Extra space at bottom to ensure content isn't hidden by buttons */
-  .lora-column {
-    padding-bottom: 20px;
-  }
-  
-  .section-header {
-    padding: 14px; /* Larger padding for better touch targeting */
-  }
-  
-  /* Make sure scrollable areas have enough spacing for iOS bounce scrolling */
-  .lora-column {
-    -webkit-overflow-scrolling: touch;
-    padding: 0 8px 20px 8px;
-  }
-  
-  /* Make sure thumbnail click areas are large enough */
-  .thumbnail-container {
-    min-height: 100%;
-  }
-}
 
 /* Fix for various mobile browsers */
 @supports (-webkit-touch-callout: none) {
@@ -1396,121 +1387,6 @@ button.lora-selector span {
   }
 }
 
-/* Enhanced mobile layout fixes */
-@media (max-width: 768px) {
-  /* Fix actions layout */
-  .lora-actions {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: rgba(13, 2, 33, 0.98);
-    border-top: 1px solid rgba(255, 46, 135, 0.3);
-    padding: 12px 16px;
-    box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.5);
-    z-index: 500;
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-  }
-  
-  /* Fix close button position for mobile */
-  .loraselector-popup-header {
-    flex-wrap: wrap;
-    padding: 16px;
-    gap: 12px;
-  }
-  
-  .loraselector-close-button {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    z-index: 101;
-    width: 36px;
-    height: 36px;
-  }
-  
-  /* Make room for fixed footer buttons */
-  .lora-content {
-    height: calc(90vh - 140px);
-    padding-bottom: 60px;
-  }
-  
-  /* Improve touch targets */
-  .lora-item {
-    padding: 16px;
-  }
-  
-  .lora-item label {
-    padding: 8px 0;
-  }
-  
-  /* Increase checkbox size */
-  .lora-item input[type="checkbox"] {
-    width: 24px;
-    height: 24px;
-  }
-  
-  /* Ensure thumbnail tapping works properly */
-  .thumbnail-container {
-    position: relative;
-    display: block; /* Ensure it's a block for better touch targeting */
-    touch-action: manipulation;
-  }
-  
-  /* Fix thumbnail preview modal for mobile */
-  .preview-modal {
-    width: 90vw;
-    max-height: 80vh;
-    padding: 16px;
-  }
-  
-  .preview-modal h4 {
-    font-size: 18px;
-    margin-bottom: 16px;
-    padding-right: 40px; /* Make room for close button */
-  }
-  
-  /* Better positioned close button in modal */
-  .preview-close-button {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    z-index: 101;
-    background: rgba(255, 46, 135, 0.15);
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    border: none;
-    color: white;
-    font-size: 20px;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-  }
-  
-  /* Make thumbnails easier to tap */
-  .preview-thumbnails img {
-    width: 50px;
-    height: 50px;
-    margin: 4px;
-  }
-  
-  /* Ensure section headers are easy to tap for collapsing */
-  .section-header {
-    padding: 16px;
-  }
-  
-  /* Add extra padding to prevent content from being hidden behind the fixed footer */
-  .lora-column:after {
-    content: '';
-    display: block;
-    height: 80px; /* Height of the fixed footer plus some extra space */
-  }
-}
-
 /* Fix any scroll issues in the preview mode */
 .preview-modal-overlay {
   overflow: hidden;
@@ -1529,156 +1405,6 @@ button.lora-selector span {
   transform: scale(0.98);
   transition: transform 0.1s;
 }
-
-/* ========= Mobile Optimization ========= */
-@media (max-width: 768px) {
-  /* Fix the header layout */
-  .loraselector-popup-header {
-    flex-wrap: nowrap;
-    justify-content: center;
-    padding: 16px 50px 16px 16px; /* Add right padding for close button */
-    position: relative;
-    border-bottom: 1px solid rgba(255, 46, 135, 0.2);
-  }
-  
-  /* Position close button in top right corner */
-  .loraselector-close-button {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    z-index: 10;
-    margin: 0;
-  }
-  
-  /* Fix thumbnail strip responsive layout */
-  .thumbnail-strip {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    padding: 10px;
-  }
-  
-  /* Make thumbnails easier to tap */
-  .thumbnail-container {
-    min-height: 100%;
-    padding: 8px;
-  }
-  
-  /* Fixed action buttons at bottom */
-  .lora-actions {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: rgba(13, 2, 33, 0.98);
-    border-top: 1px solid rgba(255, 46, 135, 0.3);
-    padding: 12px 16px;
-    box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.5);
-    z-index: 500;
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-  }
-  
-  /* Restyle action buttons for mobile */
-  .lora-action-btn {
-    flex: 1;
-    font-size: 14px;
-    padding: 12px 10px;
-    min-height: 44px; /* Larger tap target */
-  }
-  
-  /* Make room for fixed footer buttons */
-  .lora-content {
-    padding-bottom: 80px;
-    max-height: calc(90vh - 80px);
-  }
-  
-  /* Increase touch targets for checkboxes */
-  .lora-item input[type="checkbox"] {
-    width: 24px;
-    height: 24px;
-    margin-right: 12px;
-  }
-  
-  /* Adjust preview modal for mobile viewing */
-  .preview-modal {
-    width: 90vw;
-    max-height: 80vh;
-  }
-  
-  .preview-modal h4 {
-    padding-right: 30px; /* Make room for close button */
-  }
-  
-  .preview-close-button {
-    width: 40px;
-    height: 40px;
-  }
-  
-  /* Enhanced haptic feedback simulation */
-  .lora-item:active,
-  .thumbnail-container:active,
-  .lora-action-btn:active {
-    transform: scale(0.96);
-    opacity: 0.9;
-    transition: all 0.1s ease;
-  }
-  
-  /* Add visual indicator for scrollable content */
-  .lora-column::after {
-    content: '';
-    position: fixed;
-    bottom: 70px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-    opacity: 0.5;
-    animation: scroll-hint 2s ease-in-out infinite;
-    pointer-events: none;
-  }
-  
-  @keyframes scroll-hint {
-    0%, 100% { transform: translateX(-50%) scaleX(0.8); opacity: 0.3; }
-    50% { transform: translateX(-50%) scaleX(1.2); opacity: 0.7; }
-  }
-  
-  /* Fix iOS specific issues */
-  @supports (-webkit-touch-callout: none) {
-    /* iOS specific styles */
-    .lora-column {
-      padding-bottom: 150px; /* Extra padding for iOS */
-      -webkit-overflow-scrolling: touch;
-    }
-    
-    /* Fix iOS touch targets */
-    .thumbnail-container,
-    .lora-item,
-    .preset-button,
-    .lora-action-btn {
-      -webkit-tap-highlight-color: transparent;
-    }
-  }
-}
-
-/* Ensure thumbnail strip layout at different breakpoints */
-@media (min-width: 769px) and (max-width: 1023px) {
-  .thumbnail-strip {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 1024px) {
-  .thumbnail-strip {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-/* ========= Advanced Touch & Interaction Effects ========= */
 
 /* Touch ripple effect */
 .touch-ripple {
@@ -1703,434 +1429,26 @@ button.lora-selector span {
   }
 }
 
-/* Enhance focus states for keyboard navigation */
-.lora-item:focus-visible,
-.thumbnail-container:focus-visible,
-.lora-action-btn:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(255, 46, 135, 0.3);
-}
-
-/* Add interaction hints for new users */
-.lora-grid:empty::after {
-  content: 'Try tapping the thumbnails to view categories';
-  display: block;
-  text-align: center;
-  padding: 30px;
-  color: var(--text-tertiary);
-  font-style: italic;
-}
-
-/* Add "press and hold" hint for long-press actions */
-.thumbnail-container::after {
-  content: attr(data-hint);
-  position: absolute;
-  bottom: -30px;
-  left: 50%;
-  transform: translateX(-50%) translateY(10px);
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 5px 10px;
-  border-radius: 4px;
-  font-size: 12px;
-  opacity: 0;
-  transition: all 0.3s ease;
-  pointer-events: none;
-  white-space: nowrap;
-  z-index: 100;
-}
-
-.thumbnail-container:active::after {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-/* Improve swipe detection areas */
-.swipe-area {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 50px;
-  z-index: 5;
-}
-
-.swipe-area.left {
-  left: 0;
-}
-
-.swipe-area.right {
-  right: 0;
-}
-
-/* Enhanced preview modal */
-.preview-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0);
-  backdrop-filter: blur(0);
-  -webkit-backdrop-filter: blur(0);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 20000;
-  animation: backdrop-reveal 0.4s ease forwards;
-}
-
-@keyframes backdrop-reveal {
-  0% { background: rgba(0, 0, 0, 0); backdrop-filter: blur(0); }
-  100% { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px); }
-}
-
-.preview-modal {
-  background: rgba(13, 2, 33, 0.95);
-  border: 1px solid rgba(255, 46, 135, 0.3);
-  border-radius: var(--radius-lg);
-  padding: 24px;
-  max-width: 800px;
-  width: 90%;
-  max-height: 85vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 
-    0 20px 60px rgba(0, 0, 0, 0.7),
-    0 0 30px rgba(255, 46, 135, 0.15);
-  opacity: 0;
-  transform: scale(0.95);
-}
-
-.preview-modal.animate-in {
-  animation: modal-entrance 0.5s cubic-bezier(0.17, 0.84, 0.44, 1) forwards;
-}
-
-@keyframes modal-entrance {
-  0% { opacity: 0; transform: scale(0.95); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-/* Enhanced close button */
-.preview-close-button {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: rgba(255, 46, 135, 0.15);
-  border: none;
-  color: white;
-  font-size: 24px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  z-index: 1;
-}
-
-.preview-close-button:hover {
-  transform: rotate(90deg);
-  background: rgba(255, 46, 135, 0.3);
-  box-shadow: 0 0 15px rgba(255, 46, 135, 0.4);
-}
-
-/* Enhanced main image */
-.preview-main-image {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  margin: 24px 0;
-  position: relative;
-}
-
-.preview-main-image img {
-  max-width: 100%;
-  max-height: 60vh;
-  object-fit: contain;
-  border-radius: var(--radius-md);
-  box-shadow: 
-    0 10px 30px rgba(0, 0, 0, 0.3),
-    0 0 30px rgba(255, 46, 135, 0.15);
-  transition: all 0.3s ease;
-}
-
-/* Better thumbnails */
-.preview-thumbnails {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-.preview-thumbnails img {
-  width: 70px;
-  height: 70px;
-  object-fit: cover;
-  border-radius: var(--radius-sm);
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  cursor: pointer;
-  opacity: 0.5;
-  border: 2px solid transparent;
-  transform: scale(0.95);
-}
-
-.preview-thumbnails img:hover {
-  opacity: 0.8;
-  transform: translateY(-3px) scale(1);
-}
-
-.preview-thumbnails img.active {
-  opacity: 1;
-  border-color: var(--primary);
-  transform: translateY(-5px) scale(1.05);
-  box-shadow: 0 5px 15px rgba(255, 46, 135, 0.4);
-}
-
-/* Enhanced thumbnail containers */
-.thumbnail-container {
-  position: relative;
-  overflow: hidden;
-  border-radius: var(--radius-sm);
-  transform: translateZ(0);
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.thumbnail-container:hover {
-  transform: translateY(-5px);
-}
-
-.thumbnail-container:before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.2);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: 1;
-}
-
-.thumbnail-container:hover:before {
-  opacity: 1;
-}
-
-.preview-icon {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(0);
-  color: white;
-  font-size: 24px;
-  opacity: 0;
-  z-index: 2;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-}
-
-.thumbnail-container:hover .preview-icon {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
-}
-
-/* Loading indicator */
-.thumbnail-loading-indicator {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(90deg,
-    rgba(15, 10, 30, 0.3),
-    rgba(37, 26, 53, 0.5),
-    rgba(15, 10, 30, 0.3)
-  );
-  background-size: 200% 100%;
-  animation: loading-shimmer 1.5s infinite;
-  z-index: 1;
-}
-
-@keyframes loading-shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-/* Add interaction feedback with ripples */
-.ripple-effect {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.4);
-  transform: scale(0);
-  animation: ripple 0.6s linear;
-  pointer-events: none;
-}
-
-@keyframes ripple {
-  to {
-    transform: scale(4);
-    opacity: 0;
-  }
-}
-
-/* Selection animation for LoRA items */
-.lora-item.particle-effect::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 46, 135, 0.5) 0%, rgba(255, 46, 135, 0) 70%);
-  z-index: 10;
-  pointer-events: none;
-  animation: particle-burst 0.6s cubic-bezier(0.17, 0.84, 0.44, 1) forwards;
-}
-
-@keyframes particle-burst {
-  0% {
-    transform: translate(-50%, -50%) scale(0);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(3);
-    opacity: 0;
-  }
-}
-
-/* Fixed mobile issues */
+/* Mobile Optimizations */
 @media (max-width: 768px) {
-  .preview-modal {
-    width: 95%;
-    max-width: 95%;
-    max-height: 90vh;
-    padding: 16px;
-    margin: 0;
-    border-radius: 12px;
-    overflow-y: auto;
-  }
-  
-  .preview-main-image {
-    margin: 12px 0;
-  }
-  
-  .preview-main-image img {
-    max-height: 50vh;
-    border-radius: 8px;
-  }
-  
-  .preview-thumbnails {
-    gap: 8px;
-    margin-top: 12px;
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    overflow-x: auto;
-    padding: 4px 0;
-  }
-  
-  .preview-thumbnails img {
-    width: 60px;
-    height: 60px;
-    border-radius: 6px;
-  }
-}
-
-/* Fix button positioning - ensure close button is always top right */
-.loraselector-close-button {
-  position: absolute;
-  top: 16px;
-  right: -45px;
-  z-index: 101;
-  width: 36px;
-  height: 36px;
-}
-
-/* Fix other header buttons that might be misplaced */
-.loraselector-popup-header {
-  position: relative;
-  padding-right: 60px; /* Make sure there's room for the close button */
-}
-
-.loraselector-popup-header .header-actions {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-@media (max-width: 1024px) {
-  .preview-modal {
-    max-width: 900px;
-    width: 80%;
-  }
-  
-  .loraselector-close-button {
-    top: 16px;
-    right: -45px;
-  }
-}
-
-/* Ensure proper z-indexing and positioning for all screens */
-@media (max-width: 768px) {
-  .preview-modal {
-    width: 85%;
-    max-width: 800px;
-  }
-  
-  .loraselector-popup-header {
-    padding-right: 70px;
-  }
-  
-  .loraselector-close-button {
-    top: 16px;
-    right: 16px;
-  }
-}
-
-/* Make sure preview modal close button has proper positioning */
-.preview-close-button {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 1000;
-  background: rgba(255, 46, 135, 0.15);
-  border: none;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  font-size: 24px;
-  color: white;
-}
-
-/* Fix thumbnail containers to maintain square aspect ratio */
-@media (max-width: 768px) {
-  /* Ensure thumbnail strip maintains grid layout with proper aspect ratio */
+  /* Thumbnail Strip */
   .thumbnail-strip {
     display: grid;
-    grid-template-columns: repeat(2, 1fr); /* 2 columns on mobile */
-    gap: 8px;
-    margin-top: 12px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+    margin-top: 0px;
+    padding: 0px;
   }
-  
   .thumbnail-container {
     position: relative;
     width: 100%;
-    height: 0;
-    padding-bottom: 100%; /* This creates perfect squares */
+    height: 100%;
     overflow: hidden;
     border-radius: var(--radius-sm);
     background: rgba(15, 10, 30, 0.7);
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    touch-action: manipulation;
   }
-  
-  /* Position the image correctly within the container */
   .mini-thumbnail {
     position: absolute;
     top: 0;
@@ -2139,39 +1457,159 @@ button.lora-selector span {
     height: 100%;
     object-fit: cover;
   }
-  
-  /* Ensure proper hover states even on mobile */
-  .thumbnail-container:hover {
+  .thumbnail-container:hover, .thumbnail-container:active {
     transform: scale(1.05);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   }
-}
-
-/* Fix for the preview modal thumbnails */
-@media (max-width: 768px) {
+  
+  /* Preview Modal */
+  .preview-modal {
+    width: 90vw;
+    max-height: 80vh;
+    padding: 16px;
+    border-radius: 12px;
+    overflow-y: auto;
+  }
+  .preview-main-image img {
+    max-height: 50vh;
+    border-radius: 8px;
+  }
   .preview-thumbnails {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 8px;
+    margin-top: 12px;
+    overflow-x: auto;
+    padding: 4px 0;
+  }
+  .preview-thumbnails img {
+    width: 50px;
+    height: 50px;
+    border-radius: 6px;
+    margin: 4px;
   }
   
-  .preview-thumbnails img {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: var(--radius-sm);
-    margin: 0;
+  /* Header & Close Button */
+  .loraselector-popup-header {
+    display: flex;
+    justify-content: center;
+    padding: 16px 50px 16px 16px;
+    position: relative;
+    border-bottom: 1px solid rgba(255, 46, 135, 0.2);
+  }
+  .loraselector-close-button {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 101;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 46, 135, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: none;
+    color: white;
+    font-size: 20px;
+    touch-action: manipulation;
+  }
+  
+  /* Fixed Action Buttons */
+  .lora-actions {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(13, 2, 33, 0.98);
+    border-top: 1px solid rgba(255, 46, 135, 0.3);
+    padding: 12px 16px;
+    box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.5);
+    z-index: 500;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    backdrop-filter: blur(10px);
+  }
+  .lora-action-btn {
+    flex: 1;
+    font-size: 14px;
+    padding: 12px 10px;
+    min-height: 44px;
+  }
+  .lora-content {
+    padding-bottom: 80px;
+    max-height: calc(90vh - 80px);
+  }
+  
+  /* Enhancements for Mobile */
+  .lora-item input[type="checkbox"] {
+    width: 24px;
+    height: 24px;
+    margin-right: 12px;
+  }
+  .lora-item label {
+    font-size: 14px;
+    padding: 4px 0;
+  }
+  .preset-button, .lora-action-btn {
+    padding: 8px 14px;
+    touch-action: manipulation;
+  }
+  
+  /* Scroll Indicator */
+  .lora-column::after {
+    content: '';
+    position: fixed;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    opacity: 0.5;
+    animation: scroll-hint 2s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes scroll-hint {
+    0%, 100% { transform: translateX(-50%) scaleX(0.8); opacity: 0.3; }
+    50% { transform: translateX(-50%) scaleX(1.2); opacity: 0.7; }
+  }
+  
+  /* iOS Specific Fixes */
+  @supports (-webkit-touch-callout: none) {
+    .lora-column {
+      padding-bottom: 150px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .thumbnail-container, .lora-item, .preset-button, .lora-action-btn {
+      -webkit-tap-highlight-color: transparent;
+    }
   }
 }
 
-/* Override any other styles that might be causing the issue */
-@media (max-width: 768px) {
-  .thumbnail-container {
-    min-height: unset; /* Remove if causing conflicts */
-    padding: 0;
-    padding-bottom: 100%;
-    aspect-ratio: 1/1; /* Modern browsers support this */
-    display: block;
+/* ========= iOS Specific Fixes ========= */
+@supports (-webkit-touch-callout: none) {
+  .lora-column {
+    padding-bottom: 150px;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .thumbnail-container,
+  .lora-item,
+  .preset-button,
+  .lora-action-btn {
+    cursor: pointer;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  }
+  
+  .lora-column,
+  .preview-modal {
+    -webkit-overflow-scrolling: touch;
   }
 }
+
+
+

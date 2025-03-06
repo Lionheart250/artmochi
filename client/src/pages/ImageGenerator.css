@@ -1279,7 +1279,8 @@ input[type="range"].steps-slider.max-power::-moz-range-thumb {
 
 /* Enhanced LoRA settings button */
 .lora-settings-button {
-  background: linear-gradient(45deg, rgba(254, 44, 85, 0.9), rgba(254, 44, 85, 0.7));
+  /* Use the new variables */
+  background: linear-gradient(45deg, var(--primary) 0%, var(--primary-hover) 100%);
   color: white;
   border: none;
   padding: 12px 16px;
@@ -1290,7 +1291,7 @@ input[type="range"].steps-slider.max-power::-moz-range-thumb {
   transition: all var(--transition-bounce);
   width: 100%;
   margin: 5px 0;
-  box-shadow: 0 4px 15px rgba(254, 44, 85, 0.3);
+  box-shadow: 0 4px 15px rgba(255, 46, 135, 0.3);
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -1300,8 +1301,19 @@ input[type="range"].steps-slider.max-power::-moz-range-thumb {
 }
 
 .lora-settings-button:hover {
+  background: linear-gradient(45deg, var(--primary-hover) 0%, var(--primary) 100%);
   transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(254, 44, 85, 0.4);
+  box-shadow: var(--glow-pink);
+}
+
+/* Fix active state to use correct teal color */
+.lora-settings-button.active {
+  background: linear-gradient(45deg, var(--teal) 0%, var(--teal-hover) 100%);
+  box-shadow: var(--glow-cyan);
+}
+
+.lora-settings-button.active:hover {
+  box-shadow: 0 6px 20px rgba(0, 233, 255, 0.4);
 }
 
 /* Add shimmer effect */
@@ -1340,6 +1352,58 @@ input[type="range"].steps-slider.max-power::-moz-range-thumb {
 
 .lora-settings-button.active:hover {
   box-shadow: 0 6px 20px rgba(0, 242, 234, 0.4);
+}
+
+/* Fix hover disappearing issue for Lora items */
+.lora-item:hover {
+  background: rgba(37, 26, 53, 0.8);
+  transform: translateY(-3px);
+  border-color: rgba(255, 46, 135, 0.4);
+  box-shadow: 
+    0 10px 20px rgba(0, 0, 0, 0.3),
+    0 0 15px rgba(255, 46, 135, 0.2);
+  /* Remove any animation that might cause disappearing */
+  animation: none !important;
+}
+
+.lora-item.selected {
+  background: rgba(255, 46, 135, 0.1);
+  border-color: rgba(255, 46, 135, 0.7);
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.3),
+    0 0 25px rgba(255, 46, 135, 0.35);
+}
+
+/* Fix selected hover state */
+.lora-item.selected:hover {
+  background: rgba(255, 46, 135, 0.15);
+  transform: translateY(-3px);
+}
+
+/* Make sure animations don't interfere with visibility */
+.lora-item {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Remove floating animation that causes issues */
+@keyframes float {
+  0%, 50%, 100% { transform: none; }
+}
+
+/* Ensure proper z-index stacking */
+.lora-grid {
+  position: relative;
+  z-index: 1;
+}
+
+/* Make media queries consistent */
+@media (max-width: 768px) {
+  .lora-item:hover {
+    transform: translateY(-2px);
+  }
 }
 
 /* Enhanced mode selector */
@@ -1687,6 +1751,8 @@ input[type="range"].steps-slider.max-power::-moz-range-thumb {
   height: 100%;
   min-height: 750px; /* Match container min-height */
 }
+
+
 
 /* ========= Loading States ========= */
 .loading-container {

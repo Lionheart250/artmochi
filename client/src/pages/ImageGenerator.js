@@ -162,28 +162,6 @@ const detectAspectRatio = (width, height) => {
     }
   };
 
-// Add this to your ImageGenerator.js
-const createConfetti = () => {
-  const confettiCount = 100;
-  const colors = ['#fe2c55', '#00f2ea', '#9333ea', '#ffffff'];
-  
-  for (let i = 0; i < confettiCount; i++) {
-    const confetti = document.createElement('div');
-    confetti.className = 'confetti-particle';
-    confetti.style.left = `${Math.random() * 100}%`;
-    confetti.style.width = `${Math.random() * 10 + 5}px`;
-    confetti.style.height = `${Math.random() * 10 + 5}px`;
-    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
-    confetti.style.animationDuration = `${Math.random() * 3 + 2}s`;
-    document.body.appendChild(confetti);
-    
-    // Remove confetti after animation
-    setTimeout(() => {
-      document.body.removeChild(confetti);
-    }, 5000);
-  }
-};
-
 // Add to your component to handle toggling without changing layout
 const toggleFeature = (featureId, show) => {
   const element = document.getElementById(featureId);
@@ -567,7 +545,6 @@ const handleSubmit = async (e) => {
                 setImage(data.image);
                 setProgressPercentage(100);
                 setGenerationStage('Complete!');
-                createConfetti();
                 // Also add a success notification
                 const notification = document.createElement('div');
                 notification.className = 'image-generated-notification';
@@ -679,47 +656,6 @@ useEffect(() => {
         document.body.style.overflow = '';
     };
 }, [isLoraOpen]);
-
-
-
-
-useEffect(() => {
-    const loadEditData = async () => {
-        const editDataString = localStorage.getItem('editImageData');
-        if (!editDataString) return;
-
-        try {
-            const editData = JSON.parse(editDataString);
-            
-            // Create a simple fetch to get the image as a blob
-            const response = await fetch(editData.url, {
-                headers: {
-                    'Cache-Control': 'no-cache',
-                    'Pragma': 'no-cache'
-                }
-            });
-            
-            if (!response.ok) throw new Error('Failed to load image');
-            
-            const blob = await response.blob();
-            const file = new File([blob], 'image.webp', { type: 'image/webp' });
-
-            // Set all states at once
-            setMode(editData.mode);
-            setPrompt(editData.prompt || '');
-            setInitImage(file);
-            setIsImageToImage(editData.isImageToImage);
-
-            // Clean up
-            localStorage.removeItem('editImageData');
-        } catch (error) {
-            console.error('Error loading edit data:', error);
-            setError('Failed to load image for editing');
-        }
-    };
-
-    loadEditData();
-}, []); // Run once on component mount
 
 useEffect(() => {
     localStorage.setItem('selectedLoras', JSON.stringify(selectedLoras));
