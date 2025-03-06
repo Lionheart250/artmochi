@@ -469,472 +469,177 @@ body {
   z-index: 100;
 }
 
-/* Add at the end of your file */
+/* Cyberpunk Circuit Wallpaper - fixes for visibility issues */
 
-/* Electric particle effect system */
-.electric-mouse-effect {
+/* Circuit grid container - sets up the wallpaper foundation */
+.circuit-grid {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+  z-index: 2; /* Below content but above basic background */
   pointer-events: none;
-  z-index: 200;
-  overflow: visible;
-  display: block; /* Make sure container is displayed */
+  overflow: hidden;
 }
 
-/* Base particle styling - make sure they're visible */
-.energy-particle {
+/* Primary circuit pathways */
+.circuit-path {
   position: absolute;
-  display: block; /* Ensure particles are displayed */
-  width: 10px; /* Default size */
-  height: 10px; /* Default size */
-  border-radius: 50%;
-  background: radial-gradient(circle, 
-    rgba(255, 255, 255, 1) 0%, 
-    rgba(255, 210, 255, 0.9) 30%, 
-    rgba(120, 210, 255, 0.8) 60%, 
-    transparent 100%);
-  filter: blur(1px);
-  pointer-events: none;
-  mix-blend-mode: screen;
-  will-change: transform;
-  box-shadow: 
-    0 0 15px rgba(255, 210, 255, 0.7),
-    0 0 25px rgba(120, 210, 255, 0.5);
-  opacity: 0.9;
-  z-index: 5; /* Make sure they're visible above background */
-  transform: translate(0, 0); /* Initial transform */
-  transition: all 0.3s ease;
-}
-
-/* Particle sizes with cute proportions */
-.energy-particle.small {
-  width: 8px;
-  height: 8px;
-}
-
-.energy-particle.medium {
-  width: 12px;
-  height: 12px;
-}
-
-.energy-particle.large {
-  width: 18px;
-  height: 18px;
-}
-
-/* Add cute "eyes" to larger particles to give them personality */
-.energy-particle.medium::after,
-.energy-particle.large::after {
-  content: '';
-  position: absolute;
-  width: 40%;
-  height: 40%;
-  background: radial-gradient(circle, 
-    rgba(255, 255, 255, 0.95) 0%, 
-    rgba(200, 230, 255, 0.7) 70%, 
-    transparent 100%);
-  border-radius: 50%;
-  top: 20%;
-  left: 20%;
-  filter: blur(0.5px);
-  animation: blink 5s infinite;
-}
-
-/* Add second eye to larger particles */
-.energy-particle.large::before {
-  content: '';
-  position: absolute;
-  width: 35%;
-  height: 35%;
-  background: radial-gradient(circle, 
-    rgba(255, 255, 255, 0.95) 0%, 
-    rgba(200, 230, 255, 0.7) 70%, 
-    transparent 100%);
-  border-radius: 50%;
-  top: 20%;
-  right: 20%;
-  filter: blur(0.5px);
-  animation: blink 5s infinite;
-  animation-delay: 0.5s;
-}
-
-/* Cute blinking animation */
-@keyframes blink {
-  0%, 24%, 27%, 100% { transform: scaleY(1); }
-  25%, 26% { transform: scaleY(0.1); }
-}
-
-/* Happy bouncy pulse for particles */
-@keyframes particle-pulse {
-  0% { 
-    transform: scale(0.9);
-    opacity: 0.7; 
-  }
-  100% { 
-    transform: scale(1.1); 
-    opacity: 0.95;
-  }
-}
-
-/* Make energized particles extra happy and bouncy */
-.energy-particle.energized {
-  box-shadow: 
-    0 0 15px rgba(255, 220, 255, 0.9),
-    0 0 30px rgba(120, 210, 255, 0.7);
-  background: radial-gradient(circle, 
-    rgba(255, 255, 255, 1) 0%, 
-    rgba(255, 230, 255, 1) 30%, 
-    rgba(150, 230, 255, 0.7) 60%, 
-    transparent 100%);
-  animation: excited-particle 0.8s infinite alternate;
-}
-
-@keyframes excited-particle {
-  0%, 100% { transform: scale(1.1); }
-  50% { transform: scale(1.2) rotate(5deg); }
-}
-
-/* Add cute trails behind the particles */
-.energy-particle::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: inherit;
-  filter: blur(3px);
-  opacity: 0.4;
-  z-index: -1;
-  transform: translate(-50%, -50%) scale(1.5);
-  animation: trail-fade 1.5s infinite;
-}
-
-@keyframes trail-fade {
-  0% { opacity: 0.4; transform: translate(-50%, -50%) scale(1.5); }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(2.5); }
-}
-
-/* When particles are close to each other, they "notice" each other */
-.energy-particle.connected {
-  animation: happy-bounce 0.5s infinite alternate;
-}
-
-@keyframes happy-bounce {
-  0% { transform: scale(1) rotate(-5deg); }
-  100% { transform: scale(1.2) rotate(5deg); }
-}
-
-/* Make connections between particles look like playful energy streams */
-.energy-particle.connected::before {
-  content: '';
-  position: absolute;
-  width: 150px;
-  height: 3px;
-  background: linear-gradient(90deg, 
-    rgba(255, 210, 255, 0.7) 0%,
-    rgba(120, 210, 255, 0.5) 50%,
-    rgba(190, 230, 255, 0.3) 100%);
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  opacity: 0.3;
-  border-radius: 3px;
-  filter: blur(1px);
-  box-shadow: 0 0 8px rgba(255, 210, 255, 0.5);
-  animation: connection-wiggle 2s infinite;
-}
-
-@keyframes connection-wiggle {
-  0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
-  25% { transform: translate(-50%, -50%) rotate(-5deg); }
-  75% { transform: translate(-50%, -50%) rotate(5deg); }
-}
-
-/* Add sparkle effect to make them extra adorable */
-.energy-particle::before {
-  content: '';
-  position: absolute;
-  top: 10%;
-  left: 10%;
-  width: 30%;
-  height: 30%;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
-  filter: blur(0.5px);
-  opacity: 0.7;
-  animation: sparkle 4s infinite;
-}
-
-@keyframes sparkle {
-  0%, 100% { opacity: 0.7; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.5); }
-}
-
-/* Add color variety for more playfulness */
-.energy-particle:nth-child(3n) {
-  background: radial-gradient(circle, 
-    rgba(255, 255, 255, 1) 0%, 
-    rgba(255, 220, 180, 0.9) 30%, 
-    rgba(255, 150, 150, 0.8) 60%, 
-    transparent 100%);
-  box-shadow: 
-    0 0 15px rgba(255, 220, 180, 0.7),
-    0 0 25px rgba(255, 150, 150, 0.5);
-}
-
-.energy-particle:nth-child(3n+1) {
-  background: radial-gradient(circle, 
-    rgba(255, 255, 255, 1) 0%, 
-    rgba(200, 255, 220, 0.9) 30%, 
-    rgba(100, 240, 180, 0.8) 60%, 
-    transparent 100%);
-  box-shadow: 
-    0 0 15px rgba(200, 255, 220, 0.7),
-    0 0 25px rgba(100, 240, 180, 0.5);
-}
-
-/* Make the background react to mouse position */
-.home-container::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: 
-    radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), 
-      rgba(0, 233, 255, 0.15) 0%, 
-      rgba(155, 77, 255, 0.1) 20%, 
-      transparent 70%);
-  background-size: 100% 100%;
-  pointer-events: none;
-  opacity: 0.8;
-  mix-blend-mode: screen;
-  z-index: 100;
-  transition: opacity 1s ease;
-}
-
-/* Enhanced interactive elements */
-.home-hero {
-  transition: transform 0.3s ease-out;
-}
-
-/* Add to your existing CSS */
-
-/* Happy jump effect */
-.energy-particle.happy {
-  animation: happy-jump 0.5s ease-in-out;
-}
-
-@keyframes happy-jump {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-15px) scale(1.3); }
-}
-
-/* Excited dart movement */
-.energy-particle.excited {
-  animation: excited-dart 0.3s ease-in-out;
-}
-
-@keyframes excited-dart {
-  0% { transform: scale(0.7); }
-  50% { transform: scale(1.5) rotate(15deg); }
-  100% { transform: scale(1) rotate(0deg); }
-}
-
-/* Custom cute face when energized near mouse */
-.energy-particle.energized::after {
-  content: '';
-  position: absolute;
-  width: 50%;
-  height: 25%;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
-  bottom: 20%;
-  left: 25%;
-  transform: rotate(15deg);
-  animation: smile 1s infinite alternate;
-}
-
-@keyframes smile {
-  from { transform: rotate(10deg) scaleX(1); }
-  to { transform: rotate(20deg) scaleX(1.2); }
-}
-
-/* Electric particles that feel like part of the cyberpunk wallpaper */
-
-/* Container for electric effect */
-.electric-mouse-effect {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 5; /* Lower z-index to blend with background */
-  overflow: visible;
-  mix-blend-mode: screen; /* This helps blend with background */
-}
-
-/* Base electricity node styling */
-.energy-particle {
-  position: absolute;
-  border-radius: 50%;
-  background: radial-gradient(circle, 
-    rgba(255, 255, 255, 0.9) 0%, 
-    rgba(0, 233, 255, 0.7) 30%, 
-    rgba(0, 150, 220, 0.3) 70%, 
-    transparent 100%);
-  filter: blur(2px);
-  pointer-events: none;
-  will-change: transform;
-  opacity: 0.7;
+  background: rgba(0, 150, 255, 0.15);
   transform-origin: center;
-  /* Electric glow effect */
-  box-shadow: 
-    0 0 5px rgba(0, 233, 255, 0.8),
-    0 0 15px rgba(0, 180, 255, 0.5),
-    0 0 30px rgba(50, 120, 255, 0.3);
-  /* Enhanced with digital-like flicker */
-  animation: electric-flicker 4s infinite steps(6, end);
+  z-index: 1;
 }
 
-/* Electric flicker animation */
-@keyframes electric-flicker {
-  0%, 100% { opacity: 0.7; }
-  25% { opacity: 0.8; }
-  40% { opacity: 0.6; }
-  50% { opacity: 0.9; }
-  75% { opacity: 0.7; }
-  80% { opacity: 0.85; }
-  90% { opacity: 0.75; }
+/* Horizontal paths */
+.circuit-path.horizontal {
+  height: 2px;
+  width: 100%;
+  box-shadow: 0 0 8px rgba(0, 180, 255, 0.3);
 }
 
-/* Particle sizes with electric proportions */
-.energy-particle.small {
+/* Vertical paths */
+.circuit-path.vertical {
+  width: 2px;
+  height: 100%;
+  box-shadow: 0 0 8px rgba(0, 180, 255, 0.3);
+}
+
+/* Node connection points - where paths intersect */
+.circuit-node {
+  position: absolute;
   width: 5px;
   height: 5px;
-  animation-delay: -0.5s;
+  border-radius: 50%;
+  background: rgba(0, 210, 255, 0.4);
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  box-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
 }
 
-.energy-particle.medium {
+/* Energy pulse that travels along circuit paths */
+.energy-pulse {
+  position: absolute;
+  width: 50px;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent, 
+    rgba(0, 170, 255, 0.1),
+    rgba(0, 210, 255, 0.3), 
+    rgba(60, 220, 255, 0.5),
+    rgba(0, 210, 255, 0.3),
+    rgba(0, 170, 255, 0.1),
+    transparent);
+  filter: blur(1px);
+  z-index: 3;
+  animation: flow-pulse 1.5s infinite;
+}
+
+.energy-pulse.vertical {
+  width: 100%;
+  height: 50px;
+  background: linear-gradient(180deg,
+    transparent, 
+    rgba(0, 170, 255, 0.1),
+    rgba(0, 210, 255, 0.3), 
+    rgba(60, 220, 255, 0.5),
+    rgba(0, 210, 255, 0.3),
+    rgba(0, 170, 255, 0.1),
+    transparent);
+}
+
+@keyframes flow-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* Circuit terminals - where energy can appear to "jump" to other paths */
+.circuit-terminal {
+  position: absolute;
   width: 8px;
   height: 8px;
-  animation-delay: -1s;
+  border-radius: 50%;
+  background: rgba(0, 200, 255, 0.4);
+  box-shadow: 0 0 15px rgba(0, 210, 255, 0.5);
+  z-index: 2;
+  transform: translate(-50%, -50%);
 }
 
-.energy-particle.large {
-  width: 12px;
-  height: 12px;
-  animation-delay: -1.5s;
-}
-
-/* Digital circuit-like connections between particles */
-.energy-particle::before {
-  content: '';
+/* Data packet - make it more visible */
+.data-packet {
   position: absolute;
-  height: 1px;
-  width: 0; /* Starting width */
-  background: linear-gradient(90deg, 
-    transparent,
-    rgba(0, 233, 255, 0.7),
-    rgba(0, 180, 255, 0.9),
-    rgba(0, 233, 255, 0.7),
-    transparent);
-  top: 50%;
-  left: 50%;
-  transform-origin: left;
-  opacity: 0;
-  box-shadow: 0 0 8px rgba(0, 233, 255, 0.6);
-  transition: all 0.2s ease;
-  z-index: -1;
+  width: 6px;
+  height: 6px;
+  background: rgba(0, 255, 255, 0.95);
+  border-radius: 50%;
+  box-shadow: 0 0 15px rgba(0, 210, 255, 0.8);
+  z-index: 4;
+  transform: translate(-50%, -50%);
+  filter: blur(0.5px);
+  animation: data-transmission 0.3s infinite alternate;
 }
 
-/* Create electric connection between particles when they're close */
-.energy-particle.connected::before {
-  width: 100px; /* Connection line appears */
-  opacity: 0.5;
-  animation: circuit-pulse 2s infinite alternate;
+@keyframes data-transmission {
+  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.7; }
+  100% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+}
+
+/* Enhanced circuit path styles for active areas */
+.circuit-path.active {
+  background: rgba(0, 210, 255, 0.4);
+  box-shadow: 0 0 15px rgba(0, 210, 255, 0.7);
+  animation: circuit-pulse 2s infinite;
 }
 
 @keyframes circuit-pulse {
-  0% { opacity: 0.3; filter: brightness(0.8); }
-  100% { opacity: 0.7; filter: brightness(1.2); }
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
 }
 
-/* Enhanced electric effect when energized near mouse */
-.energy-particle.energized {
-  background: radial-gradient(circle, 
-    rgba(255, 255, 255, 1) 0%, 
-    rgba(50, 240, 255, 0.9) 30%, 
-    rgba(0, 150, 255, 0.5) 70%, 
-    transparent 100%);
-  box-shadow: 
-    0 0 10px rgba(0, 233, 255, 0.9),
-    0 0 20px rgba(0, 180, 255, 0.7),
-    0 0 40px rgba(30, 120, 255, 0.5);
-  animation: energy-surge 0.5s infinite alternate;
-}
-
-@keyframes energy-surge {
-  0% { transform: scale(1); filter: brightness(1); }
-  100% { transform: scale(1.2); filter: brightness(1.3); }
-}
-
-/* Electric zap effect for excited particles */
-.energy-particle.excited::after {
-  content: '';
+/* Hot zone around mouse */
+.hot-zone {
   position: absolute;
-  width: 30px;
-  height: 1px;
-  background: rgba(0, 233, 255, 0.9);
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) rotate(calc(var(--random-angle, 45deg)));
-  filter: blur(0.5px);
-  box-shadow: 
-    0 0 5px rgba(0, 233, 255, 0.8),
-    0 0 10px rgba(50, 120, 255, 0.5);
-  animation: zap-flicker 0.2s infinite steps(3);
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(0, 210, 255, 0.1) 0%,
+    rgba(0, 150, 255, 0.05) 50%,
+    transparent 70%
+  );
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  z-index: 3;
+  mix-blend-mode: screen;
+  pointer-events: none;
 }
 
-@keyframes zap-flicker {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+/* Diagonal circuit connector */
+.circuit-connector {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(0, 180, 255, 0.15);
+  border-top: none;
+  border-left: none;
+  z-index: 2;
+  transform-origin: 0 0;
 }
 
-/* Background grid that reacts to energy particles */
-.home-container::after {
-  content: '';
+/* Digital noise overlay */
+.digital-noise {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: 
-    radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), 
-      rgba(0, 233, 255, 0.1) 0%, 
-      rgba(0, 100, 200, 0.05) 20%, 
-      transparent 70%),
-    linear-gradient(rgba(0, 90, 150, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 90, 150, 0.03) 1px, transparent 1px);
-  background-size: 100% 100%, 20px 20px, 20px 20px;
-  background-position: 0 0, 0 0, 0 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.05;
+  mix-blend-mode: overlay;
   pointer-events: none;
-  opacity: 1;
-  z-index: 1;
-  mix-blend-mode: screen;
-  animation: grid-pulse 10s infinite alternate;
-}
-
-@keyframes grid-pulse {
-  0% { opacity: 0.7; }
-  100% { opacity: 1; }
+  z-index: 10;
 }
 
 
