@@ -122,6 +122,7 @@ const ImageModal = ({
     }, 300);
   };
 
+  
   // If modal is not open, don't render anything
   if (!isOpen || !modalImage || !activeImageId) return null;
 
@@ -131,6 +132,21 @@ const ImageModal = ({
 
   // Check if current user owns the image
   const isUserImage = user && imageUserDetails[activeImageId]?.user_id === user.userId;
+
+  const renderLoraPills = () => {
+    const imageDetails = imageUserDetails[activeImageId];
+    if (!imageDetails || !imageDetails.loras) return null;
+
+    return (
+      <div className="lora-pills">
+        {Array.isArray(imageDetails.loras) && imageDetails.loras.map((lora, index) => (
+          <span key={index} className="lora-pill">
+            {getLoraName(lora)}
+          </span>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className={`image-modal ${isClosing ? 'closing' : ''}`}>
@@ -219,19 +235,21 @@ const ImageModal = ({
               </div>
               
               {/* Then LoRAs */}
-              {currentImage.loras_used && (
+              {(currentImage.loras_used || imageUserDetails[activeImageId]?.loras) && (
                 <div className="image-modal-loras">
                   <h4 className="metadata-heading">Styles Used:</h4>
-                  <div className="lora-pills">
-                    {(typeof currentImage.loras_used === 'string' 
-                      ? JSON.parse(currentImage.loras_used)
-                      : currentImage.loras_used
-                    ).map((lora, index) => (
-                      <span key={index} className="lora-pill">
-                        {getLoraName(lora.model)} ({lora.weight})
-                      </span>
-                    ))}
-                  </div>
+                  {currentImage.loras_used ? (
+                    <div className="lora-pills">
+                      {(typeof currentImage.loras_used === 'string' 
+                        ? JSON.parse(currentImage.loras_used)
+                        : currentImage.loras_used
+                      ).map((lora, index) => (
+                        <span key={index} className="lora-pill">
+                          {getLoraName(lora.model)} ({lora.weight})
+                        </span>
+                      ))}
+                    </div>
+                  ) : renderLoraPills()}
                 </div>
               )}
               

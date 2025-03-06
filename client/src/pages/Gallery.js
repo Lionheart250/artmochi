@@ -144,7 +144,8 @@ const Gallery = () => {
                     ...imageData,
                     username: userProfileData.username,
                     profile_picture: userProfileData.profile_picture,
-                    user_id: imageData.user_id
+                    user_id: imageData.user_id,
+                    loras_used: imageData.loras_used  // Make sure loras_used is explicitly included
                 }
             }));
 

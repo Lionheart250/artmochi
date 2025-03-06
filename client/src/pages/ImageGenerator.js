@@ -465,8 +465,20 @@ const handleSubmit = async (e) => {
                           seedImage: imageData,
                           strength: denoisingStrength
                         }),
-                        // Rest of your parameters...
-                      }
+                      
+                      // ADD THIS CRUCIAL LINE - Include the loras_used field
+                      loras_used: Object.entries(selectedLoras).map(([model, weight]) => ({
+                        model,
+                        weight: parseFloat(weight)
+                    })),
+                    // CHANGE THIS LINE - Use 'lora' instead of 'loras_used'
+                    lora: Object.entries(selectedLoras).map(([model, weight]) => ({
+                        model,
+                        weight: parseFloat(weight)
+                    }))
+                },
+                isPrivate: isPrivate,
+                userTitle: imageTitle || 'Untitled'
                 })
             });
 

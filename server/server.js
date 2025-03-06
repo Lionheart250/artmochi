@@ -2337,7 +2337,7 @@ app.post('/api/runware', authenticateTokenWithAutoRefresh, async (req, res) => {
 
         const { categories, aspectRatio } = await categorizeImage(s3Result.url);
         const isEnterprise = subscription.rows[0]?.tier_name.toLowerCase() === 'enterprise';
-        const isPrivate = isEnterprise && req.body.input.private === true;
+        const isPrivate = isEnterprise && req.body.isPrivate === true;
         
         if (!req.body.autoUpscale) {
             // Generate title first
