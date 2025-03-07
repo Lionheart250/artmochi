@@ -425,6 +425,7 @@ const Gallery = () => {
         }
     };
 
+    // Update the openModal function to use URL-based navigation
     const openModal = (image) => {
         // Set state for this modal instance
         setSelectedImage(image.image_url);
@@ -434,20 +435,29 @@ const Gallery = () => {
         // Fetch data for this image
         fetchImageDetails(image.id);
         
+        // Update URL without full page navigation
+        navigate(`/image/${image.id}`, {
+            state: { background: location },
+            replace: true // Use replace to avoid cluttering history
+        });
+        
         // Add modal-open class to body
         document.body.classList.add('modal-open');
     };
 
+    // Also update the closeModal function to handle URL navigation
     const closeModal = () => {
-        // Just set modalOpen to false - the ImageModal component 
+        // Set modalOpen to false - the ImageModal component 
         // will handle the animation and body class cleanup
         setModalOpen(false);
+        
+        // Go back to previous URL
+        navigate(-1);
         
         // After animation completes, reset other states
         setTimeout(() => {
             setSelectedImage(null);
             setActiveImageId(null);
-            // But DON'T manipulate body styles here - let ImageModal handle it
         }, 350);
     };
 
@@ -1025,6 +1035,100 @@ useEffect(() => {
             return newSet;
         });
     };
+
+    // Replace your current initCustomDropdowns function with this one
+function initCustomDropdowns() {
+    // Store references to all dropdown option containers
+    const allOptionContainers = [];
+    
+    // First, create custom dropdowns
+    document.querySelectorAll('.gallery-sort, .gallery-time-range, .gallery-aspect-ratio, .gallery-category').forEach(dropdown => {
+        // Skip if already processed
+        if (dropdown.style.display === 'none') return;
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = 'custom-dropdown-wrapper';
+        
+        // Create the selected display
+        const selected = document.createElement('div');
+        selected.className = 'custom-dropdown-selected';
+        selected.textContent = dropdown.options[dropdown.selectedIndex].text;
+        
+        // Create the options container
+        const options = document.createElement('div');
+        options.className = 'custom-dropdown-options';
+        allOptionContainers.push(options);
+        
+        // Hide the original select element but keep it in the DOM for form submission
+        dropdown.style.display = 'none';
+        
+        // Add the new elements to the DOM
+        Array.from(dropdown.options).forEach(option => {
+            const optionElement = document.createElement('div');
+            optionElement.className = 'custom-dropdown-option';
+            optionElement.textContent = option.text;
+            optionElement.dataset.value = option.value;
+            
+            optionElement.addEventListener('click', () => {
+                dropdown.value = option.value;
+                dropdown.dispatchEvent(new Event('change', { bubbles: true }));
+                selected.textContent = option.text;
+                options.classList.remove('show');
+            });
+            
+            options.appendChild(optionElement);
+        });
+        
+        selected._clickHandler = (e) => {
+            e.stopPropagation();
+            
+            // Close all other dropdowns first
+            allOptionContainers.forEach(container => {
+                if (container !== options && container.classList.contains('show')) {
+                    container.classList.remove('show');
+                }
+            });
+            
+            // Toggle this dropdown
+            options.classList.toggle('show');
+        };
+        
+        selected.addEventListener('click', selected._clickHandler);
+        
+        wrapper.appendChild(selected);
+        wrapper.appendChild(options);
+        dropdown.parentNode.insertBefore(wrapper, dropdown);
+    });
+    
+    // Close dropdown when clicking elsewhere
+    document.removeEventListener('click', window._closeAllDropdowns);
+    window._closeAllDropdowns = () => {
+        allOptionContainers.forEach(container => {
+            container.classList.remove('show');
+        });
+    };
+    document.addEventListener('click', window._closeAllDropdowns);
+}
+
+// Also update your useEffect to guarantee removal of old dropdowns before creating new ones
+useEffect(() => {
+    document.querySelectorAll('.custom-dropdown-wrapper').forEach(wrapper => {
+        wrapper.remove();
+    });
+    
+    // Wait a bit for React to update the DOM
+    setTimeout(() => {
+        initCustomDropdowns();
+    }, 100);
+    
+    return () => {
+        // Clean up on unmount
+        document.removeEventListener('click', window._closeAllDropdowns);
+        document.querySelectorAll('.custom-dropdown-wrapper').forEach(wrapper => {
+            wrapper.remove();
+        });
+    };
+}, []); // Empty dependency array - only run once
 
     return (
         <div className="gallery-page">

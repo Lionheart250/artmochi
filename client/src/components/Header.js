@@ -65,6 +65,15 @@ const Header = () => {
     // Update the header position effect
     useEffect(() => {
         const updateHeaderPosition = () => {
+            // Check if modal is open by looking at body class
+            const isModalOpen = document.body.classList.contains('modal-open');
+            
+            if (isModalOpen) {
+                // Always use top header when modal is open
+                setHeaderPosition('top');
+                return;
+            }
+            
             const isMobile = window.innerWidth <= 768;
             if (isMobile) {
                 setHeaderPosition('top');
@@ -80,9 +89,16 @@ const Header = () => {
 
         // Add resize listener
         window.addEventListener('resize', updateHeaderPosition);
+        
+        // Create an observer to watch for body class changes
+        const bodyObserver = new MutationObserver(updateHeaderPosition);
+        bodyObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
         // Cleanup
-        return () => window.removeEventListener('resize', updateHeaderPosition);
+        return () => {
+            window.removeEventListener('resize', updateHeaderPosition);
+            bodyObserver.disconnect();
+        };
     }, [location.pathname]);
 
     const handleLogout = ()  => {
