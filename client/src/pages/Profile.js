@@ -7,7 +7,7 @@ import debounce from 'lodash.debounce';
 import { getImageUrl } from '../utils/imageUtils';
 import ImageModal from '../components/ImageModal';
 import { artisticLoras, realisticLoras } from '../components/LoraSelector';
-
+import { customHistory } from '../utils/CustomHistory';
 import './Profile.css';
 import { ReactComponent as LikeIcon } from '../assets/icons/like.svg';
 import { ReactComponent as CommentIcon } from '../assets/icons/comment.svg';
@@ -547,24 +547,36 @@ const closeModal = () => {
         }
     };
 
-    const navigateImage = async (direction) => {
-        const currentImages = activeTab === 'likes' ? likedImages : images;
-        const currentIndex = currentImages.findIndex(img => img.id === activeImageId);
+    const navigateImage = (direction, specificId = null) => {
+        if (!images.length) return;
         
         let newIndex;
-        if (direction === 'prev') {
-            newIndex = currentIndex - 1 < 0 ? currentImages.length - 1 : currentIndex - 1;
+        
+        if (specificId) {
+          // Navigate to a specific image
+          newIndex = images.findIndex(img => img.id === specificId);
         } else {
-            newIndex = currentIndex + 1 >= currentImages.length ? 0 : currentIndex + 1;
+          // Find current index
+          const currentIndex = images.findIndex(img => img.id === activeImageId);
+          
+          // Calculate new index based on direction
+          if (direction === 'next' || direction === 1) {
+            newIndex = (currentIndex + 1) % images.length;
+          } else {
+            newIndex = (currentIndex - 1 + images.length) % images.length;
+          }
         }
         
-        const nextImage = currentImages[newIndex];
-        if (nextImage) {
-            setModalImage(nextImage.image_url);
-            setActiveImageId(nextImage.id);
-            navigate(`?id=${nextImage.id}`, { replace: true });
-            fetchImageDetails(nextImage.id);
-        }
+        // Update state with new image
+        setActiveImageId(images[newIndex].id);
+        setSelectedImage(images[newIndex].image_url);
+        
+        // Update URL
+        const newUrl = `/image/${images[newIndex].id}`;
+        customHistory.replace(newUrl);
+        
+        // Fetch details for the new image
+        fetchImageDetails(images[newIndex].id);
     };
 
     const isAdmin = user && user.role === 'admin';

@@ -1,43 +1,43 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate, NavLink, useLocation } from 'react-router-dom';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
-import  './Header.css';
-import { ReactComponent as ExploreIcon } from '../assets/icons/explore.svg';
-import { ReactComponent as CreateIcon } from '../assets/icons/create.svg';
-import { ReactComponent as FollowingIcon } from '../assets/icons/following.svg';
-import { ReactComponent as UpgradeIcon } from '../assets/icons/upgrade.svg';
-import { ReactComponent as CreditsIcon } from '../assets/icons/credits.svg';
-import { ReactComponent as SettingsIcon } from '../assets/icons/settings.svg';
-import { ReactComponent as MoreIcon } from '../assets/icons/more.svg';
+import TopHeader from './headers/TopHeader';
+import SideHeader from './headers/SideHeader';
+import useHeaderTransition from '../hooks/useHeaderTransition';
+import './Header.css';
 import { getImageUrl } from '../utils/imageUtils';
+
+// Utility functions
+function debounce(func, wait) {
+  let timeout;
+  return function(...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+}
 
 const Header = () => {
     const { user, logout } = useAuth();
     const { profilePicture, fetchUserProfile } = useProfile();
-    const navigate = useNavigate();
-    const location = useLocation();
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const dropdownRef = useRef(null);
     const [headerProfilePic, setHeaderProfilePic] = useState('/default-avatar.png');
-    const [headerPosition, setHeaderPosition] = useState('side');
     const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
     const moreMenuRef = useRef(null);
     const moreButtonRef = useRef(null);
-
-    // Add this after your existing state variables
-    const mobileNavItems = [
-        { path: '/gallery', icon: <ExploreIcon />, text: 'Explore' },
-        { path: '/imagegenerator', icon: <CreateIcon />, text: 'Create' },
-        { path: '/following', icon: <FollowingIcon />, text: 'Following' }
-    ];
-
-    // Log user object to check structure
-    useEffect(() => {
-        console.log('Current user object:', user);
-    }, [user]);
-
-    // Replace the existing profile picture fetch effect with this
+    const location = useLocation();
+    const lastPathRef = useRef(location.pathname);
+    
+    // Use custom hook to manage header transitions
+    const { 
+      position: headerPosition,
+      topClass: topHeaderClass, 
+      sideClass: sideHeaderClass,
+      updatePosition,
+      handleModalClosing,
+      forceHeaderPosition
+    } = useHeaderTransition();
+    
+    // User profile loading
     useEffect(() => {
         const loadProfile = async () => {
             const token = localStorage.getItem('token');
@@ -53,7 +53,7 @@ const Header = () => {
         loadProfile();
     }, [user, fetchUserProfile]);
 
-    // Remove the separate fetchProfilePicture effect since we'll use profilePicture from context
+    // Update profile picture when available
     useEffect(() => {
         if (profilePicture) {
             setHeaderProfilePic(profilePicture);
@@ -61,67 +61,113 @@ const Header = () => {
             setHeaderProfilePic('/default-avatar.png');
         }
     }, [profilePicture]);
-
-    // Update the header position effect
+    
+    // Force update header position when navigating to homepage
+    const homeNavigationHandler = useCallback(() => {
+        if (location.pathname === '/') {
+            console.log("🏠 Force TOP header for homepage navigation");
+            forceHeaderPosition('top');
+        }
+    }, [location.pathname, forceHeaderPosition]);
+    
+    // Check for path changes and update header accordingly
     useEffect(() => {
-        const updateHeaderPosition = () => {
-            // Check if modal is open by looking at body class
-            const isModalOpen = document.body.classList.contains('modal-open');
+        // Check if this is a new path
+        if (location.pathname !== lastPathRef.current) {
+            console.log(`📍 Path changed: ${lastPathRef.current} → ${location.pathname}`);
+            lastPathRef.current = location.pathname;
             
-            if (isModalOpen) {
-                // Always use top header when modal is open
-                setHeaderPosition('top');
-                return;
-            }
-            
-            const isMobile = window.innerWidth <= 768;
-            if (isMobile) {
-                setHeaderPosition('top');
+            // Special case for homepage
+            if (location.pathname === '/') {
+                homeNavigationHandler();
             } else {
-                const topHeaderPages = ['/'];
-                const shouldBeTop = topHeaderPages.includes(location.pathname);
-                setHeaderPosition(shouldBeTop ? 'top' : 'side');
+                // For other pages, just do a normal update, but with a small delay
+                // to ensure any modal closing operations complete first
+                setTimeout(updatePosition, 10);
             }
-        };
-
-        // Initial check
-        updateHeaderPosition();
-
-        // Add resize listener
-        window.addEventListener('resize', updateHeaderPosition);
+        }
+    }, [location.pathname, updatePosition, homeNavigationHandler]);
+    
+    // Set up event listeners for header updates with proper cleanup
+    useEffect(() => {
+        // Initial position check
+        updatePosition();
         
-        // Create an observer to watch for body class changes
-        const bodyObserver = new MutationObserver(updateHeaderPosition);
-        bodyObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-
-        // Cleanup
-        return () => {
-            window.removeEventListener('resize', updateHeaderPosition);
-            bodyObserver.disconnect();
+        // Resize handler with debounce
+        const debouncedResize = debounce(updatePosition, 100);
+        window.addEventListener('resize', debouncedResize);
+        
+        // Track when modal closing has been handled to prevent duplicates
+        let justHandledModalClosing = false;
+        let modalCloseTimer = null;
+        
+        // Create reusable handler functions that we can both add and remove
+        const handleModalOpen = () => {
+            console.log("Modal opened event detected");
+            updatePosition();
         };
-    }, [location.pathname]);
+        
+        const handleModalClose = () => {
+            if (justHandledModalClosing) return;
+            
+            console.log("Modal closing event detected");
+            justHandledModalClosing = true;
+            
+            // Clear existing timer if any
+            if (modalCloseTimer) clearTimeout(modalCloseTimer);
+            
+            // Handle modal closing
+            handleModalClosing();
+            
+            // Reset flag after a while
+            modalCloseTimer = setTimeout(() => {
+                justHandledModalClosing = false;
+            }, 1500);
+        };
+        
+        // Add event listeners using the named functions
+        document.addEventListener('modalopened', handleModalOpen);
+        document.addEventListener('modalclosing', handleModalClose);
+        
+        // Create observer for body class changes
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach(mutation => {
+                if (mutation.attributeName === 'class') {
+                    const bodyClasses = document.body.className;
+                    
+                    if (bodyClasses.includes('modal-closing')) {
+                        if (!justHandledModalClosing) {
+                            console.log("👀 Modal closing detected from body class");
+                            handleModalClose();
+                        }
+                    } else if (bodyClasses.includes('modal-open')) {
+                        updatePosition();
+                    } else if (!justHandledModalClosing) {
+                        // Only do regular updates if we're not handling a modal close
+                        updatePosition();
+                    }
+                }
+            });
+        });
+        
+        observer.observe(document.body, { attributes: true });
+        
+        // Clean up all listeners using the same function references
+        return () => {
+            window.removeEventListener('resize', debouncedResize);
+            document.removeEventListener('modalopened', handleModalOpen);
+            document.removeEventListener('modalclosing', handleModalClose);
+            if (modalCloseTimer) clearTimeout(modalCloseTimer);
+            observer.disconnect();
+        };
+    }, [updatePosition, handleModalClosing]);
 
-    const handleLogout = ()  => {
-        logout();
-        setIsDropdownOpen(false);
-        setIsMoreMenuOpen(false);
-        navigate('/');
-    };
+    // Toggle more menu
+    const toggleMoreMenu = () => setIsMoreMenuOpen(!isMoreMenuOpen);
 
-    const toggleMoreMenu = () => {
-        setIsMoreMenuOpen(!isMoreMenuOpen);
-    };
-
-    const toggleDropdown = () => {
-        setIsDropdownOpen(!isDropdownOpen);
-    };
-
-    // Click outside effect
+    // Handle clicks outside more menu
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setIsDropdownOpen(false);
-            }
             if (isMoreMenuOpen && 
                 !moreButtonRef.current?.contains(event.target) && 
                 !moreMenuRef.current?.contains(event.target)) {
@@ -130,144 +176,48 @@ const Header = () => {
         };
 
         document.addEventListener('click', handleClickOutside);
-        return () => {
-            document.removeEventListener('click', handleClickOutside);
-        };
-    }, [isMoreMenuOpen]); // Add isMoreMenuOpen dependency
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, [isMoreMenuOpen]);
 
+    // Profile picture element
     const profilePicElement = (
         <img 
             src={headerProfilePic ? getImageUrl(headerProfilePic, 'profile') : '/default-avatar.png'}
-            alt={user?.username}
+            alt={user?.username || "User"}
             className="header-profile-pic"
             onError={(e) => {
-                if (!headerProfilePic) {
-                    const token = localStorage.getItem('token');
-                    if (token && user?.id) {
-                        // Retry fetch on error
-                        fetch(`${process.env.REACT_APP_API_URL}/user_profile/${user.id}`, {
-                            headers: {
-                                'Authorization': `Bearer ${token}`,
-                                'Content-Type': 'application/json'
-                            },
-                            credentials: 'include'
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.profile_picture) {
-                                setHeaderProfilePic(getImageUrl(data.profile_picture, 'profile'));
-                            }
-                        })
-                        .catch(() => {
-                            e.target.src = '/default-avatar.png';
-                        });
-                    }
+                if (e.target.src !== '/default-avatar.png') {
+                    e.target.src = '/default-avatar.png';
                 }
-                e.target.src = '/default-avatar.png';
             }}
         />
     );
 
     return (
         <>
-            <header className={`header ${headerPosition}-header ${isMoreMenuOpen ? 'drawer-open' : ''}`}>
-                <div className="header-container">
-                    <Link to="/" className="logo-link" style={{ textDecoration: 'none' }}>
-                        <div className="logo">
-                            <h1>ArtMochi</h1>
-                        </div>
-                    </Link>
-                    <nav className="nav-links">
-                        {headerPosition === 'top' && window.innerWidth > 768 && (
-                            <>
-                                <NavLink to="/gallery" end>Explore</NavLink>
-                                <NavLink to="/imagegenerator">Create</NavLink>
-                                <NavLink to="/following">Following</NavLink>
-                            </>
-                        )}
-                        {headerPosition === 'side' && (
-                            <>
-                                <NavLink to="/gallery" className="side-nav-link">
-                                    <ExploreIcon className="nav-icon" />
-                                    <span>Explore</span>
-                                </NavLink>
-                                <NavLink to="/imagegenerator" className="side-nav-link">
-                                    <CreateIcon className="nav-icon" />
-                                    <span>Create</span>
-                                </NavLink>
-                                <NavLink to="/following" className="side-nav-link">
-                                    <FollowingIcon className="nav-icon" />
-                                    <span>Following</span>
-                                </NavLink>
-                                {user ? (
-                                    <NavLink to={`/profile/${user.userId}`} className="side-nav-link">
-                                        {profilePicElement}
-                                        <span>Profile</span>
-                                    </NavLink>
-                                ) : (
-                                    <NavLink to="/login" className="side-nav-link">
-                                        <img src="/default-avatar.png" alt="Sign In" className="nav-icon header-profile-pic" />
-                                        <span>Sign In</span>
-                                    </NavLink>
-                                )}
-                                <NavLink to="/subscription" className="side-nav-link">
-                                    <UpgradeIcon className="nav-icon" />
-                                    <span>Upgrade</span>
-                                </NavLink>
-                                {/*<NavLink to="/credits" className="side-nav-link">
-                                    <CreditsIcon className="nav-icon" />
-                                    <span>Credits</span>
-                                </NavLink> */}
-                                <NavLink to="/settings" className="side-nav-link">
-                                    <SettingsIcon className="nav-icon" />
-                                    <span>Settings</span>
-                                </NavLink>
-                                <button 
-                                    className="side-nav-link more-menu-button" 
-                                    onClick={toggleMoreMenu}
-                                    ref={moreButtonRef}
-                                >
-                                    <MoreIcon className="nav-icon" />
-                                    <span>More</span>
-                                </button>
-                            </>
-                        )}
-                    </nav>
-                    {headerPosition === 'top' && (
-                        <div className="header-auth-buttons">
-                            {user ? (
-                                <div className="profile-dropdown" onClick={toggleDropdown} ref={dropdownRef}>
-                                    {profilePicElement}
-                                    <span className="header-username">{user?.username}</span>
-                                    {isDropdownOpen && (
-                                        <div className="dropdown-menu">
-                                            {window.innerWidth <= 768 && (
-                                                <div className="mobile-nav-items">
-                                                    {mobileNavItems.map(item => (
-                                                        <NavLink key={item.path} to={item.path}>
-                                                            {item.icon}
-                                                            <span>{item.text}</span>
-                                                        </NavLink>
-                                                    ))}
-                                                </div>
-                                            )}
-                                            <NavLink to={`/profile/${user.userId}`}>Profile</NavLink>
-                                            <NavLink to="/subscription">Upgrade</NavLink>
-                                            <NavLink to="/settings">Settings</NavLink>
-                                            <button onClick={handleLogout} className="logout-btn">Log out</button>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <>
-                                    <NavLink to="/login">Login</NavLink>
-                                    <NavLink to="/signup">Sign Up</NavLink>
-                                </>
-                            )}
-                        </div>
-                    )}
-                </div>
-            </header>
+            {/* Only render the top header when it's active OR transitioning */}
+            {(headerPosition === 'top' || topHeaderClass === 'entering' || topHeaderClass === 'exiting') && (
+                <TopHeader 
+                    isActive={headerPosition === 'top'}
+                    user={user}
+                    logout={logout}
+                    profilePicElement={profilePicElement}
+                    headerClass={topHeaderClass}
+                />
+            )}
+            
+            {/* Only render the side header when it's active OR transitioning */}
+            {(headerPosition === 'side' || sideHeaderClass === 'entering' || sideHeaderClass === 'exiting') && (
+                <SideHeader 
+                    isActive={headerPosition === 'side'}
+                    user={user}
+                    logout={logout}
+                    profilePicElement={profilePicElement}
+                    toggleMoreMenu={toggleMoreMenu}
+                    moreButtonRef={moreButtonRef}
+                    headerClass={sideHeaderClass}
+                />
+            )}
             
             {isMoreMenuOpen && (
                 <div className="more-drawer-container open" ref={moreMenuRef}>
@@ -276,7 +226,13 @@ const Header = () => {
                         <NavLink to="/language">Language</NavLink>
                         <NavLink to="/feedback">Feedback</NavLink>
                         <NavLink to="/keyboard">Keyboard shortcuts</NavLink>
-                        <button onClick={handleLogout} className="logout-button">
+                        <button 
+                            onClick={() => {
+                                logout();
+                                setIsMoreMenuOpen(false);
+                            }} 
+                            className="logout-button"
+                        >
                             Log out
                         </button>
                     </div>

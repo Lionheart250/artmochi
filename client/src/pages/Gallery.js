@@ -11,6 +11,8 @@ import { useProfile } from '../context/ProfileContext';
 import { getImageUrl } from '../utils/imageUtils';
 import { artisticLoras, realisticLoras } from '../components/LoraSelector';
 import ImageModal from '../components/ImageModal';
+import { customHistory } from '../utils/CustomHistory';
+
 
 const Gallery = () => {
     const { user, profile } = useAuth();
@@ -402,32 +404,50 @@ const Gallery = () => {
         }
     };
 
-    const navigateImage = async (direction) => {
-        const currentIndex = images.findIndex(img => img.id === activeImageId);
-        const nextIndex = direction === 1 ? currentIndex + 1 : currentIndex - 1;
-    
-        if (nextIndex >= 0 && nextIndex < images.length) {
-            const nextImage = images[nextIndex];
-            
-            // Start the fetch first
-            const loadingPromise = fetchImageDetails(nextImage.id);
-            
-            // Update the image state atomically
-            await Promise.all([
-                new Promise(resolve => {
-                    setSelectedImage(nextImage.image_url);  // Use selectedImage instead of modalImage
-                    setActiveImageId(nextImage.id);
-                    navigate(`?id=${nextImage.id}`, { replace: true });
-                    resolve();
-                }),
-                loadingPromise // Wait for fetch to complete
-            ]);
+    const navigateImage = (direction, specificId = null) => {
+        if (!images.length) return;
+        
+        // Set the internal navigation flag to tell the system this is an intentional image navigation
+        window.__internalImageNavigation = true;
+        
+        let newIndex;
+        
+        if (specificId) {
+          // Navigate to a specific image
+          newIndex = images.findIndex(img => img.id === specificId);
+          if (newIndex === -1) return; // Image not found
+        } else {
+          // Find current index
+          const currentIndex = images.findIndex(img => img.id === activeImageId);
+          if (currentIndex === -1) return; // Current image not found
+          
+          // Calculate new index based on direction
+          if (direction === 'next' || direction === 1) {
+            newIndex = (currentIndex + 1) % images.length;
+          } else {
+            newIndex = (currentIndex - 1 + images.length) % images.length;
+          }
+        }
+        
+        // Update state with new image
+        setActiveImageId(images[newIndex].id);
+        setSelectedImage(images[newIndex].image_url);
+        
+        // Update URL using PUSH (not replace) to create proper browser history
+        const newUrl = `/image/${images[newIndex].id}`;
+        customHistory.push(newUrl, { 
+          background: location,
+          fromGallery: true
+        });
+        
+        // Fetch details for the new image if needed
+        if (typeof fetchImageDetails === 'function') {
+          fetchImageDetails(images[newIndex].id);
         }
     };
 
     // Update the openModal function to use URL-based navigation
     const openModal = (image) => {
-        // Set state for this modal instance
         setSelectedImage(image.image_url);
         setActiveImageId(image.id);
         setModalOpen(true);
@@ -435,10 +455,11 @@ const Gallery = () => {
         // Fetch data for this image
         fetchImageDetails(image.id);
         
-        // Update URL without full page navigation
-        navigate(`/image/${image.id}`, {
-            state: { background: location },
-            replace: true // Use replace to avoid cluttering history
+        // Update URL using customHistory for proper back button support
+        const newUrl = `/image/${image.id}`;
+        customHistory.push(newUrl, { 
+            background: location,
+            fromGallery: true
         });
         
         // Add modal-open class to body
@@ -447,18 +468,27 @@ const Gallery = () => {
 
     // Also update the closeModal function to handle URL navigation
     const closeModal = () => {
-        // Set modalOpen to false - the ImageModal component 
-        // will handle the animation and body class cleanup
+        // First mark modal as closing to prevent race conditions
+        document.body.classList.add('modal-closing');
+        
+        // Start closing animation
         setModalOpen(false);
         
-        // Go back to previous URL
-        navigate(-1);
-        
-        // After animation completes, reset other states
+        // Add a small delay to allow animation to start
         setTimeout(() => {
-            setSelectedImage(null);
-            setActiveImageId(null);
-        }, 350);
+            // Navigate back to the gallery URL
+            customHistory.push('/gallery');
+            
+            // Remove modal classes
+            document.body.classList.remove('modal-open');
+            document.body.classList.remove('modal-closing');
+            
+            // After animation completes, reset other states
+            setTimeout(() => {
+                setSelectedImage(null);
+                setActiveImageId(null);
+            }, 300);
+        }, 50);
     };
 
     // Add effect to watch image loading
@@ -473,9 +503,13 @@ const Gallery = () => {
             if (!selectedImage) return;
             switch(e.key) {
                 case 'ArrowLeft':
+                    // Set internal navigation flag before navigating
+                    window.__internalImageNavigation = true;
                     navigateImage(-1);
                     break;
                 case 'ArrowRight':
+                    // Set internal navigation flag before navigating
+                    window.__internalImageNavigation = true;
                     navigateImage(1);
                     break;
                 case 'Escape':

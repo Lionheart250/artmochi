@@ -19,13 +19,14 @@ import Subscription from './pages/Subscription';
 import ImageModal from './components/ImageModal';
 import './App.css';
 import './styles/theme.css';
+import { customHistory } from './utils/CustomHistory';
 
 function App() {
   return (
     <ProfileProvider>
       <AuthProvider>
         <SubscriptionProvider>
-          <Router>
+          <Router navigator={customHistory} location={window.location.pathname}>
             <AppContent />
           </Router>
         </SubscriptionProvider>

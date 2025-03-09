@@ -6,6 +6,7 @@ import { ReactComponent as CommentIcon } from '../assets/icons/comment.svg';
 import { ReactComponent as ShareIcon } from '../assets/icons/share.svg';
 import { ReactComponent as BookmarkIcon } from '../assets/icons/bookmark.svg';
 import { LockIcon, UnlockIcon } from '../utils/Icons';
+import { customHistory } from '../utils/CustomHistory';
 
 const ImageModal = ({
   isOpen,
@@ -86,93 +87,65 @@ const ImageModal = ({
     };
   }, [isOpen, isBodyLocked]);
 
-  // Add keyboard event handlers
+  const handleClose = () => {
+    // IMMEDIATE actions before any animation or state changes
+    // 1. Add modal-closing class to body
+    document.body.classList.add('modal-closing');
+    
+    // 2. Force synchronous DOM reflow to ensure class is applied
+    void document.body.offsetHeight;
+    
+    // 3. Dispatch event to instantly trigger header transition
+    document.dispatchEvent(new CustomEvent('modalclosing', {
+      detail: { closing: true }
+    }));
+    
+    // 4. IMPORTANT: Start the header animation NOW, don't wait for timeout
+    // This will make the header start moving immediately
+    
+    // Now start modal closing animation
+    setClosingAnimation(true);
+    
+    // Remove other body classes
+    document.body.classList.remove('modal-open');
+    document.body.classList.remove('holographic-cursor');
+  
+    // Wait for modal animation to complete before actually closing
+    setTimeout(() => {
+      setClosingAnimation(false);
+      document.body.classList.remove('modal-closing');
+      
+      // If we have an explicit onClose handler from parent, use it
+      if (onClose) {
+        onClose();
+      }
+    }, 300);
+  };
+
+  // Now the rest of your effects can use handleClose
   useEffect(() => {
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (event) => {
       if (!isOpen) return;
       
-      switch(e.key) {
-        case 'ArrowLeft':
-          navigateImage('prev');
-          break;
-        case 'ArrowRight':
-          navigateImage('next');
-          break;
-        case 'Escape':
-          handleClose();
-          break;
-        default:
-          break;
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        event.preventDefault();
+        // Use the navigateImage prop safely
+        if (typeof navigateImage === 'function') {
+          isNavigatingWithArrowKeys.current = true;
+          navigateImage(event.key === 'ArrowRight' ? 'next' : 'prev');
+        }
+      }
+      
+      if (event.key === 'Escape') {
+        handleClose();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, navigateImage, onClose]);
-
-  // Handle URL/history updates when modal opens/closes
-  useEffect(() => {
-    if (isOpen && modalImage) {
-      // Add classes to body
-      document.body.classList.add('modal-open');
-      document.body.classList.add('holographic-cursor');
-      
-      // Hide side header and show standard header
-      const sideHeader = document.querySelector('.side-header');
-      const standardHeader = document.querySelector('.standard-header');
-      
-      if (sideHeader) sideHeader.style.display = 'none';
-      if (standardHeader) standardHeader.style.display = 'block';
-    }
-
-    // Clean up function to handle modal closing
     return () => {
-      document.body.classList.remove('modal-open');
-      document.body.classList.remove('holographic-cursor');
-      
-      // Restore header visibility
-      const sideHeader = document.querySelector('.side-header');
-      const standardHeader = document.querySelector('.standard-header');
-      
-      if (sideHeader) sideHeader.style.display = '';
-      if (standardHeader) standardHeader.style.display = '';
+      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, modalImage]);
-
-  // Handle back button press
-  const handlePopState = useCallback(() => {
-    if (isOpen) {
-      handleClose();
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [handlePopState]);
-
-  // Enhanced close with animation
-  const handleClose = () => {
-    setClosingAnimation(true);
-    
-    // Wait for animation to complete before actually closing
-    setTimeout(() => {
-      setClosingAnimation(false);
-      
-      // Navigate back or to gallery
-      if (onClose) {
-        onClose();
-      } else {
-        navigate(-1);
-      }
-    }, 300); // Match this to your CSS animation duration
-  };
-
-  // Handle username click
-  const handleUsernameClick = (userId) => {
-    navigate(`/profile/${userId}`);
-    onClose();
-  };
+  }, [isOpen, navigateImage]);
 
   // Add this effect to reset expanded prompts when the active image changes
   useEffect(() => {
@@ -242,6 +215,146 @@ const ImageModal = ({
       container.scrollTop = container.scrollHeight;
     }
   }, [comments, activeImageId]);
+
+  // Use custom history listener
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    // Listen for navigation events BEFORE they happen
+    const unlisten = customHistory.listen((location) => {
+      // Add this to the start of the customHistory.listen callback:
+      if (!isOpen || !images || !Array.isArray(images)) {
+        return true; // Skip the logic if images is not available
+      }
+      // Only handle POP events (back/forward buttons)
+      if (location.action === 'POP') {
+        console.log("⚡ History POP detected:", location.path);
+        
+        // Case 1: We're navigating between images
+        if (location.path.includes('/image/') || location.path.includes('/share/')) {
+          const pathSegments = location.path.split('/');
+          const newImageId = parseInt(pathSegments[pathSegments.length - 1]);
+          
+          if (newImageId && newImageId !== activeImageId && images.some(img => img.id === newImageId)) {
+            console.log("🔄 Navigating to another image:", newImageId);
+            
+            // Set flag to indicate we're navigating with browser controls
+            isNavigatingWithArrowKeys.current = true;
+            
+            // Use navigateImage if provided
+            if (navigateImage) {
+              const direction = images.findIndex(img => img.id === newImageId) > 
+                               images.findIndex(img => img.id === activeImageId) ? 'next' : 'prev';
+              navigateImage(direction, newImageId);
+            }
+            return true; // Allow navigation to proceed
+          }
+        }
+        
+        // Case 2: We're navigating away from the modal entirely
+        console.log("🚪 Closing modal via custom history");
+        
+        // Start animation for visual feedback
+        setClosingAnimation(true);
+        
+        // Remove modal-related classes immediately
+        document.body.classList.remove('modal-open');
+        document.body.classList.remove('holographic-cursor');
+        
+        // After animation completes, close the modal
+        setTimeout(() => {
+          if (onClose) {
+            console.log("📞 Calling onClose()");
+            onClose(); 
+          }
+          setClosingAnimation(false);
+        }, 300);
+        
+        return true; // Allow navigation to proceed
+      }
+      return true;
+    });
+    
+    // Clean up listener
+    return () => {
+      if (unlisten) unlisten();
+    };
+  }, [isOpen, activeImageId, images, navigateImage, onClose]);
+  
+  // Use custom history for navigation
+  const navigateToImage = (imageId) => {
+    customHistory.push(`/image/${imageId}`);
+  };
+
+  // Add missing refs at the top of your component
+  const isNavigatingWithArrowKeys = useRef(false);
+  const previousUrls = useRef([]);
+
+  useEffect(() => {
+    // When activeImageId changes, update URL and history
+    if (isOpen && activeImageId) {
+      const newUrl = `/image/${activeImageId}`;
+      
+      // Don't add duplicate entries
+      if (window.location.pathname !== newUrl) {
+        if (isNavigatingWithArrowKeys.current) {
+          // When using arrow keys, replace the current URL
+          customHistory.replace(newUrl);
+        } else {
+          // When directly opening, add a new history entry
+          customHistory.push(newUrl);
+          
+          // Store current URL before navigation
+          previousUrls.current.push(window.location.pathname);
+        }
+      }
+      
+      // Reset flag
+      isNavigatingWithArrowKeys.current = false;
+    }
+  }, [isOpen, activeImageId]);
+
+  useEffect(() => {
+    const handleForceClose = () => {
+      console.log("📣 Force close event received");
+      
+      // IMMEDIATE actions before any animation or state changes
+      // 1. Add modal-closing class to body
+      document.body.classList.add('modal-closing');
+      
+      // 2. Force synchronous DOM reflow to ensure class is applied
+      void document.body.offsetHeight;
+      
+      // 3. Dispatch event to instantly trigger header transition
+      document.dispatchEvent(new CustomEvent('modalclosing', {
+        detail: { closing: true }
+      }));
+      
+      // Now start modal closing animation
+      setClosingAnimation(true);
+      
+      // Remove other body classes
+      document.body.classList.remove('modal-open');
+      document.body.classList.remove('holographic-cursor');
+    
+      // Wait for modal animation to complete before actually closing
+      setTimeout(() => {
+        setClosingAnimation(false);
+        document.body.classList.remove('modal-closing');
+        
+        // If we have an explicit onClose handler from parent, use it
+        if (onClose) {
+          onClose();
+        }
+      }, 0);
+    };
+    
+    document.addEventListener('forcemodalclose', handleForceClose);
+    
+    return () => {
+      document.removeEventListener('forcemodalclose', handleForceClose);
+    };
+  }, [onClose]);  // Only depend on onClose, not handleClose
 
   // If modal is not open, don't render anything
   if (!isOpen || !modalImage || !activeImageId) return null;

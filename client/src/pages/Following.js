@@ -11,6 +11,7 @@ import { useProfile } from '../context/ProfileContext';
 import { getImageUrl } from '../utils/imageUtils';
 import ImageModal from '../components/ImageModal';
 import { artisticLoras, realisticLoras } from '../components/LoraSelector';
+import { customHistory } from '../utils/CustomHistory';
 
 const Following = () => {
     const { user } = useAuth();
@@ -215,27 +216,37 @@ const Following = () => {
         loadProfile();
     }, [user, fetchUserProfile]);
 
-    const navigateImage = async (direction) => {
-        const currentIndex = images.findIndex(img => img.id === activeImageId);
+    const navigateImage = (direction, specificId = null) => {
+        if (!images.length) return;
+        
         let newIndex;
         
-        if (direction === 'prev') {
-            newIndex = currentIndex - 1 < 0 ? images.length - 1 : currentIndex - 1;
+        if (specificId) {
+          // Navigate to a specific image
+          newIndex = images.findIndex(img => img.id === specificId);
         } else {
-            newIndex = currentIndex + 1 >= images.length ? 0 : currentIndex + 1;
+          // Find current index
+          const currentIndex = images.findIndex(img => img.id === activeImageId);
+          
+          // Calculate new index based on direction
+          if (direction === 'next' || direction === 1) {
+            newIndex = (currentIndex + 1) % images.length;
+          } else {
+            newIndex = (currentIndex - 1 + images.length) % images.length;
+          }
         }
         
-        const nextImage = images[newIndex];
-        if (nextImage) {
-            try {
-                setModalImage(nextImage);
-                setActiveImageId(nextImage.id);
-                await fetchImageDetails(nextImage.id);
-            } catch (error) {
-                console.error('Error navigating:', error);
-            }
-        }
-    };
+        // Update state with new image
+        setActiveImageId(images[newIndex].id);
+        setSelectedImage(images[newIndex].image_url);
+        
+        // Update URL
+        const newUrl = `/image/${images[newIndex].id}`;
+        customHistory.replace(newUrl);
+        
+        // Fetch details for the new image
+        fetchImageDetails(images[newIndex].id);
+      };
 
     const fetchAllData = async (imageId) => {
         const token = localStorage.getItem('token');

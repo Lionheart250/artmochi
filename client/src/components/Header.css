@@ -34,7 +34,6 @@ header,
     rgba(13, 2, 33, 0.95) 100%);
   color: var(--text-primary);
   z-index: 1000;
-  transition: all 0.3s ease;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
@@ -1841,4 +1840,3 @@ header::after,
   100% { top: calc(100% + 10px); opacity: 0; }
 }
 
-/* ========= End of TikTok-inspired Header.css ========= */
