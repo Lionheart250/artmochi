@@ -1076,61 +1076,72 @@ const handleImageEdit = (type, image) => {
         <div className="profile-container">
             <div className="profile-header-wrapper">
                 <div className="profile-header">
-                    {!isLoading && (
-                        <img 
-                            src={profilePicture} 
-                            alt={`${username}'s profile`}
-                            className="profile-profile-picture" 
-                            onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = '/default-avatar.png';
-                            }}
-                        />
-                    )}
-                    <div className="profile-info">
-                        <div className="profile-top">
-                            <h1 className="profile-username">{username}</h1>
-                            {user && user.userId === parseInt(id) && (
-                                <button className="profile-edit-btn" onClick={() => setIsEditing(true)}>
-                                    Edit Profile
-                                </button>
-                            )}
-                        <div className="profile-actions">
-                                {user && user.userId !== parseInt(id) && (
-                                    <button 
-                                        className={`profile-follow-btn ${isFollowing ? 'following' : ''}`}
-                                        onClick={handleFollowToggle}
-                                    >
-                                        {isFollowing ? 'Unfollow' : 'Follow'}
-                                    </button>
-                                )}
-                        </div>
-                        
-                        <div className="profile-stats">
-                            <div className="stat-item" onClick={() => {
-                                setShowFollowingModal(true);
-                                fetchFollowingList();
-                            }}>
-                                <span className="stat-number">{followingCount}</span>
-                                <span className="stat-label">Following</span>
-                            </div>
-                            <div className="stat-item" onClick={() => {
-                                setShowFollowersModal(true);
-                                fetchFollowersList();
-                            }}>
-                                <span className="stat-number">{followersCount}</span>
-                                <span className="stat-label">Followers</span>
-                            </div>
-                            <div className="stat-item">
-                                <span className="stat-number">{likesCount}</span>
-                                <span className="stat-label">Likes</span>
-                            </div>
-                        </div>
-                        
-                        <p className="profile-bio">{bio}</p>
-                    </div>
-                </div>
+    {/* Left side: Profile picture */}
+    {!isLoading && (
+        <img 
+            src={profilePicture} 
+            alt={`${username}'s profile`}
+            className="profile-profile-picture" 
+            onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = '/default-avatar.png';
+            }}
+        />
+    )}
+    
+    {/* Right side: Profile information */}
+    <div className="profile-info">
+        {/* Top row: Username and actions */}
+        <div className="profile-top">
+            <h1 className="profile-username">{username}</h1>
+            
+            <div className="profile-actions">
+                {user && user.userId === parseInt(id) ? (
+                    <button className="profile-edit-btn" onClick={() => setIsEditing(true)}>
+                        Edit Profile
+                    </button>
+                ) : user && (
+                    <button 
+                        className={`profile-follow-btn ${isFollowing ? 'following' : ''}`}
+                        onClick={handleFollowToggle}
+                    >
+                        {isFollowing ? 'Following' : 'Follow'}
+                    </button>
+                )}
             </div>
+        </div>
+        
+        {/* Middle row: Stats */}
+        <div className="profile-stats">
+            <div className="stat-item" onClick={() => {
+                setShowFollowingModal(true);
+                fetchFollowingList();
+            }}>
+                <span className="stat-number">{followingCount}</span>
+                <span className="stat-label">Following</span>
+            </div>
+            <div className="stat-item" onClick={() => {
+                setShowFollowersModal(true);
+                fetchFollowersList();
+            }}>
+                <span className="stat-number">{followersCount}</span>
+                <span className="stat-label">Followers</span>
+            </div>
+            <div className="stat-item">
+                <span className="stat-number">{postsCount}</span>
+                <span className="stat-label">Posts</span>
+            </div>
+            <div className="stat-item">
+                <span className="stat-number">{likesCount}</span>
+                <span className="stat-label">Likes</span>
+            </div>
+        </div>
+        
+        {/* Bottom row: Bio */}
+        <p className="profile-bio">{bio}</p>
+    </div>
+</div>
+           
         </div>
 
             {/* Add Tabs */}
