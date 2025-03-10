@@ -1,297 +1,137 @@
+/* ========== MAIN LAYOUT ========== */
 .settings-container {
     display: flex;
     gap: 2rem;
-    padding: 2rem;
-    margin-left: 13rem;
-    margin-top: 5rem;
-    max-width: 1800px;
-    background: #1f1f1f;
-    border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    color: #ffffff;
+    padding: 2.5rem;
+    margin-left: 10.5rem;
+    margin-top: 2rem;
+    color: var(--text-primary);
+    max-width: 1400px;
 }
 
+/* ========== SETTINGS SIDEBAR ========== */
 .settings-sidebar {
-    width: 200px;
+    width: 240px;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    padding: 1.5rem 1rem;
+    height: fit-content;
 }
 
 .settings-nav-btn {
-    padding: 1rem;
+    padding: 0.9rem 1.25rem;
     text-align: left;
     background: none;
     border: none;
     border-radius: 8px;
-    color: #fff;
+    color: rgba(255, 255, 255, 0.8);
     cursor: pointer;
     transition: all 0.3s ease;
+    font-weight: 500;
+    font-size: 0.95rem;
 }
 
 .settings-nav-btn:hover {
-    background-color: #2f2f2f;
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
 }
 
 .settings-nav-btn.active {
-    background-color: #fe2c55;
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    box-shadow: 0 4px 12px rgba(42, 117, 252, 0.3);
+    color: white;
+    font-weight: 600;
 }
 
+/* ========== SETTINGS CONTENT ========== */
 .settings-content {
     flex: 1;
-    background-color: #1a1a1a;
-    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    border-radius: 16px;
     padding: 2rem;
 }
 
 .settings-section {
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
 }
 
+.settings-section h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(90deg, #fff, #ccc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* ========== FORM ELEMENTS ========== */
 .settings-form {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    max-width: 400px;
+    gap: 1.5rem;
+    max-width: 500px;
 }
 
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.6rem;
 }
 
 .form-group label {
-    color: #fff;
-    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.95rem;
+    font-weight: 500;
 }
 
 .form-group input {
-    padding: 0.75rem;
+    padding: 0.9rem;
     border-radius: 8px;
-    border: 1px solid #2f2f2f;
-    background-color: #252525;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.3);
     color: #fff;
     font-size: 1rem;
+    transition: all 0.2s ease;
 }
 
 .form-group input:focus {
     outline: none;
-    border-color: #fe2c55;
+    border-color: rgba(106, 17, 203, 0.5);
+    box-shadow: 0 0 0 2px rgba(106, 17, 203, 0.2);
 }
 
 .verification-status {
     display: inline-block;
-    padding: 0.25rem 0.5rem;
+    padding: 0.3rem 0.6rem;
     border-radius: 4px;
     font-size: 0.8rem;
     margin-left: 0.5rem;
 }
 
 .verification-status.verified {
-    background-color: #28a745;
+    background: rgba(0, 200, 83, 0.15);
+    color: #00c853;
 }
 
 .verification-status.unverified {
-    background-color: #dc3545;
-}
-
-.settings-message {
-    margin-top: 1rem;
-    padding: 12px;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    text-align: center;
-}
-
-.settings-message.success {
-    background-color: rgba(76, 175, 80, 0.1);
-    color: #4CAF50;
-    border: 1px solid #4CAF50;
-}
-
-.settings-message.error {
-    background-color: rgba(255, 77, 77, 0.1);
+    background: rgba(255, 77, 77, 0.15);
     color: #ff4d4d;
-    border: 1px solid #ff4d4d;
 }
 
-.current-email {
-    margin-bottom: 1rem;
-    padding: 1rem;
-    background-color: #252525;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.verification-sent-message {
-    padding: 1rem;
-    background-color: rgba(255, 193, 7, 0.1);
-    color: #ffc107;
-    border-radius: 8px;
-}
-
-@media (max-width: 1024px) {
-    .settings-container {
-        flex-direction: column;
-        padding: 1rem;
-        margin-left: 4.5rem;
-        margin-top: 5rem;
-        border-radius: 0;
-        gap: 1rem;
-    }
-
-    .settings-sidebar {
-        width: 100%;
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
-    .settings-nav-btn {
-        flex: 1;
-        min-width: calc(50% - 0.5rem);
-        padding: 0.75rem;
-        font-size: 0.9rem;
-    }
-
-    .settings-content {
-        padding: 1rem;
-    }
-
-    .settings-profile-container {
-        width: 200px;
-        height: 200px;
-    }
-
-    .settings-form {
-        max-width: 100%;
-    }
-}
-
-@media (max-width: 480px) {
-    .settings-container {
-        padding: 0.5rem;
-        margin-left: 4.5rem;
-        margin-top: 5rem;
-    }
-
-    .settings-nav-btn {
-        min-width: 100%;
-        padding: 0.5rem;
-        font-size: 0.85rem;
-    }
-
-    .settings-content {
-        padding: 0.75rem;
-    }
-
-    .settings-profile-container {
-        width: 150px;
-        height: 150px;
-    }
-
-    .form-group input {
-        padding: 0.5rem;
-        font-size: 0.9rem;
-    }
-
-    .settings-form button {
-        padding: 10px;
-        font-size: 0.9rem;
-    }
-
-    .subscription-info {
-        padding: 12px;
-    }
-
-    .subscription-info .info-item {
-        margin-bottom: 12px;
-    }
-
-    .subscription-info .info-item label {
-        font-size: 0.85rem;
-    }
-
-    .subscription-info .info-item p {
-        font-size: 0.9rem;
-    }
-
-    .subscription-info .settings-btn {
-        padding: 10px 16px;
-        font-size: 0.85rem;
-        width: 100%;
-    }
-
-    .settings-message {
-        padding: 8px;
-        font-size: 0.85rem;
-    }
-
-    .password-requirements {
-        font-size: 0.75rem;
-    }
-
-    .password-requirements li {
-        font-size: 0.75rem;
-        margin-bottom: 0.2rem;
-    }
-
-    .current-email {
-        padding: 0.75rem;
-        font-size: 0.9rem;
-    }
-}
-
-.settings-form label {
-    display: flex;
-    flex-direction: column;
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.settings-form input {
-    padding: 8px;
-    border-radius: 4px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: #121212;
-    color: #ffffff;
-    margin-top: 4px;
-}
-
-.settings-form button {
-    padding: 12px;
-    border-radius: 4px;
-    border: none;
-    background: #fe2c55;
-    color: #ffffff;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.settings-form button:hover {
-    background: #ff425f;
-}
-
-.settings-message {
-    padding: 12px;
-    margin-bottom: 16px;
-    border-radius: 4px;
-    background: rgba(254, 44, 85, 0.1);
-    color: #fe2c55;
-    text-align: center;
-    white-space: pre-line;
-}
-
-/* profile picture button size */
+/* ========== PROFILE PICTURE STYLES ========== */
 .settings-profile-container {
     position: relative;
-    width: 300px;
-    height: 300px;
+    width: 180px;
+    height: 180px;
     margin: 0 auto 2rem;
     cursor: pointer;
 }
@@ -301,6 +141,16 @@
     display: block;
     width: 100%;
     height: 100%;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 3px solid rgba(255, 255, 255, 0.15);
+}
+
+.settings-avatar-label:hover {
+    transform: scale(1.03);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
 }
 
 .settings-avatar {
@@ -308,7 +158,6 @@
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
-    background-color: #1a1a1a;
     transition: filter 0.3s ease;
 }
 
@@ -328,9 +177,16 @@
     transition: opacity 0.3s ease;
 }
 
+.settings-avatar-overlay svg {
+    width: 32px;
+    height: 32px;
+    fill: white;
+    margin-bottom: 0.5rem;
+}
+
 .settings-avatar-text {
     color: white;
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 600;
 }
 
@@ -342,54 +198,33 @@
     display: none;
 }
 
-/* Remove these unused classes */
-.settings-avatar-btn,
-.profile-picture-section,
-.profile-picture-change-btn,
-.profile-picture-label,
-.profile-picture.loading,
-.profile-picture input {
-    display: none;
+/* ========== ACTION BUTTONS ========== */
+.settings-form button {
+    padding: 0.9rem 1.2rem;
+    border-radius: 8px;
+    border: none;
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    align-self: flex-start;
 }
 
-.password-requirements {
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 0.8rem;
-    margin-top: 0.5rem;
+.settings-form button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(42, 117, 252, 0.3);
 }
 
-.password-requirements ul {
-    margin: 0.5rem 0 0 1rem;
-    padding: 0;
+.settings-form button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
-.password-requirements li {
-    margin-bottom: 0.25rem;
-    color: #666; /* Default color for unmet requirements */
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.password-requirements li.valid {
-    color: #4CAF50; /* Green color for met requirements */
-}
-
-.password-requirements ul {
-    list-style: none;
-    padding: 0;
-    margin: 8px 0;
-}
-
-/* Style for the checkmark and circle symbols */
-.password-requirements li::before {
-    transition: color 0.2s ease;
-}
-
-.password-requirements li.valid {
-    color: #4CAF50;
-}
-
+/* ========== PASSWORD INPUT ========== */
 .password-input-container {
     position: relative;
     display: flex;
@@ -398,190 +233,309 @@
 
 .password-input-container input {
     width: 100%;
-    padding-right: 40px; /* Make room for the eye icon */
-}
-
-.password-toggle-btn {
-    position: absolute;
-    right: 10px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 5px;
-    display: flex;
-    align-items: center;
-    color: #666;
-}
-
-.password-toggle-btn:hover {
-    color: #333;
-}
-
-/* Remove default password reveal button in Edge browser */
-input::-ms-reveal,
-input::-ms-clear {
-    display: none;
+    padding-right: 40px;
 }
 
 .eye-toggle-btn {
     position: absolute;
     right: 10px;
-    background: transparent;
-    border: none;
+    background: transparent !important;
+    border: none !important;
     cursor: pointer;
-    padding: 5px;
+    padding: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #666;
+    color: rgba(255, 255, 255, 0.6);
     transition: color 0.2s ease;
-}
-
-.eye-toggle-btn:hover {
-    color: #333;
-}
-
-.eye-toggle-btn:focus {
-    outline: none;
-}
-
-/* Remove any inherited button styles */
-.eye-toggle-btn:active {
-    background: transparent;
-    border: none;
-    box-shadow: none;
-}
-
-/* Add these specific styles for the eye toggle buttons */
-.password-input-container .eye-toggle-btn {
-    position: absolute;
-    right: 10px;
-    background: none !important; /* Override any inherited backgrounds */
-    border: none !important; /* Override any inherited borders */
-    box-shadow: none !important; /* Override any inherited shadows */
-    padding: 8px;
-    color: #666;
-    transition: color 0.2s ease;
-    min-width: unset !important; /* Override any inherited widths */
+    box-shadow: none !important;
+    min-width: unset !important;
     width: auto !important;
     margin: 0 !important;
 }
 
-.password-input-container .eye-toggle-btn:hover {
-    background: none !important;
-    color: #333;
+.eye-toggle-btn:hover {
+    color: rgba(255, 255, 255, 0.9);
 }
 
-.password-input-container .eye-toggle-btn:active,
-.password-input-container .eye-toggle-btn:focus {
-    background: none !important;
-    outline: none;
-    box-shadow: none !important;
+/* ========== PASSWORD REQUIREMENTS ========== */
+.password-requirements {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.85rem;
+    margin-top: 0.75rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
 }
 
-/* Ensure proper positioning of the input and button */
-.password-input-container {
-    position: relative;
+.password-requirements ul {
+    margin: 0.5rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.password-requirements li {
+    margin-bottom: 0.4rem;
+    color: rgba(255, 255, 255, 0.5);
     display: flex;
     align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
 }
 
-.password-input-container input {
-    width: 100%;
-    padding-right: 40px; /* Make room for the eye icon */
+.password-requirements li.valid {
+    color: #4CAF50;
 }
 
-/* Add these styles to your existing Settings.css */
-.subscription-info {
-    background: #f8f9fa;
+.password-requirements li::before {
+    content: "•";
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.password-requirements li.valid::before {
+    content: "✓";
+    color: #4CAF50;
+}
+
+/* ========== MESSAGES ========== */
+.settings-message {
+    margin: 1rem 0;
+    padding: 0.9rem 1rem;
     border-radius: 8px;
-    padding: 20px;
-    margin-top: 20px;
+    font-size: 0.9rem;
+    text-align: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.settings-message.success {
+    background: rgba(0, 200, 83, 0.1);
+    color: #00c853;
+    border: 1px solid rgba(0, 200, 83, 0.2);
+}
+
+.settings-message.error {
+    background: rgba(255, 77, 77, 0.1);
+    color: #ff4d4d;
+    border: 1px solid rgba(255, 77, 77, 0.2);
+}
+
+/* ========== CURRENT EMAIL DISPLAY ========== */
+.current-email {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.verification-sent-message {
+    padding: 1rem;
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+    border: 1px solid rgba(255, 193, 7, 0.2);
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+/* ========== SUBSCRIPTION SECTION ========== */
+.subscription-info {
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1rem;
 }
 
 .subscription-info .info-item {
-    margin-bottom: 15px;
+    margin-bottom: 1.5rem;
 }
 
-.subscription-info label {
-    font-weight: 600;
-    color: #666;
-    display: block;
-    margin-bottom: 5px;
-}
-
-.subscription-info p {
-    color: #333;
-    margin: 0;
-    font-size: 1.1em;
-}
-
-.settings-btn {
-    background-color: #fe2c55;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 600;
-    margin-top: 15px;
-}
-
-.settings-btn:hover {
-    background-color: #e62a4d;
-}
-
-/* Subscription Section Styles */
-.subscription-info {
-    background-color: #1a1a1a;
-    border: 1px solid #2f2f2f;
-    border-radius: 8px;
-    padding: 20px;
-    margin-top: 15px;
-}
-
-.subscription-info .info-item {
-    margin-bottom: 20px;
+.subscription-info .info-item:last-child {
+    margin-bottom: 0;
 }
 
 .subscription-info .info-item label {
     display: block;
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.8);
-    margin-bottom: 8px;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 0.5rem;
 }
 
 .subscription-info .info-item p {
-    font-size: 16px;
+    font-size: 1.1rem;
     color: #ffffff;
     margin: 0;
 }
 
 .subscription-info .settings-btn {
-    background-color: #fe2c55;
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
     color: #ffffff;
     border: none;
-    padding: 12px 24px;
+    padding: 0.9rem 1.2rem;
     border-radius: 8px;
-    font-size: 14px;
+    font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s ease;
-    margin-top: 20px;
+    transition: all 0.3s ease;
+    margin-top: 1.5rem;
 }
 
 .subscription-info .settings-btn:hover {
-    background-color: #ff425f;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(42, 117, 252, 0.3);
 }
 
 /* Status Badge */
 .subscription-info .status {
     display: inline-block;
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 12px;
+    padding: 0.3rem 0.7rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
     font-weight: 600;
     text-transform: capitalize;
-    background-color: rgba(76, 175, 80, 0.1);
-    color: #4CAF50;
+    margin-left: 0.5rem;
+}
+
+.subscription-info .status.active {
+    background: rgba(0, 200, 83, 0.15);
+    color: #00c853;
+}
+
+.subscription-info .status.canceled,
+.subscription-info .status.expired {
+    background: rgba(255, 77, 77, 0.15);
+    color: #ff4d4d;
+}
+
+.subscription-info .status.pending {
+    background: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+}
+
+/* ========== ANIMATIONS ========== */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* ========== RESPONSIVE STYLES ========== */
+@media (max-width: 1024px) {
+    .settings-container {
+        flex-direction: column;
+        padding: 1.5rem;
+        margin-left: 5rem; /* Consistent with other pages */
+        margin-top: 4rem;
+        width: calc(100% - 8rem); /* Take up full width minus sidebar */
+        gap: 1.5rem;
+    }
+
+    .settings-sidebar {
+        width: calc(100% - 2rem);
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 1rem;
+    }
+
+    .settings-nav-btn {
+        flex: 1;
+        min-width: calc(33% - 0.5rem);
+        padding: 0.75rem;
+        font-size: 0.9rem;
+        text-align: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .settings-container {
+        padding: 1rem;
+        margin: 4rem auto;
+        width: 90%;
+    }
+
+    .settings-nav-btn {
+        min-width: calc(50% - 0.5rem);
+    }
+
+    .settings-content {
+        padding: 1.5rem;
+    }
+
+    .settings-section h2 {
+        font-size: 1.5rem;
+    }
+
+    .settings-form {
+        max-width: 100%;
+    }
+
+    .settings-profile-container {
+        width: 150px;
+        height: 150px;
+    }
+}
+
+@media (max-width: 480px) {
+    .settings-container {
+        padding: 0.75rem;
+        width: 95%;
+    }
+
+    .settings-nav-btn {
+        min-width: 100%;
+        padding: 0.6rem;
+        font-size: 0.85rem;
+    }
+
+    .settings-content {
+        padding: 1rem;
+    }
+
+    .form-group label {
+        font-size: 0.85rem;
+    }
+
+    .form-group input {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    .settings-form button {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+        width: 100%;
+    }
+
+    .subscription-info {
+        padding: 1rem;
+    }
+
+    .subscription-info .info-item label {
+        font-size: 0.85rem;
+    }
+
+    .subscription-info .info-item p {
+        font-size: 0.95rem;
+    }
+
+    .subscription-info .settings-btn {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+        width: 100%;
+    }
+
+    .password-requirements {
+        font-size: 0.75rem;
+    }
+
+    .password-requirements li {
+        font-size: 0.75rem;
+        margin-bottom: 0.2rem;
+    }
 }
