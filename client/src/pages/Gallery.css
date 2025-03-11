@@ -1762,3 +1762,23 @@ select.gallery-category {
   border-bottom: 2px solid white !important;
   transform: translate(-50%, -50%) rotate(45deg) !important;
 }
+
+.lazy-image-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.lazy-image.loaded {
+  opacity: 1;
+}
+
+.lazy-image.loading {
+  opacity: 0;
+}
+
+.lazy-image-placeholder {
+  background-color: rgba(0,0,0,0.1);
+  background-size: cover;
+  background-position: center;
+}

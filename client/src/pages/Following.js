@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { jwtDecode } from 'jwt-decode'; // Ensure jwt-decode is installed
 import { useNavigate } from 'react-router-dom';
 import { ReactComponent as LikeIcon } from '../assets/icons/like.svg';
@@ -12,6 +12,7 @@ import { getImageUrl } from '../utils/imageUtils';
 import ImageModal from '../components/ImageModal';
 import { artisticLoras, realisticLoras } from '../components/LoraSelector';
 import { customHistory } from '../utils/CustomHistory';
+import LazyImage from '../components/LazyImage';
 
 const Following = () => {
     const { user } = useAuth();
@@ -31,6 +32,11 @@ const Following = () => {
     const [isFollowing, setIsFollowing] = useState(false);
     const [expandedPrompts, setExpandedPrompts] = useState(new Set());
     const navigate = useNavigate();
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const loadingRef = useRef(null);
+    const fetchingInProgress = useRef(false);
+    const imagesPerPage = 12; // Adjust based on your needs
 
     const handleImageClick = (image) => {
         openModal(image);
@@ -583,50 +589,143 @@ const fetchImageDetails = async (imageId) => {
         console.log("Image edit not applicable in Following view");
     };
 
+    // Paginated fetch function
+    const fetchImages = async (pageNum) => {
+        if (fetchingInProgress.current) return;
+        fetchingInProgress.current = true;
+        
+        try {
+            if (pageNum === 1) {
+                setLoading(true);
+            }
+            
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No authentication token');
+            }
+
+            const response = await fetch(
+                `${process.env.REACT_APP_API_URL}/following_images?page=${pageNum}&limit=${imagesPerPage}`, 
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch images');
+            }
+
+            const data = await response.json();
+            
+            // Update image user details
+            const newUserDetails = {};
+            data.images.forEach(image => {
+                newUserDetails[image.id] = {
+                    username: image.username,
+                    profile_picture: image.profile_picture,
+                    user_id: image.user_id
+                };
+            });
+            
+            setImageUserDetails(prev => ({ ...prev, ...newUserDetails }));
+            
+            if (data.images.length === 0) {
+                setHasMore(false);
+            } else {
+                setImages(prev => 
+                    pageNum === 1 ? data.images : [...prev, ...data.images]
+                );
+            }
+        } catch (error) {
+            console.error('Error fetching images:', error);
+        } finally {
+            setLoading(false);
+            fetchingInProgress.current = false;
+        }
+    };
+
+    // Initial data fetch
+    useEffect(() => {
+        fetchImages(1);
+    }, []);
+
+    // Intersection Observer for infinite scroll
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasMore && !loading && !fetchingInProgress.current) {
+                    setPage(prevPage => prevPage + 1);
+                }
+            },
+            { threshold: 0.1 }
+        );
+        
+        if (loadingRef.current) {
+            observer.observe(loadingRef.current);
+        }
+        
+        return () => {
+            if (loadingRef.current) {
+                observer.unobserve(loadingRef.current);
+            }
+        };
+    }, [hasMore, loading]);
+
+    // Fetch when page changes
+    useEffect(() => {
+        if (page > 1) {
+            fetchImages(page);
+        }
+    }, [page]);
+
+    // Updated render with LazyImage
     return (
         <div className="following-container">
             <h1>Following</h1>
             
-            <div className="following-grid">
-                {loading ? (
-                    <div>Loading...</div>
-                ) : images.length === 0 ? (
-                    <div>No posts from followed users</div>
-                ) : (
-                    images.map((image) => (
-                        <div 
-                            key={image.id} 
-                            className="following-item"
-                            onClick={() => handleImageClick(image)}
-                        >
-                            <div className="following-user-info">
+            {loading && page === 1 ? (
+                <div className="loading-spinner">Loading...</div>
+            ) : images.length === 0 ? (
+                <div className="empty-state">
+                    <h3>No images yet</h3>
+                    <p>Images from people you follow will appear here.</p>
+                </div>
+            ) : (
+                <div className="following-grid">
+                    {images.map(image => (
+                        <div key={image.id} className="following-item" onClick={() => handleImageClick(image)}>
+                            <div className="following-user-info" onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/profile/${image.user_id}`);
+                            }}>
                                 <img 
-                                    src={imageUserDetails[image.id]?.profile_picture || '/default-avatar.png'}
-                                    alt="Profile"
                                     className="following-user-avatar"
+                                    src={getImageUrl(image.profile_picture, 'profile')} 
+                                    alt={image.username}
                                     onError={(e) => {
-                                        if (!imageUserDetails[image.id]?.profile_picture) {
-                                            fetchImageDetails(image.id);
-                                        }
+                                        e.target.onerror = null;
                                         e.target.src = '/default-avatar.png';
                                     }}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        navigate(`/profile/${image.user_id}`);
-                                    }}
                                 />
-                                <span>{imageUserDetails[image.id]?.username}</span>
+                                <span>{image.username}</span>
                             </div>
-                            <img 
+                            <LazyImage 
                                 src={image.image_url} 
                                 alt={image.prompt}
-                                className="following-image" 
+                                className="following-image"
                             />
                         </div>
-                    ))
-                )}
-            </div>
-    
+                    ))}
+                    {hasMore && (
+                        <div ref={loadingRef} className="loading-indicator">
+                            {loading && page > 1 && <div className="spinner"></div>}
+                        </div>
+                    )}
+                </div>
+            )}
+            
             {modalOpen && modalImage && (
                 <ImageModal
                     isOpen={modalOpen && !!modalImage}

@@ -12,22 +12,23 @@ import { getImageUrl } from '../utils/imageUtils';
 import { artisticLoras, realisticLoras } from '../components/LoraSelector';
 import ImageModal from '../components/ImageModal';
 import { customHistory } from '../utils/CustomHistory';
+import LazyImage from '../components/LazyImage'; // Ensure LazyImage component is imported
 
 
 const Gallery = () => {
     const { user, profile } = useAuth();
     const { fetchUserProfile } = useProfile();
     const [images, setImages] = useState([]);
-    const [selectedImage, setSelectedImage] = useState(null); // Rename this from modalImage
+    const [selectedImage, setSelectedImage] = useState(null); 
     const [activeImageId, setActiveImageId] = useState(null);
     const [likes, setLikes] = useState({});
     const [comments, setComments] = useState({});
     const [commentInput, setCommentInput] = useState('');
     const [userLikedImages, setUserLikedImages] = useState(new Set());
     const [isAdmin, setIsAdmin] = useState(false);
-    const [username, setUsername] = useState(''); // For storing the username from the token
+    const [username, setUsername] = useState('');
     const [commentLikes, setCommentLikes] = useState({});
-    const [modalOpen, setModalOpen] = useState(false); // Add modalOpen state
+    const [modalOpen, setModalOpen] = useState(false);
     const [imageUserDetails, setImageUserDetails] = useState({});
     const navigate = useNavigate();
     const location = useLocation();
@@ -36,7 +37,7 @@ const Gallery = () => {
     const [sortType, setSortType] = useState('newest');
     const [timeRange, setTimeRange] = useState('week');
     const [selectedCategory, setSelectedCategory] = useState('all');
-    const [selectedAspectRatio, setSelectedAspectRatio] = useState('all'); // Add this
+    const [selectedAspectRatio, setSelectedAspectRatio] = useState('all'); 
     const [userLikedComments, setUserLikedComments] = useState(new Set());
     const [selectionMode, setSelectionMode] = useState(false);
     const [selectedImages, setSelectedImages] = useState(new Set());
@@ -45,19 +46,23 @@ const Gallery = () => {
     const [hasMore, setHasMore] = useState(true);
     const loadingRef = useRef(null);
     const fetchingRef = useRef(false);
-
-    // Add new state for global counts
     const [globalLikeCounts, setGlobalLikeCounts] = useState({});
     const [globalCommentCounts, setGlobalCommentCounts] = useState({});
-
-    // Add new state
     const [isFollowing, setIsFollowing] = useState(false);
-
-    // Add at the top of component
     const currentRequestRef = useRef(null);
-
-    // First, add a profileLoaded ref to track if we've already loaded the profile
     const profileLoaded = useRef(false);
+    const imageDetailsCache = useRef(new Map());
+    const [columnImages, setColumnImages] = useState([]);
+    const [error, setError] = useState(null);
+    const [expandedPrompts, setExpandedPrompts] = useState(new Set());
+    // Move this hook here to fix the invalid hook error
+    const [columnLoadingState, setColumnLoadingState] = useState(
+      Array(4).fill().map(() => ({ loading: false, complete: false }))
+    );
+    const [availableCategories, setAvailableCategories] = useState([]);
+    const [columnsLoading, setColumnsLoading] = useState({
+        0: 0, 1: 0, 2: 0, 3: 0 // Tracks number of images loading per column
+    });
 
     // Replace the problematic useEffect with:
     useEffect(() => {
@@ -114,10 +119,6 @@ const Gallery = () => {
     
         fetchImagesAndCheckAuth();
     }, []);
-
-    // First, optimize the fetchImageDetails function
-    // 1. Add image details cache
-    const imageDetailsCache = useRef(new Map());
 
     // 2. Optimize fetchImageDetails with caching and parallel requests
     const fetchImageDetails = async (imageId) => {
@@ -901,30 +902,27 @@ useEffect(() => {
         }
     }, [activeImageId, imageUserDetails]);
 
-    // In Gallery.js, add new state
-    const [availableCategories, setAvailableCategories] = useState([]);
-
     // Add function to fetch categories
-const fetchCategories = async () => {
-    try {
-        console.log('Fetching categories...');
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/categories`);
-        if (response.ok) {
-            const data = await response.json();
-            console.log('Raw categories data:', data);
-            setAvailableCategories(data);
-            
-            // Log the state after update
-            setTimeout(() => {
-                console.log('Available categories state:', availableCategories);
-            }, 0);
-        } else {
-            console.error('Failed to fetch categories:', response.status);
+    const fetchCategories = async () => {
+        try {
+            console.log('Fetching categories...');
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/categories`);
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Raw categories data:', data);
+                setAvailableCategories(data);
+                
+                // Log the state after update
+                setTimeout(() => {
+                    console.log('Available categories state:', availableCategories);
+                }, 0);
+            } else {
+                console.error('Failed to fetch categories:', response.status);
+            }
+        } catch (error) {
+            console.error('Error fetching categories:', error);
         }
-    } catch (error) {
-        console.error('Error fetching categories:', error);
-    }
-};
+    };
 
 // Update the useEffect to fetch categories on mount and when navigating back to Gallery
 useEffect(() => {
@@ -981,9 +979,6 @@ useEffect(() => {
     useEffect(() => {
         setColumnImages(organizeIntoColumns(images));
     }, [images, organizeIntoColumns]);
-
-    const [columnImages, setColumnImages] = useState([]); // Add this state
-    const [error, setError] = useState(null);
 
     // Add these functions after your existing state declarations
     const handleImageEdit = (type, image) => {
@@ -1053,9 +1048,6 @@ useEffect(() => {
         // Fallback to model ID if not found
         return url.split(':')[1];
     };
-
-    // Add this state at the top of your component
-    const [expandedPrompts, setExpandedPrompts] = useState(new Set());
 
     // Add this function to your component
     const togglePrompt = (imageId) => {
@@ -1164,6 +1156,67 @@ useEffect(() => {
     };
 }, []); // Empty dependency array - only run once
 
+  
+
+    // Use single useEffect for infinite scroll
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && 
+                    hasMore && 
+                    !loading && 
+                    !fetchingRef.current &&
+                    !columnLoadingState.some(col => col.loading)) {
+                    
+                    setTimeout(() => {
+                        setPage(prev => prev + 1);
+                    }, 150);
+                }
+            },
+            { 
+                threshold: 0.2,
+                rootMargin: '300px'
+            }
+        );
+
+        if (loadingRef.current) {
+            observer.observe(loadingRef.current);
+        }
+
+        return () => {
+            if (loadingRef.current) {
+                observer.unobserve(loadingRef.current);
+            }
+        };
+    }, [hasMore, loading, fetchingRef.current, columnLoadingState]);
+
+    const handleImageLoadStart = (columnIndex) => {
+        setColumnsLoading(prev => ({
+            ...prev,
+            [columnIndex]: prev[columnIndex] + 1
+        }));
+    };
+    
+    const handleImageLoadComplete = (columnIndex) => {
+        setColumnsLoading(prev => ({
+            ...prev, 
+            [columnIndex]: Math.max(0, prev[columnIndex] - 1)
+        }));
+    };
+
+    // Add this function to estimate height when not available in your data
+    const getEstimatedHeight = (image) => {
+        // If you have width and aspect ratio info
+        if (image.width && image.aspect_ratio) {
+            return image.width * image.aspect_ratio;
+        }
+        
+        // Based on common aspect ratios
+        if (image.orientation === 'portrait') return 500;
+        if (image.orientation === 'landscape') return 300;
+        return 400; // Default for square or unknown
+    };
+
     return (
         <div className="gallery-page">
             <div className="gallery-container">
@@ -1271,20 +1324,15 @@ useEffect(() => {
                                                 }}
                                             />
                                         )}
-                                        <img 
-                                            className="gallery-thumbnail" 
+                                        <LazyImage 
                                             src={image.image_url} 
-                                            alt={image.prompt}
+                                            alt={image.prompt || 'Gallery image'}
+                                            className="gallery-thumbnail"
                                             onClick={() => !selectionMode && openModal(image)}
-                                            onError={(e) => {
-                                                if (!e.target.dataset.retried) {
-                                                    e.target.dataset.retried = true;
-                                                    // Give a small delay before retry
-                                                    setTimeout(() => {
-                                                        e.target.src = image.image_url;
-                                                    }, 500);
-                                                }
-                                            }}
+                                            columnIndex={colIndex}
+                                            onLoadStart={handleImageLoadStart}
+                                            onLoadComplete={handleImageLoadComplete}
+                                            height={image.height || getEstimatedHeight(image)}
                                         />
                                     </div>
                                 ))}
@@ -1326,7 +1374,7 @@ useEffect(() => {
                         getLoraName={getLoraName}
                     />
 
-                    {hasMore && <div ref={loadingRef} style={{ height: '20px' }} />}
+                    {hasMore && <div ref={loadingRef} style={{ height: '200px' }} />}
                     {loading && <div>Loading more images...</div>}
                 </>
             </div>

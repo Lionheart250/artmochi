@@ -8,10 +8,13 @@ button.lora-selector {
   color: var(--text-primary);
   font-weight: 600;
   cursor: pointer;
-  transition: all var(--transition-bounce);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
+              box-shadow 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
+              border-color 0.3s ease;
   position: relative;
   overflow: hidden;
   box-shadow: var(--shadow-soft);
+  will-change: transform, box-shadow;
 }
 
 button.lora-selector::before {
@@ -23,7 +26,7 @@ button.lora-selector::before {
   height: 100%;
   background: linear-gradient(45deg, var(--primary), #ff5277);
   opacity: 0;
-  transition: opacity var(--transition-medium);
+  transition: opacity 0.3s ease;
   z-index: 0;
 }
 
@@ -49,32 +52,14 @@ button.lora-selector span {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0);
-  backdrop-filter: blur(0);
-  -webkit-backdrop-filter: blur(0);
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 10000;
-  animation: cyber-backdrop 0.7s cubic-bezier(0.17, 0.84, 0.44, 1) forwards;
-}
-
-@keyframes cyber-backdrop {
-  0% {
-    background: rgba(0, 0, 0, 0);
-    backdrop-filter: blur(0);
-    -webkit-backdrop-filter: blur(0);
-  }
-  30% {
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-  }
-  100% {
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-  }
+  will-change: backdrop-filter;
 }
 
 /* ========= Modal Container ========= */
@@ -87,19 +72,16 @@ button.lora-selector span {
   position: relative;
   overflow: hidden;
   color: var(--text-primary);
-  font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   border: 1px solid rgba(255, 46, 135, 0.3);
-  animation: cyber-entrance 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  transform: perspective(1200px) scale(0.9) translateY(20px);
-  transform-origin: center;
-  opacity: 0;
+  transform: translateZ(0);
+  opacity: 1;
   box-shadow: 
     0 10px 40px rgba(0, 0, 0, 0.5),
-    0 0 100px rgba(255, 46, 135, 0.2),
-    0 0 200px rgba(0, 233, 255, 0.1);
+    0 0 100px rgba(255, 46, 135, 0.2);
+  will-change: transform;
 }
 
-/* Scanline effect */
+/* Performance-optimized scanline effect */
 .loraselector-popup::before {
   content: '';
   position: absolute;
@@ -117,10 +99,9 @@ button.lora-selector span {
   pointer-events: none;
   z-index: 1;
   opacity: 0.3;
-  animation: scanline 10s infinite linear;
 }
 
-/* Accent glow border */
+/* Accent border */
 .loraselector-popup::after {
   content: '';
   position: absolute;
@@ -136,59 +117,12 @@ button.lora-selector span {
   z-index: -1;
   border-radius: var(--radius-lg);
   opacity: 0.3;
-  animation: border-glow 8s linear infinite;
   pointer-events: none;
-}
-
-@keyframes scanline {
-  0% { background-position: 0 0; }
-  100% { background-position: 0 100%; }
-}
-
-@keyframes cyber-entrance {
-  0% {
-    opacity: 0;
-    transform: perspective(1200px) scale(0.8) translateY(50px) rotateX(10deg);
-    box-shadow: 
-      0 10px 40px rgba(0, 0, 0, 0),
-      0 0 0 rgba(255, 46, 135, 0),
-      0 0 0 rgba(0, 233, 255, 0);
-    filter: brightness(0.8);
-  }
-  70% {
-    opacity: 1;
-    transform: perspective(1200px) scale(1.02) translateY(-10px) rotateX(0deg);
-    box-shadow: 
-      0 20px 60px rgba(0, 0, 0, 0.6),
-      0 0 120px rgba(255, 46, 135, 0.3),
-      0 0 240px rgba(0, 233, 255, 0.15);
-    filter: brightness(1.1);
-  }
-  100% {
-    opacity: 1;
-    transform: perspective(1200px) scale(1) translateY(0) rotateX(0deg);
-    box-shadow: 
-      0 10px 40px rgba(0, 0, 0, 0.5),
-      0 0 100px rgba(255, 46, 135, 0.2),
-      0 0 200px rgba(0, 233, 255, 0.1);
-    filter: brightness(1);
-  }
-}
-
-@keyframes popIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-@keyframes border-glow {
-  0% { opacity: 0.2; }
-  50% { opacity: 0.4; }
-  100% { opacity: 0.2; }
 }
 
 /* ========= Header Styling ========= */
 .loraselector-popup-header {
-  position: relative;
+  position: sticky;
   top: 0;
   background: rgba(21, 10, 40, 0.95);
   z-index: 100;
@@ -201,8 +135,7 @@ button.lora-selector span {
   padding-right: 60px;
   background-image: 
     radial-gradient(circle at 10% 50%, rgba(0, 233, 255, 0.1) 0%, transparent 15%),
-    radial-gradient(circle at 90% 50%, rgba(255, 46, 135, 0.1) 0%, transparent 15%),
-    linear-gradient(90deg, rgba(21, 10, 40, 0.95), rgba(21, 10, 40, 0.98), rgba(21, 10, 40, 0.95));
+    radial-gradient(circle at 90% 50%, rgba(255, 46, 135, 0.1) 0%, transparent 15%);
   overflow: hidden;
 }
 
@@ -212,59 +145,14 @@ button.lora-selector span {
   align-items: center;
 }
 
-/* Rainbow scanline animation for header */
-.loraselector-popup-header::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(to right,
-    rgba(255, 46, 135, 0),
-    rgba(255, 46, 135, 1),
-    rgba(0, 233, 255, 1),
-    rgba(255, 46, 135, 0)
-  );
-  z-index: 1;
-  animation: rainbow-scan 3s ease-in-out infinite alternate;
-}
-
-@keyframes rainbow-scan {
-  0% {
-    background-position: -200% 0;
-    opacity: 0.3;
-    left: -100%;
-  }
-  100% {
-    background-position: 300% 0;
-    opacity: 0.7;
-    left: 100%;
-  }
-}
-
 .loraselector-popup-header h3 {
   margin: 0;
   font-size: 22px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
-  position: relative;
-  background: linear-gradient(90deg, 
-    var(--primary),
-    var(--teal),
-    var(--primary)
-  );
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: gradient-text 3s linear infinite alternate;
+  color: var(--primary);
   text-shadow: 0 0 10px rgba(255, 46, 135, 0.5);
-}
-
-@keyframes gradient-text {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 100% 50%; }
 }
 
 /* High-tech close button */
@@ -279,11 +167,13 @@ button.lora-selector span {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
+              background-color 0.3s ease,
+              box-shadow 0.3s ease;
   font-size: 24px;
   position: absolute;
   top: 16px;
-  right: -45px;
+  right: 16px;
   z-index: 101;
   overflow: hidden;
 }
@@ -294,42 +184,10 @@ button.lora-selector span {
   z-index: 2;
 }
 
-/* Animated glow ring */
-.loraselector-close-button::after {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  border-radius: 50%;
-  background: conic-gradient(
-    var(--primary) 0deg,
-    transparent 60deg,
-    var(--teal) 120deg,
-    transparent 180deg,
-    var(--primary) 240deg,
-    transparent 300deg
-  );
-  opacity: 0;
-  z-index: 0;
-  transition: all 0.3s ease;
-  animation: spin-glow 4s linear infinite;
-}
-
-@keyframes spin-glow {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
 .loraselector-close-button:hover {
   background: rgba(255, 46, 135, 0.3);
-  transform: rotate(90deg) scale(1.1);
+  transform: rotate(90deg);
   box-shadow: 0 0 15px rgba(255, 46, 135, 0.4);
-}
-
-.loraselector-close-button:hover::after {
-  opacity: 0.6;
 }
 
 /* ========= Content Layout ========= */
@@ -340,9 +198,7 @@ button.lora-selector span {
   overflow: hidden;
   padding: 0;
   position: relative;
-  background-image: 
-    radial-gradient(circle at 20% 80%, rgba(0, 233, 255, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(255, 46, 135, 0.03) 0%, transparent 50%);
+  contain: content;
 }
 
 .lora-column {
@@ -355,8 +211,6 @@ button.lora-selector span {
   scrollbar-color: rgba(255, 46, 135, 0.3) transparent;
   overscroll-behavior: contain;
   scroll-behavior: smooth;
-  perspective: 1000px;
-  transform-style: preserve-3d;
 }
 
 .lora-column::-webkit-scrollbar {
@@ -391,46 +245,13 @@ button.lora-selector span {
   align-items: center;
   cursor: pointer;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: background-color 0.3s ease, transform 0.3s ease;
   overflow: hidden;
-}
-
-/* Tech lines background */
-.section-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: 
-    linear-gradient(90deg, transparent 50%, rgba(255, 46, 135, 0.05) 50%),
-    linear-gradient(90deg, rgba(0, 233, 255, 0.03) 50%, transparent 50%);
-  background-size: 10px 100%, 30px 100%;
-  opacity: 0.2;
-  z-index: -1;
 }
 
 .section-header:hover {
   background: rgba(37, 26, 53, 0.98);
   transform: translateY(-1px);
-}
-
-/* Interactive hover state */
-.section-header:hover::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 4px;
-  height: 100%;
-  background: linear-gradient(to bottom, var(--primary), var(--teal));
-  animation: pulse-height 1.5s ease-in-out infinite alternate;
-}
-
-@keyframes pulse-height {
-  0% { height: 30%; opacity: 0.7; }
-  100% { height: 100%; opacity: 1; }
 }
 
 .section-header h3 {
@@ -441,7 +262,7 @@ button.lora-selector span {
   position: relative;
   padding-left: 15px;
   letter-spacing: 0.5px;
-  transition: all 0.3s ease;
+  transition: color 0.3s ease, transform 0.3s ease;
 }
 
 /* Cyberpunk accent line */
@@ -455,7 +276,7 @@ button.lora-selector span {
   width: 3px;
   background: linear-gradient(to bottom, var(--primary), var(--teal));
   border-radius: 2px;
-  transition: all 0.3s ease;
+  transition: height 0.3s ease;
 }
 
 .section-header:hover h3 {
@@ -465,7 +286,6 @@ button.lora-selector span {
 
 .section-header:hover h3::before {
   height: 24px;
-  box-shadow: 0 0 10px rgba(255, 46, 135, 0.7);
 }
 
 /* ========= LoRA Grid Items ========= */
@@ -477,39 +297,16 @@ button.lora-selector span {
   position: relative;
 }
 
-/* Staggered entrance animation for grid items */
-.lora-grid .lora-item {
-  opacity: 0;
-  transform: translateY(15px);
-  animation: stagger-fade-in 0.5s ease forwards;
-}
-
-@keyframes stagger-fade-in {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Apply staggered delay to each item */
-.lora-grid .lora-item:nth-child(1) { animation-delay: 0.1s; }
-.lora-grid .lora-item:nth-child(2) { animation-delay: 0.15s; }
-.lora-grid .lora-item:nth-child(3) { animation-delay: 0.2s; }
-.lora-grid .lora-item:nth-child(4) { animation-delay: 0.25s; }
-.lora-grid .lora-item:nth-child(5) { animation-delay: 0.3s; }
-.lora-grid .lora-item:nth-child(6) { animation-delay: 0.35s; }
-.lora-grid .lora-item:nth-child(7) { animation-delay: 0.4s; }
-.lora-grid .lora-item:nth-child(8) { animation-delay: 0.45s; }
-.lora-grid .lora-item:nth-child(9) { animation-delay: 0.5s; }
-.lora-grid .lora-item:nth-child(10) { animation-delay: 0.55s; }
-
 /* Item styling */
 .lora-item {
   background: rgba(26, 16, 37, 0.7);
   border-radius: var(--radius-md);
   border: 1px solid rgba(255, 46, 135, 0.2);
   padding: 14px;
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background-color 0.3s ease,
+              border-color 0.3s ease,
+              box-shadow 0.3s ease;
   min-height: 80px;
   display: grid;
   grid-template-rows: auto minmax(40px, auto);
@@ -519,54 +316,19 @@ button.lora-selector span {
   position: relative;
   overflow: hidden;
   box-shadow: var(--shadow-soft);
-  background-image: 
-    linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, transparent 50%, rgba(255, 255, 255, 0.02) 100%);
-}
-
-/* Tech pattern background */
-.lora-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h20v20H0V0zm2 2v16h16V2H2z' fill='%23FF2E87' fill-opacity='0.05'/%3E%3C/svg%3E");
-  opacity: 0.4;
-  z-index: -1;
-  transition: opacity 0.5s ease;
+  will-change: transform;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 180px;
+  contain: layout style paint;
 }
 
 .lora-item:hover {
   background: rgba(37, 26, 53, 0.8);
-  transform: translateY(-3px) scale(1.01);
+  transform: translateY(-3px);
   border-color: rgba(255, 46, 135, 0.4);
   box-shadow: 
     0 10px 20px rgba(0, 0, 0, 0.3),
     0 0 15px rgba(255, 46, 135, 0.2);
-}
-
-/* Glowing accent border animation on hover */
-.lora-item::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--primary), var(--teal), transparent);
-  opacity: 0;
-  transition: all 0.5s ease;
-}
-
-.lora-item:hover::after {
-  opacity: 1;
-  animation: slide-border 2s linear infinite;
-}
-
-@keyframes slide-border {
-  0% { left: -100%; }
-  100% { left: 100%; }
 }
 
 /* Selected state */
@@ -576,58 +338,7 @@ button.lora-selector span {
   box-shadow: 
     0 10px 30px rgba(0, 0, 0, 0.2),
     0 0 20px rgba(255, 46, 135, 0.25);
-  transform: translateY(-3px) scale(1.01);
-}
-
-.lora-item.selected::before {
-  opacity: 0.6;
-  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h20v20H0V0zm2 2v16h16V2H2z' fill='%23FF2E87' fill-opacity='0.1'/%3E%3C/svg%3E");
-}
-
-.lora-item.selected::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border: 2px solid transparent;
-  border-radius: var(--radius-md);
-  background-image: 
-    linear-gradient(var(--bg-secondary), var(--bg-secondary)), 
-    linear-gradient(135deg, var(--primary), var(--teal));
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
-  animation: border-pulse 2s infinite alternate;
-}
-
-@keyframes border-pulse {
-  0% { opacity: 0.5; }
-  100% { opacity: 1; }
-}
-
-/* Data processing animation */
-.lora-item.selected::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 46, 135, 0.1) 50%,
-    transparent 100%
-  );
-  z-index: -1;
-  animation: data-scan 2s infinite linear;
-  pointer-events: none;
-}
-
-@keyframes data-scan {
-  0% { background-position: -200px 0; }
-  100% { background-position: 200px 0; }
+  transform: translateY(-3px);
 }
 
 /* ========= Form Controls ========= */
@@ -638,7 +349,7 @@ button.lora-selector span {
   color: var(--text-primary);
   font-weight: 500;
   font-size: 14px;
-  transition: all var(--transition-fast);
+  transition: color 0.3s ease;
   cursor: pointer;
   padding: 4px;
   -webkit-tap-highlight-color: transparent;
@@ -647,7 +358,6 @@ button.lora-selector span {
 
 .lora-item:hover label {
   color: var(--primary);
-  text-shadow: 0 0 10px rgba(255, 46, 135, 0.3);
 }
 
 /* Custom checkbox */
@@ -665,7 +375,7 @@ button.lora-selector span {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.3s ease;
   flex-shrink: 0;
   margin: 0;
   outline: none;
@@ -673,7 +383,6 @@ button.lora-selector span {
   box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
 }
 
-/* Animated checkmark */
 .lora-item input[type="checkbox"]:checked::after {
   content: "";
   position: absolute;
@@ -683,23 +392,7 @@ button.lora-selector span {
   border-bottom: 2px solid white;
   top: 40%;
   left: 50%;
-  transform: translate(-50%, -50%) rotate(45deg) scale(0);
-  opacity: 0;
-  animation: checkmark-appear 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
-
-@keyframes checkmark-appear {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) rotate(45deg) scale(0);
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 1;
-    transform: translate(-50%, -50%) rotate(45deg) scale(1);
-  }
+  transform: translate(-50%, -50%) rotate(45deg);
 }
 
 .lora-item input[type="checkbox"]:checked {
@@ -739,27 +432,12 @@ button.lora-selector span {
   border-radius: 50%;
   cursor: pointer;
   box-shadow: 0 0 10px rgba(255, 46, 135, 0.4);
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  position: relative;
-  z-index: 2;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .lora-item input[type="range"]::-webkit-slider-thumb:hover {
   transform: scale(1.2);
   box-shadow: 0 0 15px rgba(255, 46, 135, 0.6);
-}
-
-/* Track highlight */
-.lora-item input[type="range"]::before {
-  content: '';
-  position: absolute;
-  height: 4px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(15, 10, 30, 0.5);
-  border-radius: 2px;
-  z-index: 0;
 }
 
 /* ========= Thumbnail Grid ========= */
@@ -768,6 +446,9 @@ button.lora-selector span {
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
   margin-top: 12px;
+  contain: layout;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 100px;
 }
 
 .thumbnail-container {
@@ -779,37 +460,12 @@ button.lora-selector span {
   border-radius: var(--radius-sm);
   background: rgba(15, 10, 30, 0.7);
   box-shadow: var(--shadow-soft);
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   transform-origin: center;
   cursor: pointer;
-  clip-path: polygon(
-    5% 0%,
-    95% 0%,
-    100% 5%,
-    100% 95%,
-    95% 100%,
-    5% 100%,
-    0% 95%,
-    0% 5%
-  );
-}
-
-/* Border glow effect */
-.thumbnail-container::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  padding: 2px;
-  border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--primary), var(--teal));
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0.4;
-  transition: opacity 0.3s ease;
-  z-index: 2;
+  will-change: transform;
+  contain: layout;
+  background-image: linear-gradient(45deg, rgba(15, 10, 30, 0.7), rgba(26, 16, 37, 0.7));
 }
 
 .thumbnail-container:hover {
@@ -819,46 +475,45 @@ button.lora-selector span {
     0 0 15px rgba(255, 46, 135, 0.3);
 }
 
-.thumbnail-container:hover::before {
-  opacity: 0.8;
-}
-
-.thumbnail-container.active::before {
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) padding-box,
-    linear-gradient(#fff 0 0);
-}
-
 .mini-thumbnail {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  opacity: 0;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   object-fit: cover;
   cursor: pointer;
   transform-origin: center;
-}
-
-.mini-thumbnail.loaded {
-  opacity: 1;
-  animation: zoom-fade 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes zoom-fade {
-  from {
-    opacity: 0;
-    transform: scale(1.1);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  backface-visibility: hidden;
+  content-visibility: auto;
+  image-rendering: optimizeSpeed;
+  will-change: transform;
+  transform: translateZ(0);
+  opacity: 1 !important;
+  image-rendering: -webkit-optimize-contrast;
+  -webkit-backface-visibility: hidden;
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0.2, 1);
+  contain: paint;
 }
 
 .mini-thumbnail:hover {
   transform: scale(1.1);
   filter: brightness(1.1);
+}
+
+.preview-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  font-size: 1.5rem;
+  transition: opacity 0.2s;
+  text-shadow: 0 0 8px rgba(0,0,0,0.8);
+}
+
+.thumbnail-container.hovered .preview-icon {
+  opacity: 1;
 }
 
 /* ========= Preview Modal ========= */
@@ -875,16 +530,7 @@ button.lora-selector span {
   z-index: 11000;
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
-  animation: fade-zoom-in 0.4s cubic-bezier(0.17, 0.84, 0.44, 1);
-  overflow: hidden;
-}
-
-@keyframes fade-zoom-in {
-  from {
-    backdrop-filter: blur(0px);
-    -webkit-backdrop-filter: blur(0px);
-    background: rgba(0, 0, 0, 0);
-  }
+  will-change: opacity;
 }
 
 .preview-modal {
@@ -902,47 +548,7 @@ button.lora-selector span {
   max-width: 90vw;
   max-height: 90vh;
   overflow-y: auto;
-  animation: modalSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.preview-modal.animate-in {
-  animation: modal-entrance 0.5s cubic-bezier(0.17, 0.84, 0.44, 1) forwards;
-}
-
-@keyframes modal-entrance {
-  0% { opacity: 0; transform: scale(0.95); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-@keyframes modalSlideUp {
-  from {
-    opacity: 0;
-    transform: scale(0.95) translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-/* Accent glow */
-.preview-modal::after {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: linear-gradient(135deg, 
-    rgba(0, 233, 255, 0.7) 0%, 
-    transparent 20%, 
-    transparent 80%, 
-    rgba(255, 46, 135, 0.7) 100%);
-  z-index: -1;
-  border-radius: var(--radius-lg);
-  opacity: 0.3;
-  animation: border-glow 8s linear infinite;
-  pointer-events: none;
+  transform: translateZ(0);
 }
 
 /* Close button */
@@ -961,7 +567,7 @@ button.lora-selector span {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
   z-index: 1000;
 }
 
@@ -976,9 +582,7 @@ button.lora-selector span {
   font-weight: 600;
   font-size: 24px;
   text-align: center;
-  background: linear-gradient(90deg, var(--primary), var(--teal));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--primary);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
@@ -998,7 +602,7 @@ button.lora-selector span {
   box-shadow: 
     0 10px 30px rgba(0, 0, 0, 0.3),
     0 0 30px rgba(255, 46, 135, 0.15);
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .preview-main-image img:hover {
@@ -1021,7 +625,7 @@ button.lora-selector span {
   height: 70px;
   object-fit: cover;
   border-radius: var(--radius-sm);
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s ease, opacity 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
   opacity: 0.5;
   border: 2px solid transparent;
@@ -1030,13 +634,13 @@ button.lora-selector span {
 
 .preview-thumbnails img:hover {
   opacity: 0.8;
-  transform: translateY(-3px) scale(1);
+  transform: translateY(-3px);
 }
 
 .preview-thumbnails img.active {
   opacity: 1;
   border-color: var(--primary);
-  transform: translateY(-5px) scale(1.05);
+  transform: translateY(-5px);
   box-shadow: 0 5px 15px rgba(255, 46, 135, 0.4);
 }
 
@@ -1062,7 +666,7 @@ button.lora-selector span {
   padding: 12px 20px;
   border-radius: var(--radius-md);
   font-weight: 600;
-  transition: all var(--transition-bounce);
+  transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
   min-width: 120px;
   text-align: center;
   cursor: pointer;
@@ -1077,27 +681,6 @@ button.lora-selector span {
   box-shadow: 0 4px 15px rgba(255, 46, 135, 0.3);
   position: relative;
   overflow: hidden;
-}
-
-/* Shimmer effect */
-.lora-action-btn.primary::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, 
-    transparent, 
-    rgba(255, 255, 255, 0.2), 
-    transparent);
-  animation: shimmer 3s infinite;
-  z-index: 1;
-}
-
-@keyframes shimmer {
-  0% { left: -100%; }
-  100% { left: 100%; }
 }
 
 .lora-action-btn.secondary {
@@ -1128,392 +711,43 @@ button.lora-selector span {
   box-shadow: none;
 }
 
-/* ========= Navigation Elements ========= */
-.preview-nav-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 24px;
-  opacity: 0.5;
-  transition: all 0.3s ease;
-}
-
-.preview-nav-arrow:hover {
-  opacity: 1;
-  background: rgba(255, 46, 135, 0.3);
-  transform: translateY(-50%) scale(1.1);
-}
-
-.preview-nav-prev {
-  left: 10px;
-}
-
-.preview-nav-next {
-  right: 10px;
-}
-
-/* Keyboard navigation hint */
-.preview-modal::after {
-  content: 'Use arrow keys to navigate';
-  position: absolute;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 12px;
-  color: var(--text-tertiary);
-  opacity: 0.7;
-  pointer-events: none;
-  white-space: nowrap;
-}
-
-/* ========= Selection Animations ========= */
-.lora-item.particle-effect::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 46, 135, 0.5) 0%, rgba(255, 46, 135, 0) 70%);
-  z-index: 10;
-  pointer-events: none;
-  animation: particle-burst 0.6s cubic-bezier(0.17, 0.84, 0.44, 1) forwards;
-}
-
-@keyframes particle-burst {
-  0% {
-    transform: translate(-50%, -50%) scale(0);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(3);
-    opacity: 0;
-  }
-}
-
-/* Ripple effect */
+/* Ripple effect - optimized */
 .ripple-effect {
   position: absolute;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.4);
-  transform: scale(0);
-  animation: ripple 0.6s linear;
+  background-color: rgba(255, 255, 255, 0.3);
+  width: 100px;
+  height: 100px;
+  margin-top: -50px;
+  margin-left: -50px;
+  animation: ripple-optimized 0.6s linear forwards;
   pointer-events: none;
+  will-change: transform, opacity;
+  transform: translateZ(0);
 }
 
-@keyframes ripple {
+@keyframes ripple-optimized {
   to {
-    transform: scale(4);
+    transform: scale(2);
     opacity: 0;
   }
 }
 
-/* ========= Loading Indicators ========= */
-.thumbnail-loading-indicator {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(90deg,
-    rgba(15, 10, 30, 0.3),
-    rgba(37, 26, 53, 0.5),
-    rgba(15, 10, 30, 0.3)
-  );
-  background-size: 200% 100%;
-  animation: loading-shimmer 1.5s infinite;
-  z-index: 1;
-}
-
-@keyframes loading-shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-/* ========= Accessibility ========= */
-@media (prefers-reduced-motion: reduce) {
-  .preview-modal,
-  .preview-modal::before,
-  .preview-main-image img,
-  .preview-thumbnails img,
-  .loraselector-close-button,
-  .thumbnail-container,
-  .preview-icon {
-    transition-duration: 0.1s;
-    animation-duration: 0.1s;
-  }
-  
-  .preview-modal::after {
-    display: none;
-  }
-
-  .lora-grid .lora-item {
-    animation: none;
-    opacity: 1;
-    transform: none;
-  }
-
-  /* Disable other intensive animations */
-  .loraselector-popup::before,
-  .loraselector-popup::after,
-  .loraselector-popup-header::after,
-  .loraselector-close-button::after {
-    animation: none;
-  }
-}
-
-/* Focus states for keyboard navigation */
-.lora-item:focus-visible,
-.thumbnail-container:focus-visible,
-.lora-action-btn:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(255, 46, 135, 0.3);
-}
-
-/* ========= Touch Interactions ========= */
-.touch-ripple {
-  position: absolute;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle, 
-    rgba(255, 46, 135, 0.4) 0%, 
-    rgba(0, 233, 255, 0.2) 70%, 
-    transparent 100%
-  );
-  transform: scale(0);
-  animation: ripple-effect 0.8s ease-out;
-  pointer-events: none;
-  z-index: 10;
-}
-
-@keyframes ripple-effect {
-  to {
-    transform: scale(4);
-    opacity: 0;
-  }
-}
-
-.lora-item:active,
-.preset-button:active,
-.lora-action-btn:active,
-.thumbnail-container:active {
-  transform: scale(0.98);
-  transition: transform 0.1s;
-}
-
-/* ============ media screen settings ============== */
-
-
-@media (max-width: 1024px) {
-  .thumbnail-strip {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  .preview-modal {
-    max-width: 900px;
-    width: 80%;
-  }
-  
-  .loraselector-close-button {
-    top: 16px;
-    right: -45px;
-  }
-}
-
-/* ========= Responsive Adjustments ========= */
-@media screen and (max-width: 1024px) {
-  .loraselector-popup {
-    width: 95%;
-    max-height: 90vh;
-    margin: auto;
-  }
-  
+/* ========= Mobile & Responsive Design ========= */
+@media (max-width: 768px) {
   .lora-content {
-    gap: 12px;
+    flex-direction: column;
   }
   
   .thumbnail-strip {
     grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
   }
-  
+
   .lora-action-btn {
     min-width: 100px;
     padding: 10px 16px;
-  }
-  
-  .style-categories {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  
-  .category-badge {
-    min-width: 120px;
-  }
-}
-
-
-/* Fix for various mobile browsers */
-@supports (-webkit-touch-callout: none) {
-  /* iOS specific styles */
-  .lora-column {
-    padding-bottom: 150px; /* Extra padding for iOS */
-  }
-  
-  /* Fix iOS touch targets */
-  .thumbnail-container,
-  .lora-item,
-  .preset-button,
-  .lora-action-btn {
-    cursor: pointer;
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-  }
-  
-  /* Fix iOS scrolling */
-  .lora-column,
-  .preview-modal {
-    -webkit-overflow-scrolling: touch;
-  }
-}
-
-/* Fix any scroll issues in the preview mode */
-.preview-modal-overlay {
-  overflow: hidden;
-}
-
-.preview-modal {
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Add active state for touch feedback */
-.lora-item:active,
-.preset-button:active,
-.lora-action-btn:active,
-.thumbnail-container:active {
-  transform: scale(0.98);
-  transition: transform 0.1s;
-}
-
-/* Touch ripple effect */
-.touch-ripple {
-  position: absolute;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle, 
-    rgba(255, 46, 135, 0.4) 0%, 
-    rgba(0, 233, 255, 0.2) 70%, 
-    transparent 100%
-  );
-  transform: scale(0);
-  animation: ripple-effect 0.8s ease-out;
-  pointer-events: none;
-  z-index: 10;
-}
-
-@keyframes ripple-effect {
-  to {
-    transform: scale(4);
-    opacity: 0;
-  }
-}
-
-/* Mobile Optimizations */
-@media (max-width: 768px) {
-  /* Thumbnail Strip */
-  .thumbnail-strip {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 2px;
-    margin-top: 0px;
-    padding: 0px;
-  }
-  .thumbnail-container {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    border-radius: var(--radius-sm);
-    background: rgba(15, 10, 30, 0.7);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    touch-action: manipulation;
-  }
-  .mini-thumbnail {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  .thumbnail-container:hover, .thumbnail-container:active {
-    transform: scale(1.05);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  }
-  
-  /* Preview Modal */
-  .preview-modal {
-    width: 90vw;
-    max-height: 80vh;
-    padding: 16px;
-    border-radius: 12px;
-    overflow-y: auto;
-  }
-  .preview-main-image img {
-    max-height: 50vh;
-    border-radius: 8px;
-  }
-  .preview-thumbnails {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 12px;
-    overflow-x: auto;
-    padding: 4px 0;
-  }
-  .preview-thumbnails img {
-    width: 50px;
-    height: 50px;
-    border-radius: 6px;
-    margin: 4px;
-  }
-  
-  /* Header & Close Button */
-  .loraselector-popup-header {
-    display: flex;
-    justify-content: center;
-    padding: 16px 50px 16px 16px;
-    position: relative;
-    border-bottom: 1px solid rgba(255, 46, 135, 0.2);
-  }
-  .loraselector-close-button {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    z-index: 101;
-    width: 36px;
-    height: 36px;
-    background: rgba(255, 46, 135, 0.15);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    border: none;
-    color: white;
-    font-size: 20px;
-    touch-action: manipulation;
+    font-size: 14px;
   }
   
   /* Fixed Action Buttons */
@@ -1532,65 +766,68 @@ button.lora-selector span {
     gap: 10px;
     backdrop-filter: blur(10px);
   }
+
   .lora-action-btn {
     flex: 1;
     font-size: 14px;
     padding: 12px 10px;
     min-height: 44px;
   }
+  
   .lora-content {
     padding-bottom: 80px;
     max-height: calc(90vh - 80px);
   }
   
-  /* Enhancements for Mobile */
-  .lora-item input[type="checkbox"] {
-    width: 24px;
-    height: 24px;
-    margin-right: 12px;
-  }
-  .lora-item label {
-    font-size: 14px;
-    padding: 4px 0;
-  }
-  .preset-button, .lora-action-btn {
-    padding: 8px 14px;
-    touch-action: manipulation;
+  .preview-modal {
+    width: 90vw;
+    max-height: 80vh;
+    padding: 16px;
+    border-radius: 12px;
+    overflow-y: auto;
   }
   
-  /* Scroll Indicator */
-  .lora-column::after {
-    content: '';
-    position: fixed;
-    bottom: 70px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-    opacity: 0.5;
-    animation: scroll-hint 2s ease-in-out infinite;
-    pointer-events: none;
-  }
-  @keyframes scroll-hint {
-    0%, 100% { transform: translateX(-50%) scaleX(0.8); opacity: 0.3; }
-    50% { transform: translateX(-50%) scaleX(1.2); opacity: 0.7; }
+  .preview-main-image img {
+    max-height: 50vh;
+    border-radius: 8px;
   }
   
-  /* iOS Specific Fixes */
-  @supports (-webkit-touch-callout: none) {
-    .lora-column {
-      padding-bottom: 150px;
-      -webkit-overflow-scrolling: touch;
-    }
-    .thumbnail-container, .lora-item, .preset-button, .lora-action-btn {
-      -webkit-tap-highlight-color: transparent;
-    }
+  .preview-thumbnails {
+    gap: 8px;
+    margin-top: 12px;
+  }
+  
+  .preview-thumbnails img {
+    width: 50px;
+    height: 50px;
+    border-radius: 6px;
+    margin: 4px;
   }
 }
 
-/* ========= iOS Specific Fixes ========= */
+/* Smaller screens */
+@media (max-width: 480px) {
+  .loraselector-popup {
+    width: 100%;
+    height: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+  
+  .lora-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+  
+  .lora-actions {
+    flex-direction: column;
+  }
+  
+  .thumbnail-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* iOS Specific Fixes */
 @supports (-webkit-touch-callout: none) {
   .lora-column {
     padding-bottom: 150px;
@@ -1599,10 +836,8 @@ button.lora-selector span {
   
   .thumbnail-container,
   .lora-item,
-  .preset-button,
   .lora-action-btn {
-    cursor: pointer;
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    -webkit-tap-highlight-color: transparent;
   }
   
   .lora-column,
@@ -1611,5 +846,25 @@ button.lora-selector span {
   }
 }
 
+/* Force the browser to load all visible images immediately */
+@media (prefers-reduced-motion: no-preference) {
+  .mini-thumbnail {
+    -webkit-animation: mini-thumbnail-appear 0.01s;
+    animation: mini-thumbnail-appear 0.01s;
+  }
+  
+  @-webkit-keyframes mini-thumbnail-appear {
+    0% { opacity: 0.99; }
+    100% { opacity: 1; }
+  }
+  
+  @keyframes mini-thumbnail-appear {
+    0% { opacity: 0.99; }
+    100% { opacity: 1; }
+  }
+}
 
-
+/* Prevent hover animation delays */
+.thumbnail-container:hover .mini-thumbnail {
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0.2, 1);
+}

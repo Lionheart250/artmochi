@@ -234,3 +234,87 @@
     height: 32px;
   }
 }
+
+/* Add to your existing Following.css */
+
+/* Loading indicators styling */
+.loading-indicator {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  padding: 2rem 0;
+  height: 80px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s linear infinite;
+}
+
+/* Loading spinner for initial page load */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.2rem;
+  position: relative;
+}
+
+.loading-spinner:after {
+  content: '';
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  border-top-color: white;
+  position: absolute;
+  animation: spin 1s linear infinite;
+}
+
+/* Lazy image styling */
+.lazy-image-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.lazy-image.loaded {
+  opacity: 1;
+}
+
+.lazy-image.loading {
+  opacity: 0;
+}
+
+/* Empty state styling */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 1rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.empty-state h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.empty-state p {
+  margin: 0;
+  max-width: 400px;
+  line-height: 1.6;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

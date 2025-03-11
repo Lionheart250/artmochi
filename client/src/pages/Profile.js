@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { jwtDecode } from 'jwt-decode'; // Ensure jwt-decode is installed
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -13,6 +13,7 @@ import { ReactComponent as LikeIcon } from '../assets/icons/like.svg';
 import { ReactComponent as CommentIcon } from '../assets/icons/comment.svg';
 import { ReactComponent as ShareIcon } from '../assets/icons/share.svg';
 import { ReactComponent as BookmarkIcon } from '../assets/icons/bookmark.svg';
+import LazyImage from '../components/LazyImage';
 
 const Profile = () => {
     const { id } = useParams();
@@ -742,17 +743,23 @@ const closeModal = () => {
         }
     }, [profilePicture]);
 
-    const fetchLikedImagesWithDetails = async () => {
+    const fetchLikedImagesWithDetails = async (pageNum = 1) => {
         const token = localStorage.getItem('token');
         if (!token || !id) return;
         
-        setIsLoadingLikes(true);
+        if (pageNum === 1) {
+            setIsLoadingLikes(true);
+        }
+        
         try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/user/${id}/likes`, {                
-                headers: {
-                    'Authorization': `Bearer ${token}`
+            const response = await fetch(
+                `${process.env.REACT_APP_API_URL}/user/${id}/likes?page=${pageNum}&limit=${imagesPerPage}`, 
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
                 }
-            });
+            );
             const data = await response.json();
             
             // Create user details object
@@ -762,12 +769,17 @@ const closeModal = () => {
                     username: img.username,
                     profile_picture: img.profile_picture,
                     user_id: img.user_id,
-                    prompt: img.prompt // Add prompt to user details
+                    prompt: img.prompt
                 };
             });
             
             setImageUserDetails(prev => ({...prev, ...details}));
-            setLikedImages(data.images);
+            
+            if (data.images.length === 0) {
+                setHasMore(false);
+            } else {
+                setLikedImages(prev => pageNum === 1 ? data.images : [...prev, ...data.images]);
+            }
         } catch (error) {
             console.error('Error:', error);
         } finally {
@@ -935,68 +947,6 @@ const closeModal = () => {
         console.log('Current user:', user);
     }, [id, user]);
 
-    // Consolidate fetch functions into one main function
-    const fetchProfileData = async () => {
-        if (!id) return;
-        
-        try {
-            setIsLoading(true);
-            const token = localStorage.getItem('token');
-
-            // Fetch all data in parallel
-            const [profileResponse, statsResponse, imagesResponse] = await Promise.all([
-                fetch(`${process.env.REACT_APP_API_URL}/user_profile/${id}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                }),
-                fetch(`${process.env.REACT_APP_API_URL}/user/${id}/stats`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                }),
-                fetch(`${process.env.REACT_APP_API_URL}/user_images/${id}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                })
-            ]);
-
-            const [profileData, statsData, imagesData] = await Promise.all([
-                profileResponse.json(),
-                statsResponse.json(),
-                imagesResponse.json()
-            ]);
-
-            // Update all state at once
-            setUsername(profileData.username);
-            setBio(profileData.bio || '');
-            setProfilePicture(profileData.profile_picture);
-            
-            setFollowersCount(parseInt(statsData.followers_count) || 0);
-            setFollowingCount(parseInt(statsData.following_count) || 0);
-            setPostsCount(parseInt(statsData.posts_count) || 0);
-            setLikesCount(parseInt(statsData.likes_count) || 0);
-            setIsFollowing(Boolean(statsData.is_following));
-
-            setImages(imagesData.images);
-
-        } catch (error) {
-            console.error('Error fetching profile data:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // Single useEffect for initial data fetch
-    useEffect(() => {
-        if (!id) {
-            console.log('No ID provided, redirecting...');
-            if (user?.userId) {
-                navigate(`/profile/${user.userId}`);
-            } else {
-                navigate('/');
-            }
-            return;
-        }
-
-        fetchProfileData();
-    }, [id, user]);
-
     // Add this check near the top of the component
     const isOwnProfile = user && user.userId === parseInt(id);
 
@@ -1070,6 +1020,130 @@ const handleImageEdit = (type, image) => {
   } catch (error) {
     console.error('Error preparing image for edit:', error);
   }
+};
+
+// Add these state variables
+const [page, setPage] = useState(1);
+const [hasMore, setHasMore] = useState(true);
+const loadingRef = useRef(null);
+const loadingInProgress = useRef(false);
+const imagesPerPage = 7; // Balance between UX and performance
+
+// Function to fetch paginated posts
+const fetchPaginatedImages = async (pageNum) => {
+    if (loadingInProgress.current) return;
+    loadingInProgress.current = true;
+    
+    try {
+        setLoading(true);
+        const token = localStorage.getItem('token');
+        
+        const response = await fetch(
+            `${process.env.REACT_APP_API_URL}/user_images/${id}?page=${pageNum}&limit=${imagesPerPage}`, 
+            {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }
+        );
+        
+        const data = await response.json();
+        
+        if (data.images.length === 0) {
+            setHasMore(false);
+        } else {
+            // Append new images rather than replacing
+            setImages(prev => pageNum === 1 ? data.images : [...prev, ...data.images]);
+        }
+    } catch (error) {
+        console.error('Error fetching paginated images:', error);
+    } finally {
+        setLoading(false);
+        loadingInProgress.current = false;
+    }
+};
+
+// Update fetchProfileData to use pagination
+const fetchProfileData = async () => {
+    if (!id) return;
+    
+    try {
+        setIsLoading(true);
+        const token = localStorage.getItem('token');
+
+        // Fetch profile and stats in parallel, but paginate images
+        const [profileResponse, statsResponse] = await Promise.all([
+            fetch(`${process.env.REACT_APP_API_URL}/user_profile/${id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }),
+            fetch(`${process.env.REACT_APP_API_URL}/user/${id}/stats`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }),
+        ]);
+
+        const [profileData, statsData] = await Promise.all([
+            profileResponse.json(),
+            statsResponse.json(),
+        ]);
+
+        setUsername(profileData.username);
+        setBio(profileData.bio || '');
+        setProfilePicture(profileData.profile_picture);
+        
+        setFollowersCount(parseInt(statsData.followers_count) || 0);
+        setFollowingCount(parseInt(statsData.following_count) || 0);
+        setPostsCount(parseInt(statsData.posts_count) || 0);
+        setLikesCount(parseInt(statsData.likes_count) || 0);
+        setIsFollowing(Boolean(statsData.is_following));
+
+        // Reset pagination and fetch first page
+        setPage(1);
+        setHasMore(true);
+        fetchPaginatedImages(1);
+
+    } catch (error) {
+        console.error('Error fetching profile data:', error);
+    } finally {
+        setIsLoading(false);
+    }
+};
+
+// Add effect for infinite scroll
+useEffect(() => {
+    const observer = new IntersectionObserver(
+        (entries) => {
+            if (entries[0].isIntersecting && hasMore && !loading && !loadingInProgress.current) {
+                setPage(prev => prev + 1);
+            }
+        },
+        { threshold: 0.1 }
+    );
+    
+    if (loadingRef.current) {
+        observer.observe(loadingRef.current);
+    }
+    
+    return () => {
+        if (loadingRef.current) {
+            observer.unobserve(loadingRef.current);
+        }
+    };
+}, [hasMore, loading]);
+
+// Effect to fetch when page changes
+useEffect(() => {
+    if (page > 1) {
+        fetchPaginatedImages(page);
+    }
+}, [page]);
+
+// Update the tab handling to reset pagination
+const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setPage(1);
+    setHasMore(true);
+    
+    if (tab === 'likes' && isOwnProfile) {
+        fetchLikedImagesWithDetails(1);
+    }
 };
 
     return (
@@ -1148,20 +1222,20 @@ const handleImageEdit = (type, image) => {
             <div className="profile-tabs">
                 <button 
                     className={`tab-btn ${activeTab === 'posts' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('posts')}
+                    onClick={() => handleTabChange('posts')}
                 >
                     Posts
                 </button>
                 <button 
                     className={`tab-btn ${activeTab === 'private' ? 'active' : ''}`}
-                    onClick={() => isOwnProfile ? setActiveTab('private') : null}
+                    onClick={() => isOwnProfile ? handleTabChange('private') : null}
                     style={{ opacity: isOwnProfile ? 1 : 0.5, cursor: isOwnProfile ? 'pointer' : 'not-allowed' }}
                 >
                     Private
                 </button>
                 <button 
                     className={`tab-btn ${activeTab === 'likes' ? 'active' : ''}`}
-                    onClick={() => isOwnProfile ? setActiveTab('likes') : null}
+                    onClick={() => isOwnProfile ? handleTabChange('likes') : null}
                     style={{ opacity: isOwnProfile ? 1 : 0.5, cursor: isOwnProfile ? 'pointer' : 'not-allowed' }}
                 >
                     Likes
@@ -1177,9 +1251,18 @@ const handleImageEdit = (type, image) => {
                             className="profile-item"
                             onClick={() => openModal(image)}
                         >
-                            <img src={image.image_url} alt={image.prompt} />
+                            <LazyImage 
+                                src={image.image_url} 
+                                alt={image.prompt}
+                                className="profile-image" 
+                            />
                         </div>
                     ))}
+                    {hasMore && (
+                        <div ref={loadingRef} className="loading-indicator">
+                            {loading && <div className="spinner"></div>}
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -1191,26 +1274,46 @@ const handleImageEdit = (type, image) => {
                             className="profile-item"
                             onClick={() => openModal(image)}
                         >
-                            <img src={image.image_url} alt={image.prompt} />
+                            <LazyImage 
+                                src={image.image_url} 
+                                alt={image.prompt}
+                                className="profile-image" 
+                            />
                         </div>
                     ))}
+                    {hasMore && (
+                        <div ref={loadingRef} className="loading-indicator">
+                            {loading && <div className="spinner"></div>}
+                        </div>
+                    )}
                 </div>
             )}
 
             {activeTab === 'likes' && isOwnProfile && (
                 <div className="profile-grid">
-                    {isLoadingLikes ? (
+                    {isLoadingLikes && page === 1 ? (
                         <div className="loading-spinner">Loading...</div>
                     ) : (
-                        likedImages && likedImages.map((image) => (  // Added null check with &&
-                            <div 
-                                key={image.id} 
-                                className="profile-item"
-                                onClick={() => openModal(image)}
-                            >
-                                <img src={image.image_url} alt={image.prompt} />
-                            </div>
-                        ))
+                        <>
+                            {likedImages && likedImages.map((image) => (
+                                <div 
+                                    key={image.id} 
+                                    className="profile-item"
+                                    onClick={() => openModal(image)}
+                                >
+                                    <LazyImage 
+                                        src={image.image_url} 
+                                        alt={image.prompt}
+                                        className="profile-image" 
+                                    />
+                                </div>
+                            ))}
+                            {hasMore && (
+                                <div ref={loadingRef} className="loading-indicator">
+                                    {isLoadingLikes && page > 1 && <div className="spinner"></div>}
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
             )}

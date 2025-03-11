@@ -1530,33 +1530,35 @@ const preloadNearbyImages = (currentIndex, loraExamples) => {
 
 // Update the LazyThumbnail component
 const LazyThumbnail = ({ src, alt, className, onClick }) => {
-    const [isLoaded, setIsLoaded] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
-    const imageRef = useRef(null);
     const containerRef = useRef(null);
-  
+    const imageRef = useRef(null);
+    
+    // Check the console to see what src values are coming in
     useEffect(() => {
-        // Set src immediately to start loading
-        if (imageRef.current) {
-            imageRef.current.src = src;
-        }
-    
-        const checkIfLoaded = () => {
-            if (imageRef.current?.complete) {
-                setIsLoaded(true);
-            }
-        };
-    
-        // Check if already loaded
-        checkIfLoaded();
-    
-        // Add load event listener
-        const image = imageRef.current;
-        if (image) {
-            image.addEventListener('load', checkIfLoaded);
-            return () => image.removeEventListener('load', checkIfLoaded);
-        }
+        console.log("Thumbnail source:", src);
     }, [src]);
+    
+    // FIXED: Generate proper thumbnail paths
+    const getThumbUrl = (originalSrc) => {
+        // Handle the path correctly by keeping the directory structure
+        const lastDotIndex = originalSrc.lastIndexOf('.');
+        if (lastDotIndex === -1) return originalSrc;
+        
+        const basePath = originalSrc.substring(0, lastDotIndex);
+        return basePath; // Returns path without extension
+    };
+    
+    const thumbUrl = getThumbUrl(src);
+    
+    // Verify the constructed URLs
+    useEffect(() => {
+        console.log("Constructed URLs:", {
+            small: `${thumbUrl}-thumb-sm.webp`,
+            medium: `${thumbUrl}-thumb.webp`,
+            original: src
+        });
+    }, [thumbUrl, src]);
 
     // Add ripple effect on click
     const addRippleEffect = (e) => {
@@ -1591,14 +1593,35 @@ const LazyThumbnail = ({ src, alt, className, onClick }) => {
                 onClick(e);
             }}
         >
-            {!isLoaded && <div className="thumbnail-loading-indicator" />}
             <img
+                className="mini-thumbnail"
+                srcSet={`${thumbUrl}-thumb-sm.webp 100w, 
+                        ${thumbUrl}-thumb.webp 300w,
+                        ${src} 600w`} // Use original src here, not another .webp
+                sizes="(max-width: 768px) 60px, 
+                    (max-width: 1920px) 100px,
+                    120px"
+                src={`${thumbUrl}-thumb.webp`} // Try medium thumbnail first
+                alt={alt || "Thumbnail"}
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
                 ref={imageRef}
-                alt={alt}
-                className={`${className} ${isLoaded ? 'loaded' : ''}`}
-                style={{
-                    opacity: isLoaded ? 1 : 0,
-                    transition: 'opacity 0.3s ease-in-out, transform 0.3s cubic-bezier(0.17, 0.84, 0.44, 1.2)'
+                onError={(e) => {
+                    // Add better error logging
+                    console.error(`Failed to load image: ${e.target.src}`);
+                    
+                    // More robust fallback chain
+                    if (e.target.src.includes('-thumb-sm.webp')) {
+                        console.log("Small thumbnail failed, trying medium");
+                        e.target.src = `${thumbUrl}-thumb.webp`;
+                    } else if (e.target.src.includes('-thumb.webp')) {
+                        console.log("Medium thumbnail failed, trying original");
+                        e.target.src = src;
+                    } else {
+                        e.target.style.opacity = "0.7";
+                        e.target.style.filter = "grayscale(1)";
+                    }
                 }}
             />
             <div className="preview-icon">👁️</div>
