@@ -252,6 +252,7 @@
   gap: 1.5rem;
   position: relative;
   z-index: 5;
+  min-height: 100vh;
 }
 
 /* Advanced Masonry-like layout for images */
@@ -1781,4 +1782,35 @@ select.gallery-category {
   background-color: rgba(0,0,0,0.1);
   background-size: cover;
   background-position: center;
+}
+
+.loading-indicator.sticky {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  z-index: 1000;
+  animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
+}
+
+body.loading-images {
+  overflow: hidden; /* Prevent scrolling while loading */
+}
+
+.no-transitions * {
+  transition: none !important;
+  animation: none !important;
+}
+
+.image-modal-content {
+  transition: opacity 0.15s ease;
 }

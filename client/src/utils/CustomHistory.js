@@ -66,7 +66,38 @@ export const customHistory = {
 };
 
 function notifyListeners(location) {
-  // Add safety check before notifying listeners
+  // Block ALL navigation during modal closing
+  if (window.__preventGalleryRemount === true) {
+    console.log("Blocking ALL navigation during modal transition");
+    return;
+  }
+
+  // At the top of notifyListeners function
+  if (window.__preventHistoryUpdate === true) {
+    console.log("History update prevented by modal transition");
+    return;
+  }
+
+  // Skip if the skip flag is set
+  if (window.__skipHistoryListener === true) {
+    console.log("Skipping history listener notification");
+    return;
+  }
+  
+  // Skip if state contains skipRouteChange flag
+  if (location.state && location.state.skipRouteChange) {
+    console.log("Skipping route change due to state flag");
+    return;
+  }
+  
+  // Add this important check - don't notify during modal transitions
+  if (document.body.classList.contains('modal-closing') || 
+      document.querySelector('.modal-transition-overlay')) {
+    console.log("Modal transition in progress - skipping history update");
+    return;
+  }
+  
+  // Otherwise proceed with normal notification
   if (listeners && Array.isArray(listeners)) {
     listeners.forEach(listener => {
       try {

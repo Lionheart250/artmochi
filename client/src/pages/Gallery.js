@@ -55,14 +55,14 @@ const Gallery = () => {
     const [columnImages, setColumnImages] = useState([]);
     const [error, setError] = useState(null);
     const [expandedPrompts, setExpandedPrompts] = useState(new Set());
-    // Move this hook here to fix the invalid hook error
-    const [columnLoadingState, setColumnLoadingState] = useState(
-      Array(4).fill().map(() => ({ loading: false, complete: false }))
-    );
     const [availableCategories, setAvailableCategories] = useState([]);
-    const [columnsLoading, setColumnsLoading] = useState({
-        0: 0, 1: 0, 2: 0, 3: 0 // Tracks number of images loading per column
-    });
+    const [imagesLoading, setImagesLoading] = useState(0);
+    const [scrollLock, setScrollLock] = useState(false);
+    const [hidingColumns, setHidingColumns] = useState(false);
+    const [forceRerender, setForceRerender] = useState(0);
+    const lastScrollPosition = useRef(0);
+    const [pageHistory, setPageHistory] = useState([1]);
+    const [galleryState, setGalleryState] = useState(null);
 
     // Replace the problematic useEffect with:
     useEffect(() => {
@@ -447,8 +447,19 @@ const Gallery = () => {
         }
     };
 
-    // Update the openModal function to use URL-based navigation
+    // Updated openModal that captures complete view state
     const openModal = (image) => {
+        // Save full gallery state before opening modal
+        const stateToSave = {
+            page: page,
+            scrollPosition: window.scrollY,
+            sortType: sortType,
+            timeRange: timeRange,
+            selectedCategory: selectedCategory,
+            selectedAspectRatio: selectedAspectRatio
+        };
+        sessionStorage.setItem('galleryState', JSON.stringify(stateToSave));
+        
         setSelectedImage(image.image_url);
         setActiveImageId(image.id);
         setModalOpen(true);
@@ -467,30 +478,78 @@ const Gallery = () => {
         document.body.classList.add('modal-open');
     };
 
-    // Also update the closeModal function to handle URL navigation
-    const closeModal = () => {
-        // First mark modal as closing to prevent race conditions
-        document.body.classList.add('modal-closing');
-        
-        // Start closing animation
+    // Update your closeModal function:
+
+const closeModal = () => {
+    // Get saved state from sessionStorage
+    const savedState = JSON.parse(sessionStorage.getItem('galleryState'));
+    
+    if (!savedState || typeof savedState.scrollPosition !== 'number') {
+        console.error('Missing valid gallery state - cannot restore position');
         setModalOpen(false);
+        document.body.classList.remove('modal-open');
+        setSelectedImage(null);
+        setActiveImageId(null);
+        return;
+    }
+    
+    const scrollPos = savedState.scrollPosition;
+    console.log('Restoring to position:', scrollPos);
+    
+    // CRITICAL: Completely disable history functions temporarily
+    const originalPushState = window.history.pushState;
+    const originalReplaceState = window.history.replaceState;
+    
+    // Override history methods to prevent any navigation
+    window.history.pushState = function() { return; };
+    window.history.replaceState = function() { return; };
+    
+    // Create opacity transition overlay FIRST
+    const blackOverlay = document.createElement('div');
+    blackOverlay.className = 'modal-transition-overlay';
+    blackOverlay.style.position = 'fixed';
+    blackOverlay.style.top = '0';
+    blackOverlay.style.left = '0';
+    blackOverlay.style.width = '100%';
+    blackOverlay.style.height = '100%';
+    blackOverlay.style.backgroundColor = 'black';
+    blackOverlay.style.zIndex = '9999';
+    blackOverlay.style.opacity = '1';
+    document.body.insertBefore(blackOverlay, document.body.firstChild);
+    
+    // WAIT FOR THE OVERLAY TO BE VISIBLE before closing modal
+    setTimeout(() => {
+        // NOW close the modal (after overlay is visible)
+        setModalOpen(false);
+        document.body.classList.remove('modal-open');
+        setSelectedImage(null);
+        setActiveImageId(null);
         
-        // Add a small delay to allow animation to start
+        // After another tiny delay to allow state updates to complete:
         setTimeout(() => {
-            // Navigate back to the gallery URL
-            customHistory.push('/gallery');
+            // Force scroll position first
+            window.scrollTo(0, scrollPos);
             
-            // Remove modal classes
-            document.body.classList.remove('modal-open');
-            document.body.classList.remove('modal-closing');
+            // Restore history functions but still prevent navigation
+            window.history.pushState = originalPushState;
+            window.history.replaceState = originalReplaceState;
             
-            // After animation completes, reset other states
+            // Only NOW update the URL, after scroll position is set
+            window.history.replaceState(null, '', '/gallery');
+            
+            // Wait a moment, then fade out overlay
             setTimeout(() => {
-                setSelectedImage(null);
-                setActiveImageId(null);
-            }, 300);
-        }, 50);
-    };
+                blackOverlay.style.transition = 'opacity 300ms ease';
+                blackOverlay.style.opacity = '0';
+                
+                // Remove overlay after fade completes
+                setTimeout(() => {
+                    blackOverlay.remove();
+                }, 300);
+            }, 50);
+        }, 10);
+    }, 20); // Small delay to ensure overlay is visible first
+};
 
     // Add effect to watch image loading
     useEffect(() => {
@@ -636,29 +695,24 @@ const Gallery = () => {
                 return filteredImages;
         }
     };
+    
 
     const createColumns = (images, columnCount) => {
-        if (!Array.isArray(images) || images.length === 0) {
+        if (!images || images.length === 0) {
             return Array(columnCount).fill().map(() => []);
         }
-    
-        // Create Set of existing IDs to prevent duplicates
-        const uniqueImages = [];
-        const seenIds = new Set();
         
-        images.forEach(img => {
-            if (!seenIds.has(img.id)) {
-                uniqueImages.push(img);
-                seenIds.add(img.id);
-            }
-        });
-    
-        // Distribute unique images across columns
+        // Initialize empty columns array
         const cols = Array(columnCount).fill().map(() => []);
-        uniqueImages.forEach((image, index) => {
-            cols[index % columnCount].push(image);
+        
+        // SIMPLE SEQUENTIAL DISTRIBUTION - WITHOUT TRIMMING REMAINDERS
+        images.forEach((image, index) => {
+            // Calculate column index by simple modulo (remainder)
+            const columnIndex = index % columnCount;
+            // Add image to corresponding column
+            cols[columnIndex].push(image);
         });
-    
+        
         return cols;
     };
 
@@ -751,24 +805,72 @@ const Gallery = () => {
         }
     };
 
-    // Define fetchImagesForPage function
+    useEffect(() => {
+        fetchAllCounts();
+    }, []);
+
+    useEffect(() => {
+        fetchImagesForPage(page);
+    }, [page, sortType, timeRange, selectedCategory, selectedAspectRatio]);
+
+    // 1. Image loading handlers with proper logging
+    const handleImageLoadStart = () => {
+        setImagesLoading(prev => {
+            const newCount = prev + 1;
+            console.log("Image load started, total loading:", newCount);
+            return newCount;
+        });
+    };
+
+    const handleImageLoadComplete = () => {
+        setImagesLoading(prev => {
+            const newCount = Math.max(0, prev - 1);
+            console.log("Image load completed, remaining:", newCount);
+            return newCount;
+        });
+    };
+
+    // Replace your fetchImagesForPage function with this one:
+
     const fetchImagesForPage = async (pageNum) => {
         if (loading || fetchingRef.current) return;
         setLoading(true);
         fetchingRef.current = true;
         
+        // Track that we've loaded this page
+        if (!pageHistory.includes(pageNum)) {
+            setPageHistory(prev => [...prev, pageNum]);
+        }
+        
+        // Instead of hiding the entire gallery, just add a loading state
+        if (pageNum > 1) {
+            // Add a loading indicator at the bottom of the gallery
+            const loadingIndicator = document.createElement('div');
+            loadingIndicator.className = 'gallery-bottom-loader';
+            loadingIndicator.innerHTML = '<div class="spinner"></div><div>Loading more images...</div>';
+            gridRef.current?.appendChild(loadingIndicator);
+        }
+        
         try {
             const token = localStorage.getItem('token');
+            
+            // Capture the current column count
+            const currentColumnCount = columns;
+            
+            // Calculate request size based on columns
+            const IMAGES_PER_COLUMN = 4; // Each column gets this many new images
+            const batchSize = currentColumnCount * IMAGES_PER_COLUMN;
+            
             const params = new URLSearchParams({
                 page: pageNum,
-                limit: 20,
+                limit: batchSize,
                 sortType: sortType,
                 category: selectedCategory,
-                aspectRatio: selectedAspectRatio, // Add this parameter
-                hidePrivate: true // Add this parameter
+                aspectRatio: selectedAspectRatio,
+                hidePrivate: true
             });
 
-            console.log('Fetching images with params:', Object.fromEntries(params));
+            console.log(`Fetching ${batchSize} images for ${currentColumnCount} columns`);
 
             const response = await fetch(
                 `${process.env.REACT_APP_API_URL}/images?${params}`,
@@ -784,62 +886,117 @@ const Gallery = () => {
             }
 
             const data = await response.json();
-            // Additional client-side filter to ensure no private images slip through
             const newImages = (data?.images || []).filter(img => !img.private);
             
-            setImages(prev => 
-                pageNum === 1 ? newImages : [...prev, ...newImages]
-            );
+            // Reset imagesLoading counter for new images
+            setImagesLoading(0);
             
-            setHasMore(newImages.length > 0);
+            setImages(prev => {
+                const allImages = pageNum === 1 ? [...newImages] : [...prev, ...newImages];
+                
+                // Don't trim the remainder at all - keep ALL images
+                // This ensures we show everything, even if it's not divisible by column count
+                return allImages;
+            });
+            
+            // Update hasMore logic to be more accurate:
+            // If we got fewer images than requested, we've reached the end
+            setHasMore(newImages.length > 0 && newImages.length >= batchSize);
+            
+            // Force a rerender after a delay
+            setTimeout(() => {
+                setForceRerender(prev => prev + 1);
+            }, 100);
+            
+            // If this was the last page to restore, handle scroll restoration
+            const storedState = galleryState;
+            if (storedState && pageNum === storedState.page) {
+                setTimeout(() => {
+                    window.scrollTo(0, storedState.scrollPosition);
+                    // Clear stored state now that we've used it
+                    setGalleryState(null);
+                }, 100);
+            }
+            
         } catch (error) {
             console.error('Error fetching images:', error);
             setError('Failed to load images');
-            setImages(prev => pageNum === 1 ? [] : prev); // Keep existing images if not first page
         } finally {
             setLoading(false);
             fetchingRef.current = false;
+            
+            // Clean up loading indicators
+            setTimeout(() => {
+                document.querySelectorAll('.gallery-bottom-loader').forEach(el => el.remove());
+                document.querySelectorAll('.loading-indicator').forEach(el => el.remove());
+                setHidingColumns(false);
+                setScrollLock(false);
+                document.body.classList.remove('loading-images');
+            }, 300);
         }
     };
 
-// Add effect to fetch counts on mount
-useEffect(() => {
-    fetchAllCounts();
-}, []);
-
+    // Replace your Intersection Observer with this scroll-based approach
     useEffect(() => {
-        fetchImagesForPage(page);
-    }, [page, sortType, timeRange, selectedCategory, selectedAspectRatio]);
+        // More reliable scroll-based loading that doesn't depend on observers
+        const handleScroll = () => {
+            // Don't check if already loading or no more content
+            if (!hasMore || loading || fetchingRef.current) return;
     
-
-    // Use single useEffect for infinite scroll
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (entries[0].isIntersecting && hasMore && !loading && !fetchingRef.current) {
-                    setPage(prev => prev + 1);
-                }
-            },
-            { threshold: 0.1 } // Ensures the element is fully visible
-        );
-    
-        if (loadingRef.current) {
-            observer.observe(loadingRef.current);
-        }
-    
-        return () => {
-            if (loadingRef.current) {
-                observer.unobserve(loadingRef.current);
+            // Get scroll position
+            const scrollY = window.scrollY;
+            const scrollHeight = document.documentElement.scrollHeight;
+            const clientHeight = window.innerHeight;
+            
+            // Check if we're near the bottom (within 1000px)
+            const isNearBottom = scrollY + clientHeight > scrollHeight - 1000;
+            
+            // Check if we're scrolling down (not up)
+            const isScrollingDown = scrollY > lastScrollPosition.current;
+            
+            // Update last scroll position
+            lastScrollPosition.current = scrollY;
+            
+            // If we're near the bottom and scrolling down, load more
+            if (isNearBottom && isScrollingDown) {
+                console.log("🔄 Scroll triggered load, position:", 
+                    Math.round(scrollY), "/", Math.round(scrollHeight - clientHeight));
+                setPage(prev => prev + 1);
             }
         };
-    }, [hasMore, loading, fetchingRef.current]);
+        
+        // Add scroll throttling to prevent excessive checks
+        let scrollTimeout = null;
+        const throttledScroll = () => {
+            if (scrollTimeout === null) {
+                scrollTimeout = setTimeout(() => {
+                    handleScroll();
+                    scrollTimeout = null;
+                }, 200);
+            }
+        };
+        
+        window.addEventListener('scroll', throttledScroll);
+    
+        // Also check on load and resize
+        handleScroll();
+        window.addEventListener('resize', handleScroll);
+        
+        return () => {
+            window.removeEventListener('scroll', throttledScroll);
+            window.removeEventListener('resize', handleScroll);
+            clearTimeout(scrollTimeout);
+        };
+    }, [hasMore, loading, page]);
 
-    // Add effect to watch for page changes
+    // Add a cleanup effect that will make sure to finish any pending loads
+    // on component unmount or when changing sort/filter
     useEffect(() => {
-        if (page > 1) {
-            console.log('Page changed to:', page);
-        }
-    }, [page]);
+        return () => {
+            // If there are any loading indicators left, clean them up
+            document.querySelectorAll('.loading-indicator').forEach(el => el.remove());
+        };
+    }, []);
 
     // Add follow toggle function
     const handleModalFollowToggle = async (targetUserId) => {
@@ -1156,53 +1313,17 @@ useEffect(() => {
     };
 }, []); // Empty dependency array - only run once
 
-  
+// Add this useEffect to throttle loads and ensure sequential batch completion
+useEffect(() => {
+    // Set a flag when all images in current batch are loaded
+    if (imagesLoading === 0 && !loading && !fetchingRef.current && images.length > 0) {
+        // Reset hiding flag when loading completes
+        document.querySelectorAll('.gallery-column').forEach(col => {
+            col.style.visibility = 'visible';
+        });
+    }
+}, [imagesLoading, loading, images.length]);
 
-    // Use single useEffect for infinite scroll
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (entries[0].isIntersecting && 
-                    hasMore && 
-                    !loading && 
-                    !fetchingRef.current &&
-                    !columnLoadingState.some(col => col.loading)) {
-                    
-                    setTimeout(() => {
-                        setPage(prev => prev + 1);
-                    }, 150);
-                }
-            },
-            { 
-                threshold: 0.2,
-                rootMargin: '300px'
-            }
-        );
-
-        if (loadingRef.current) {
-            observer.observe(loadingRef.current);
-        }
-
-        return () => {
-            if (loadingRef.current) {
-                observer.unobserve(loadingRef.current);
-            }
-        };
-    }, [hasMore, loading, fetchingRef.current, columnLoadingState]);
-
-    const handleImageLoadStart = (columnIndex) => {
-        setColumnsLoading(prev => ({
-            ...prev,
-            [columnIndex]: prev[columnIndex] + 1
-        }));
-    };
-    
-    const handleImageLoadComplete = (columnIndex) => {
-        setColumnsLoading(prev => ({
-            ...prev, 
-            [columnIndex]: Math.max(0, prev[columnIndex] - 1)
-        }));
-    };
 
     // Add this function to estimate height when not available in your data
     const getEstimatedHeight = (image) => {
@@ -1216,6 +1337,63 @@ useEffect(() => {
         if (image.orientation === 'landscape') return 300;
         return 400; // Default for square or unknown
     };
+
+    const loadMoreImages = () => {
+        if (hasMore && !loading && !fetchingRef.current && imagesLoading === 0) {
+            console.log("Loading more images from modal navigation");
+            setPage(prev => prev + 1);
+        }
+    };
+
+    // KKKEEEEEEEP TTTTHHHHHIIIIIIISSSSSSSSSS
+    useEffect(() => {
+    // Try to restore previous gallery state
+        const savedState = sessionStorage.getItem('galleryState');
+        if (savedState) {
+            try {
+                const parsed = JSON.parse(savedState);
+                // Restore page number
+                setPage(parsed.page);
+                // Set flag to indicate we're restoring state
+                setGalleryState(parsed);
+            } catch (e) {
+                console.error('Failed to parse saved gallery state:', e);
+                sessionStorage.removeItem('galleryState');
+            }
+        }
+        
+        // Set up cleanup function to save state on unmount
+        return () => {
+            const stateToSave = {
+                page: page,
+                scrollPosition: window.scrollY,
+                sortType: sortType,
+                timeRange: timeRange,
+                selectedCategory: selectedCategory,
+                selectedAspectRatio: selectedAspectRatio
+            };
+            sessionStorage.setItem('galleryState', JSON.stringify(stateToSave));
+        };
+    }, []); // Empty dependencies to run only on mount/unmount
+
+    // Add a useEffect that watches page changes to load multiple pages if needed
+    useEffect(() => {
+        // Get saved state
+        const storedState = galleryState;
+        
+        // If we have saved state and we're on page 1 but need to load more pages
+        if (storedState && page === 1 && storedState.page > 1) {
+            // Load pages 2 through storedState.page sequentially
+            const loadNextPage = (pageToLoad) => {
+                if (pageToLoad <= storedState.page) {
+                    setPage(pageToLoad);
+                }
+            };
+            
+            // Start loading from page 2
+            loadNextPage(2);
+        }
+    }, [galleryState, page]);
 
     return (
         <div className="gallery-page">
@@ -1306,8 +1484,9 @@ useEffect(() => {
                     <div className="gallery-grid" ref={gridRef}>
                         {createColumns(images, columns).map((col, colIndex) => (
                             <div key={colIndex} className="gallery-column">
-                                {col.map((image) => (
-                                    <div key={image.id} className="gallery-item">
+                                {col.map((image, imageIndex) => (
+                                    // Use a combination of column index, image index and image id to ensure uniqueness
+                                    <div key={`col${colIndex}-${image.id}-${imageIndex}`} className="gallery-item">
                                         {selectionMode && isAdmin && (
                                             <input
                                                 type="checkbox"
@@ -1324,16 +1503,18 @@ useEffect(() => {
                                                 }}
                                             />
                                         )}
-                                        <LazyImage 
-                                            src={image.image_url} 
+                                        
+                                        <LazyImage
+                                            src={image.image_url}
                                             alt={image.prompt || 'Gallery image'}
                                             className="gallery-thumbnail"
                                             onClick={() => !selectionMode && openModal(image)}
+                                            onLoadComplete={() => handleImageLoadComplete(colIndex)}
+                                            onLoadStart={() => handleImageLoadStart(colIndex)}
                                             columnIndex={colIndex}
-                                            onLoadStart={handleImageLoadStart}
-                                            onLoadComplete={handleImageLoadComplete}
-                                            height={image.height || getEstimatedHeight(image)}
                                         />
+                                        
+                                        {/* Rest of your item rendering code */}
                                     </div>
                                 ))}
                             </div>
@@ -1372,6 +1553,8 @@ useEffect(() => {
                         formatTimestamp={formatTimestamp}
                         formatDate={formatDate}
                         getLoraName={getLoraName}
+                        loadMoreImages={loadMoreImages}
+                        loadThreshold={5}
                     />
 
                     {hasMore && <div ref={loadingRef} style={{ height: '200px' }} />}

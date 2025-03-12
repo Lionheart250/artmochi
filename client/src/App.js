@@ -22,6 +22,32 @@ import './styles/theme.css';
 import { customHistory } from './utils/CustomHistory';
 
 function App() {
+  useEffect(() => {
+    const originalPush = window.history.pushState;
+    const originalReplace = window.history.replaceState;
+    
+    window.history.pushState = function(...args) {
+      if (window.__suppressRemount) {
+        args[0] = args[0] || {};
+        args[0].suppressRemount = true;
+      }
+      return originalPush.apply(this, args);
+    };
+    
+    window.history.replaceState = function(...args) {
+      if (window.__suppressRemount) {
+        args[0] = args[0] || {};
+        args[0].suppressRemount = true;
+      }
+      return originalReplace.apply(this, args);
+    };
+    
+    return () => {
+      window.history.pushState = originalPush;
+      window.history.replaceState = originalReplace;
+    };
+  }, []);
+
   return (
     <ProfileProvider>
       <AuthProvider>
@@ -45,7 +71,14 @@ function AppContent() {
       <Header />
       <Routes location={background || location}>
         <Route path="/" element={<Home />} />
-        <Route path="/gallery" element={<Gallery />} />
+        <Route 
+          path="/gallery" 
+          element={
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <Gallery key="persistent-gallery" />
+            </React.Suspense>
+          } 
+        />
         <Route path="/imagegenerator" element={<ImageGenerator />} />
         <Route path="/following" element={<Following />} />
         <Route path="/profile/:id" element={<Profile />} />
@@ -55,7 +88,14 @@ function AppContent() {
         <Route path="/verify-email/:token" element={<EmailVerification />} />
         <Route path="/verification-sent" element={<VerificationSent />} />
         <Route path="/subscription" element={<Subscription />} />
-        <Route path="/image/:imageId" element={<ImageDetailPage />} />
+        <Route 
+          path="/image/:id" 
+          element={
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <Gallery key="persistent-gallery" />
+            </React.Suspense>
+          } 
+        />
         <Route path="*" element={<div>404 Not Found</div>} />
       </Routes>
       

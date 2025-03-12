@@ -1,4 +1,4 @@
-const CACHE_NAME = 'artmochi-lora-cache-v2'; // Updated version number
+const CACHE_NAME = 'artmochi-lora-cache-v3'; // Increment version
 const LORA_ASSETS = /\.(webp|jpg|jpeg|png|gif)$/i;
 
 self.addEventListener('install', (event) => {
@@ -29,26 +29,48 @@ self.addEventListener('fetch', (event) => {
   if (event.request.url.match(LORA_ASSETS)) {
     // Extract path to check if it's a thumbnail request
     const url = new URL(event.request.url);
+    
+    // Critical: Don't intercept canvas blob URLs - let the LazyImage component handle these
+    if (url.protocol === 'blob:') {
+      return;
+    }
+    
     const isThumbRequest = url.pathname.includes('-thumb');
     
-    console.log(`Intercepted ${isThumbRequest ? 'thumbnail' : 'image'} request:`, url.pathname);
+    // Create a properly CORS-enabled request with credentials
+    const corsRequest = new Request(event.request.url, {
+      mode: 'cors',
+      credentials: 'same-origin',
+      headers: event.request.headers
+    });
     
     event.respondWith(
       caches.open(CACHE_NAME).then(async (cache) => {
         // Try cache first
         const cachedResponse = await cache.match(event.request);
         if (cachedResponse) {
-          console.log('Serving from cache:', event.request.url);
           return cachedResponse;
         }
 
-        // If not in cache, fetch and cache
+        // If not in cache, fetch with CORS headers
         try {
-          const networkResponse = await fetch(event.request);
+          const networkResponse = await fetch(corsRequest);
           // Only cache successful responses
           if (networkResponse.ok) {
-            console.log('Caching new response:', event.request.url);
-            cache.put(event.request, networkResponse.clone());
+            // Create a new response with CORS headers
+            const corsResponse = new Response(networkResponse.body, {
+              status: networkResponse.status,
+              statusText: networkResponse.statusText,
+              headers: new Headers(networkResponse.headers)
+            });
+            
+            // Add CORS headers if not present
+            if (!corsResponse.headers.get('Access-Control-Allow-Origin')) {
+              corsResponse.headers.set('Access-Control-Allow-Origin', '*');
+            }
+            
+            cache.put(event.request, corsResponse.clone());
+            return corsResponse;
           }
           return networkResponse;
         } catch (error) {

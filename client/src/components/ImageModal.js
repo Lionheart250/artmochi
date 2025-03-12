@@ -40,7 +40,9 @@ const ImageModal = ({
   setCommentInput,
   formatTimestamp = (timestamp) => timestamp,
   formatDate = (date) => date,
-  getLoraName = (url) => url
+  getLoraName = (url) => url,
+  loadMoreImages = () => {}, // Function to load more images  
+  loadThreshold = 5, // How many images from end before loading more
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -48,6 +50,9 @@ const ImageModal = ({
   const [isBodyLocked, setIsBodyLocked] = useState(false);
   const [closingAnimation, setClosingAnimation] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const originalScrollPosition = useRef(0);
+  const [showLeftIndicator, setShowLeftIndicator] = useState(false);
+  const [showRightIndicator, setShowRightIndicator] = useState(false);
   
   // Move the current image declaration up here, before the hooks
   const currentImage = isOpen && activeImageId ? 
@@ -56,10 +61,11 @@ const ImageModal = ({
   // Add a proper effect to handle body scrolling
   useEffect(() => {
     if (isOpen && !isBodyLocked) {
-      // Save the current scroll position
-      const scrollY = window.scrollY;
+      // Save the scroll position in our ref
+      originalScrollPosition.current = window.scrollY;
       
       // Apply styles to lock the body scroll in place
+      const scrollY = window.scrollY;
       document.body.style.position = 'fixed';
       document.body.style.top = `-${scrollY}px`;
       document.body.style.width = '100%';
@@ -119,7 +125,10 @@ const ImageModal = ({
       if (onClose) {
         onClose();
       }
-    }, 300);
+      
+      // Make sure we restore to the original position
+      window.scrollTo(0, originalScrollPosition.current);
+    }, 0);
   };
 
   // Now the rest of your effects can use handleClose
@@ -356,6 +365,20 @@ const ImageModal = ({
     };
   }, [onClose]);  // Only depend on onClose, not handleClose
 
+  // Add auto-load feature when nearing end of list
+  useEffect(() => {
+    const currentIndex = images.findIndex(img => img.id === activeImageId);
+    
+    // Check if we're approaching the end of the images array
+    if (currentIndex >= images.length - loadThreshold && 
+        images.length > 0 &&
+        loadMoreImages) {
+      // Load more images when we're nearing the end
+      console.log("Loading more images from modal navigation");
+      loadMoreImages();
+    }
+  }, [activeImageId, images, loadThreshold, loadMoreImages]);
+
   // If modal is not open, don't render anything
   if (!isOpen || !modalImage || !activeImageId) return null;
 
@@ -384,7 +407,11 @@ const ImageModal = ({
       <div className="image-modal-content">
         <div className="image-modal-main">
           {/* Image container section */}
-          <div className="image-modal-image-container">
+          <div className={`image-modal-image-container ${showLeftIndicator ? 'at-boundary-start' : ''} ${showRightIndicator ? 'at-boundary-end' : ''}`}>
+            {/* Add boundary indicators */}
+            <div className={`boundary-indicator left ${showLeftIndicator ? 'show' : ''}`}></div>
+            <div className={`boundary-indicator right ${showRightIndicator ? 'show' : ''}`}></div>
+            
             {/* Close button */}
             <button className="image-close-button" onClick={handleClose}>
               <svg viewBox="0 0 24 24" width="24" height="24">
@@ -393,19 +420,43 @@ const ImageModal = ({
             </button>
             
             {/* Navigation buttons */}
-            <button className="image-modal-nav-left" onClick={() => navigateImage('prev')}>
+            <button 
+              className={`image-modal-nav-left ${images.findIndex(img => img.id === activeImageId) <= 0 ? 'disabled' : ''}`}
+              onClick={() => {
+                const currentIndex = images.findIndex(img => img.id === activeImageId);
+                if (currentIndex <= 0) {
+                  // Use visual indicator instead of wrapper
+                  setShowLeftIndicator(true);
+                  setTimeout(() => setShowLeftIndicator(false), 800);
+                } else {
+                  navigateImage('prev');
+                }
+              }}
+            >
               <svg viewBox="0 0 24 24" width="24" height="24">
                 <path fill="currentColor" d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"></path>
               </svg>
             </button>
-            
+
             <img 
               className="image-modal-image" 
               src={modalImage} 
               alt="AI generated image" 
             />
-            
-            <button className="image-modal-nav-right" onClick={() => navigateImage('next')}>
+
+            <button 
+              className={`image-modal-nav-right ${images.findIndex(img => img.id === activeImageId) >= images.length - 1 ? 'disabled' : ''}`}
+              onClick={() => {
+                const currentIndex = images.findIndex(img => img.id === activeImageId);
+                if (currentIndex >= images.length - 1) {
+                  // Use visual indicator instead of wrapper
+                  setShowRightIndicator(true);
+                  setTimeout(() => setShowRightIndicator(false), 800);
+                } else {
+                  navigateImage('next');
+                }
+              }}
+            >
               <svg viewBox="0 0 24 24" width="24" height="24">
                 <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path>
               </svg>

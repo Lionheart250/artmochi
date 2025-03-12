@@ -1,16 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-// Initialize global state once
+// Simple global state tracker
 if (typeof window !== 'undefined') {
-  if (!window.__imageProcessingState) {
-    window.__imageProcessingState = {
-      activeCount: 0,
-      queue: [],
-      failed: new Set(),
-      timeout: 10000,
-      columnHeights: {},
-      processingByColumn: {},
-      maxHeightDifference: 500
+  if (!window.__imageLoadingState) {
+    window.__imageLoadingState = {
+      // Track concurrent loads
+      activeLoads: 0,
+      maxConcurrent: 8
     };
   }
 }
@@ -22,33 +18,28 @@ const LazyImage = ({ src, alt, className, onClick, columnIndex, onLoadStart, onL
   const [hasError, setHasError] = useState(false);
   const [displayOriginal, setDisplayOriginal] = useState(false);
   const containerRef = useRef(null);
-  const processingTimerRef = useRef(null);
-  const isProcessingRef = useRef(false); // Track if we're currently processing
+  const isProcessingRef = useRef(false);
+  const imgRef = useRef(null);
+  const hasStartedLoadingRef = useRef(false);
   
   // Base64 encoded simple dark gradient placeholder
   const placeholderImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAEhgJAi2Nw0wAAAABJRU5ErkJggg==";
   
-  // Notify parent when starting load - use ref to prevent infinite loop
+  // Notify parent when starting load
   useEffect(() => {
-    if (isInView && !isLoaded && !canvasDataUrl && !hasError && typeof onLoadStart === 'function') {
+    if (isInView && !isLoaded && !hasError && typeof onLoadStart === 'function') {
       onLoadStart(columnIndex);
     }
-    
-    return () => {
-      if (processingTimerRef.current) {
-        clearTimeout(processingTimerRef.current);
-      }
-    };
-  }, [isInView]); // Only depend on isInView to avoid loops
+  }, [isInView, isLoaded, hasError, onLoadStart, columnIndex]);
   
-  // Notify parent when load completes - use ref to prevent infinite loop
+  // Notify parent when load completes
   useEffect(() => {
-    if ((isLoaded || hasError) && isInView && typeof onLoadComplete === 'function') {
+    if ((isLoaded || hasError) && typeof onLoadComplete === 'function') {
       onLoadComplete(columnIndex);
     }
-  }, [isLoaded, hasError]); // Reduced dependencies to avoid loops
+  }, [isLoaded, hasError, onLoadComplete, columnIndex]);
   
-  // Set up intersection observer - this is fine as is
+  // FIXED: Improved intersection observer with larger margin and fallback
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -57,146 +48,134 @@ const LazyImage = ({ src, alt, className, onClick, columnIndex, onLoadStart, onL
           observer.disconnect();
         }
       },
-      { threshold: 0.1, rootMargin: '500px' }
+      // INCREASED rootMargin for earlier detection
+      { threshold: 0.01, rootMargin: '1500px' }
     );
     
     if (containerRef.current) {
       observer.observe(containerRef.current);
     }
     
+    // ADD FALLBACK: Force load after a timeout even if never scrolled into view
+    const timeoutId = setTimeout(() => {
+      if (!isInView && !isLoaded && !hasStartedLoadingRef.current) {
+        console.log(`Force loading image in column ${columnIndex} after timeout`);
+        setIsInView(true);
+        observer.disconnect();
+      }
+    }, 500); // half second fallback
+    
     return () => {
       if (observer) observer.disconnect();
+      clearTimeout(timeoutId);
     };
-  }, []);
-  
-  // Initialize column tracking - separate from state updates
-  useEffect(() => {
-    if (typeof window === 'undefined' || !window.__imageProcessingState || columnIndex === undefined) return;
-    
-    // Safely initialize column height tracking
-    if (!window.__imageProcessingState.columnHeights) {
-      window.__imageProcessingState.columnHeights = {};
-    }
-    
-    if (window.__imageProcessingState.columnHeights[columnIndex] === undefined) {
-      window.__imageProcessingState.columnHeights[columnIndex] = 0;
-    }
-    
-    // Safely initialize column processing tracking
-    if (!window.__imageProcessingState.processingByColumn) {
-      window.__imageProcessingState.processingByColumn = {};
-    }
-    
-    if (window.__imageProcessingState.processingByColumn[columnIndex] === undefined) {
-      window.__imageProcessingState.processingByColumn[columnIndex] = 0;
-    }
-  }, [columnIndex]);
+  }, [columnIndex, isInView, isLoaded]);
 
-  // Process image when it comes into view - key fix is here
+  // Process image when it comes into view - with simpler loading approach
   useEffect(() => {
-    // Only run if the image is in view and not already loaded/processing
-    if (!isInView || isLoaded || canvasDataUrl || hasError || isProcessingRef.current) return;
-    if (typeof window === 'undefined' || !window.__imageProcessingState) return;
+    if (!isInView || isLoaded || hasError || isProcessingRef.current) return;
+    if (typeof window === 'undefined') return;
     
-    // Mark that we're starting to process
-    isProcessingRef.current = true;
+    const state = window.__imageLoadingState;
+    hasStartedLoadingRef.current = true;
     
-    // Ensure failed Set exists
-    if (!window.__imageProcessingState.failed) {
-      window.__imageProcessingState.failed = new Set();
+    // Wait if too many concurrent loads
+    if (state.activeLoads >= state.maxConcurrent) {
+      const checkTimer = setInterval(() => {
+        if (state.activeLoads < state.maxConcurrent) {
+          clearInterval(checkTimer);
+          loadImage();
+        }
+      }, 100);
+      
+      return () => clearInterval(checkTimer);
+    } else {
+      loadImage();
     }
     
-    const processImage = async () => {
-      // Skip if already failed
-      if (window.__imageProcessingState.failed.has(src)) {
-        setDisplayOriginal(true);
-        setIsLoaded(true);
-        isProcessingRef.current = false;
-        return;
+    function loadImage() {
+      isProcessingRef.current = true;
+      state.activeLoads++;
+      
+      // Notify parent when starting load
+      if (typeof onLoadStart === 'function') {
+        onLoadStart(columnIndex);
       }
       
-      try {
-        const img = new Image();
-        
-        const imageLoadPromise = new Promise((resolve, reject) => {
-          img.onload = () => resolve(img);
-          img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
-          
-          // Handle cross-origin images
-          if (!src.startsWith('data:') && !src.startsWith(window.location.origin)) {
-            img.crossOrigin = "anonymous";
-          }
-        });
-        
-        img.src = src;
-        const loadedImg = await imageLoadPromise;
-        
-        // Skip optimization for small images
-        if (loadedImg.naturalWidth <= 400 && loadedImg.naturalHeight <= 400) {
-          setDisplayOriginal(true);
-          setIsLoaded(true);
-          isProcessingRef.current = false;
-          return;
-        }
-        
-        const aspectRatio = loadedImg.naturalHeight / loadedImg.naturalWidth;
-        const targetPixels = 360000; // 600x600 equivalent
-        
-        let canvasWidth, canvasHeight;
-        
-        if (aspectRatio >= 1) {
-          canvasHeight = Math.sqrt(targetPixels * aspectRatio);
-          canvasWidth = canvasHeight / aspectRatio;
-        } else {
-          canvasWidth = Math.sqrt(targetPixels / aspectRatio);
-          canvasHeight = canvasWidth * aspectRatio;
-        }
-        
-        canvasWidth = Math.round(Math.max(canvasWidth, 200));
-        canvasHeight = Math.round(Math.max(canvasHeight, 200));
-        
-        const canvas = document.createElement('canvas');
-        canvas.width = canvasWidth;
-        canvas.height = canvasHeight;
-        
-        const ctx = canvas.getContext('2d');
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(loadedImg, 0, 0, canvasWidth, canvasHeight);
-        
-        let dataUrl;
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      
+      img.onload = () => {
         try {
-          dataUrl = canvas.toDataURL('image/webp', 0.85);
-        } catch (err) {
-          dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          // Skip optimization for small images
+          if (img.naturalWidth <= 400 && img.naturalHeight <= 400) {
+            setDisplayOriginal(true);
+          } else {
+            // Create optimized version with canvas
+            const aspectRatio = img.naturalHeight / img.naturalWidth;
+            const targetWidth = 800;
+            const targetHeight = Math.round(targetWidth * aspectRatio);
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
+            
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.imageSmoothingEnabled = true;
+              ctx.imageSmoothingQuality = 'high';
+              ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+              
+              try {
+                // Try WebP first
+                const dataUrl = canvas.toDataURL('image/webp', 0.8);
+                if (dataUrl.length > 100) {
+                  setCanvasDataUrl(dataUrl);
+                } else {
+                  // If WebP fails, try JPEG
+                  const jpegUrl = canvas.toDataURL('image/jpeg', 0.85);
+                  setCanvasDataUrl(jpegUrl);
+                }
+              } catch (err) {
+                // Fall back to original if canvas fails
+                setDisplayOriginal(true);
+              }
+            } else {
+              setDisplayOriginal(true);
+            }
+          }
+        } catch (error) {
+          setDisplayOriginal(true);
+        } finally {
+          setIsLoaded(true);
+          state.activeLoads--;
+          isProcessingRef.current = false;
+          
+          // Make sure we call the callback with the column index
+          if (typeof onLoadComplete === 'function') {
+            console.log(`Image in column ${columnIndex} loaded, calling completion callback`);
+            onLoadComplete(columnIndex);
+          }
         }
-        
-        // Update state in a batch to avoid multiple re-renders
-        setCanvasDataUrl(dataUrl);
-        setIsLoaded(true);
-        
-        // Update column height if needed
-        if (columnIndex !== undefined && window.__imageProcessingState.columnHeights) {
-          const imageHeight = height || 300;
-          window.__imageProcessingState.columnHeights[columnIndex] += imageHeight;
-        }
-      } catch (error) {
-        console.error(`Error processing image ${src}:`, error);
-        if (window.__imageProcessingState.failed) {
-          window.__imageProcessingState.failed.add(src);
-        }
+      };
+      
+      img.onerror = () => {
         setDisplayOriginal(true);
         setIsLoaded(true);
-      } finally {
+        setHasError(true);
+        state.activeLoads--;
         isProcessingRef.current = false;
-      }
-    };
-    
-    processImage();
-    
-  }, [isInView, src, height]); // Reduced dependencies to avoid loops
-  
-  // Render component
+        
+        if (typeof onLoadComplete === 'function') {
+          onLoadComplete(columnIndex);
+        }
+      };
+      
+      // Start loading the image
+      img.src = src;
+    }
+  }, [isInView, isLoaded, hasError, src, columnIndex, onLoadStart, onLoadComplete]);
+
   return (
     <div 
       ref={containerRef}
@@ -220,7 +199,8 @@ const LazyImage = ({ src, alt, className, onClick, columnIndex, onLoadStart, onL
       
       {isInView && (
         <img
-          src={displayOriginal ? src : (canvasDataUrl || src)}
+          ref={imgRef}
+          src={canvasDataUrl || src}
           alt={alt}
           className={`lazy-image ${isLoaded ? 'loaded' : 'loading'}`}
           style={{
@@ -230,14 +210,15 @@ const LazyImage = ({ src, alt, className, onClick, columnIndex, onLoadStart, onL
             height: '100%',
             objectFit: 'cover'
           }}
+          crossOrigin="anonymous"
           onLoad={() => {
-            // Use a condition to prevent unnecessary state updates
             if (!isLoaded) setIsLoaded(true);
           }}
           onError={() => {
-            if (!displayOriginal) {
+            if (canvasDataUrl) {
+              setCanvasDataUrl(null); // Try original if optimized fails
               setDisplayOriginal(true);
-            } else if (!hasError) {
+            } else {
               setHasError(true);
               setIsLoaded(true);
             }
