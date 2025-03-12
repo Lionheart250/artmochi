@@ -74,7 +74,10 @@ self.addEventListener('fetch', (event) => {
           // If response is not OK, throw an error with status
           throw new Error(`Network response was not ok: ${networkResponse.status}`);
         } catch (error) {
-          console.error(`Fetch failed for ${event.request.url}:`, error.message);
+          // MODIFIED: Only log errors that aren't about default-avatar.png
+          if (!event.request.url.includes('default-avatar.png')) {
+            console.error(`Fetch failed for ${event.request.url}:`, error.message);
+          }
           
           // For thumbnails, try fallback with better error handling
           if (isThumbRequest) {
@@ -97,7 +100,10 @@ self.addEventListener('fetch', (event) => {
               
               throw new Error('Fallback fetch failed');
             } catch (fallbackError) {
-              console.error('Fallback also failed:', fallbackError.message);
+              // MODIFIED: Only log if not default-avatar related
+              if (!event.request.url.includes('default-avatar.png')) {
+                console.error('Fallback also failed:', fallbackError.message);
+              }
               
               // Return a graceful fallback image
               return caches.match('/images/fallback-image.webp')
@@ -115,23 +121,13 @@ self.addEventListener('fetch', (event) => {
           }
           
           // If we got here, both attempts failed - return a transparent image instead of throwing
-          console.log('All fetch attempts failed, returning fallback image');
-          
-          // First try to fetch the default avatar
-          try {
-            const baseUrl = self.registration.scope;
-            const defaultAvatarUrl = new URL('default-avatar.png', baseUrl).href;
-            
-            const defaultResponse = await fetch(defaultAvatarUrl, { 
-              mode: 'no-cors' 
-            });
-            if (defaultResponse.ok) {
-              return defaultResponse;
-            }
-          } catch (defaultError) {
-            // Don't log this error at all - it's expected and handled
-            // console.error('Default avatar fetch failed:', defaultError);
+          // MODIFIED: Don't log the fallback message for default-avatar
+          if (!event.request.url.includes('default-avatar.png')) {
+            console.log('All fetch attempts failed, returning fallback image');
           }
+          
+          // MODIFIED: Completely skip the default avatar fetch attempt
+          // since we know it fails and we don't need the console spam
           
           // As last resort, return a transparent 1x1 pixel
           return new Response(
@@ -144,7 +140,10 @@ self.addEventListener('fetch', (event) => {
         }
       }).catch(error => {
         // Handle any uncaught errors in the cache operations
-        console.error('Service worker cache error:', error);
+        // MODIFIED: Only log non-default-avatar errors
+        if (!error.message || !error.message.includes('default-avatar')) {
+          console.error('Service worker cache error:', error);
+        }
         return new Response(
           new Blob(
             [new Uint8Array([71,73,70,56,57,97,1,0,1,0,128,0,0,255,255,255,0,0,0,33,249,4,1,0,0,0,0,44,0,0,0,0,1,0,1,0,0,2,1,68,1,0,59])],
