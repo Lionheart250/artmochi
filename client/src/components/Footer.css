@@ -267,6 +267,13 @@
     box-shadow: 0 0 8px rgba(0, 210, 255, 0.7);
 }
 
+@keyframes data-travel {
+    0% { left: 0%; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { left: 100%; opacity: 0; }
+}
+
 /* Add responsive styles */
 @media screen and (max-width: 768px) {
     .footer {

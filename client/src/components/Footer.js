@@ -118,15 +118,6 @@ const Footer = () => {
                     transform: 'translateY(-50%)'
                 }}></div>
             </div>
-            
-            <style jsx>{`
-                @keyframes data-travel {
-                    0% { left: 0%; opacity: 0; }
-                    10% { opacity: 1; }
-                    90% { opacity: 1; }
-                    100% { left: 100%; opacity: 0; }
-                }
-            `}</style>
         </footer>
     );
 };
