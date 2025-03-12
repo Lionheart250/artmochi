@@ -119,14 +119,20 @@ self.addEventListener('fetch', (event) => {
           
           // First try to fetch the default avatar
           try {
-            const defaultResponse = await fetch('/default-avatar.png', { 
+            const baseUrl = self.registration.scope;
+            const defaultAvatarUrl = new URL('default-avatar.png', baseUrl).href;
+            
+            const defaultResponse = await fetch(defaultAvatarUrl, { 
               mode: 'no-cors' 
             });
             if (defaultResponse.ok) {
               return defaultResponse;
             }
           } catch (defaultError) {
-            console.error('Default avatar fetch also failed:', defaultError);
+            // Don't log 404 errors for the default avatar
+            if (!defaultError.message.includes('404')) {
+              console.error('Default avatar fetch failed:', defaultError);
+            }
           }
           
           // As last resort, return a transparent 1x1 pixel
