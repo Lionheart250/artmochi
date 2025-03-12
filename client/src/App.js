@@ -20,6 +20,7 @@ import ImageModal from './components/ImageModal';
 import './App.css';
 import './styles/theme.css';
 import { customHistory } from './utils/CustomHistory';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
   useEffect(() => {
@@ -53,7 +54,9 @@ function App() {
       <AuthProvider>
         <SubscriptionProvider>
           <Router navigator={customHistory} location={window.location.pathname}>
-            <AppContent />
+            <ErrorBoundary>
+              <AppContent />
+            </ErrorBoundary>
           </Router>
         </SubscriptionProvider>
       </AuthProvider>
@@ -75,13 +78,19 @@ function AppContent() {
           path="/gallery" 
           element={
             <React.Suspense fallback={<div>Loading...</div>}>
-              <Gallery key="persistent-gallery" />
+              <ErrorBoundary>
+                <Gallery key="persistent-gallery" />
+              </ErrorBoundary>
             </React.Suspense>
           } 
         />
         <Route path="/imagegenerator" element={<ImageGenerator />} />
         <Route path="/following" element={<Following />} />
-        <Route path="/profile/:id" element={<Profile />} />
+        <Route path="/profile/:id" element={
+          <ErrorBoundary>
+            <Profile />
+          </ErrorBoundary>
+        } />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/settings" element={<Settings />} />
