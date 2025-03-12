@@ -129,10 +129,8 @@ self.addEventListener('fetch', (event) => {
               return defaultResponse;
             }
           } catch (defaultError) {
-            // Don't log 404 errors for the default avatar
-            if (!defaultError.message.includes('404')) {
-              console.error('Default avatar fetch failed:', defaultError);
-            }
+            // Don't log this error at all - it's expected and handled
+            // console.error('Default avatar fetch failed:', defaultError);
           }
           
           // As last resort, return a transparent 1x1 pixel
