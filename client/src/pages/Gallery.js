@@ -64,6 +64,62 @@ const Gallery = () => {
     const [pageHistory, setPageHistory] = useState([1]);
     const [galleryState, setGalleryState] = useState(null);
 
+    // Add this cleanupDOM function near the top of your Gallery component
+const cleanupDOM = useCallback(() => {
+    console.log('Running DOM cleanup before navigation');
+    
+    // Clean up dropdowns first - CRITICAL FOR FIXING THE ERROR
+    document.querySelectorAll('.custom-dropdown-wrapper').forEach(wrapper => {
+      if (wrapper && wrapper.parentNode) {
+        try {
+          // First remove event listeners to prevent memory leaks
+          const selected = wrapper.querySelector('.custom-dropdown-selected');
+          if (selected && selected._clickHandler) {
+            selected.removeEventListener('click', selected._clickHandler);
+          }
+          wrapper.parentNode.removeChild(wrapper);
+        } catch (e) {
+          console.error('Error removing dropdown:', e);
+        }
+      }
+    });
+    
+    // Clean up global click handler
+    if (window._closeAllDropdowns) {
+      document.removeEventListener('click', window._closeAllDropdowns);
+      window._closeAllDropdowns = null;
+    }
+    
+    // Clean up any modal overlays
+    document.querySelectorAll('.modal-transition-overlay').forEach(el => {
+      if (el && el.parentNode) {
+        try {
+          el.parentNode.removeChild(el);
+        } catch (e) {
+          console.error('Error removing overlay:', e);
+        }
+      }
+    });
+    
+    // Clean up body classes
+    document.body.classList.remove('modal-open');
+    
+    // Reset any flags
+    window.__internalImageNavigation = false;
+  }, []);
+  
+  // Add this useEffect to make the cleanup function available globally
+  useEffect(() => {
+    // Make cleanup function available to header navigation
+    window.__galleryCleanup = cleanupDOM;
+    
+    // Clean up on unmount
+    return () => {
+      cleanupDOM();
+      delete window.__galleryCleanup;
+    };
+  }, [cleanupDOM]);
+
     // Replace the problematic useEffect with:
     useEffect(() => {
         const loadProfile = async () => {

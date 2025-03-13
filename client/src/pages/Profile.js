@@ -1338,6 +1338,52 @@ const handleTabChange = (tab) => {
         };
     }, []);
 
+    // Replace your existing cleanup useEffect with this comprehensive one
+useEffect(() => {
+  // Create a special cleanup function
+  const cleanupDOM = () => {
+    // First, clean gallery overlays if they exist
+    if (window.__modalOverlays) {
+      [...window.__modalOverlays].forEach(id => {
+        const element = document.getElementById(id);
+        if (element && element.parentNode) {
+          element.parentNode.removeChild(element);
+        }
+      });
+      window.__modalOverlays.clear();
+    }
+    
+    // Then clean up any other overlays
+    document.querySelectorAll('.modal-transition-overlay').forEach(el => {
+      if (el && el.parentNode) {
+        try {
+          el.parentNode.removeChild(el);
+        } catch (e) {}
+      }
+    });
+    
+    // Clean up body classes
+    document.body.classList.remove('modal-open');
+    document.body.classList.remove('modal-closing');
+    
+    // Clean up navigation flags
+    window.__galleryNavigating = false;
+    window.__internalImageNavigation = false;
+  };
+  
+  // Do immediate cleanup
+  cleanupDOM();
+  
+  // Do cleanup again after a frame to ensure DOM is settled
+  const cleanupId = requestAnimationFrame(cleanupDOM);
+  
+  // Clean up on unmount
+  return () => {
+    cancelAnimationFrame(cleanupId);
+    cleanupDOM();
+  };
+}, []);
+
     return (
         <div className="profile-container">
             <div className="profile-header-wrapper">

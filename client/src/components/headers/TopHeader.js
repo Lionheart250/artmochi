@@ -26,21 +26,37 @@ const TopHeader = ({ isActive, user, logout, profilePicElement, headerClass }) =
         // Prevent default navigation
         if (e) e.preventDefault();
         
-        // Check if a modal is open
+        // Check if Gallery cleanup function exists (we added this earlier)
+        const needsGalleryCleanup = window.__galleryCleanup && document.querySelector('.custom-dropdown-wrapper');
+        
+        // Run gallery cleanup if available - this fixes the DOM insertion error
+        if (needsGalleryCleanup) {
+            console.log('Running gallery cleanup before navigation from TopHeader');
+            window.__galleryCleanup();
+        }
+        
+        // Different handling based on whether modal is open
         if (document.body.classList.contains('modal-open')) {
-            // Close the modal by simulating the close button click
+            // Close the modal first
             const closeButton = document.querySelector('.image-close-button');
             if (closeButton) {
                 closeButton.click();
                 
-                // Navigate after a small delay to allow modal closing to start
+                // Navigate after a small delay to allow modal closing and cleanup to complete
                 setTimeout(() => {
                     navigate(path);
-                }, 50);
+                }, needsGalleryCleanup ? 50 : 30);
+            } else {
+                // If can't find close button, navigate directly after cleanup
+                setTimeout(() => {
+                    navigate(path);
+                }, needsGalleryCleanup ? 10 : 0);
             }
         } else {
-            // If no modal is open, just navigate directly
-            navigate(path);
+            // For non-modal navigation, still ensure cleanup completes first
+            setTimeout(() => {
+                navigate(path);
+            }, needsGalleryCleanup ? 10 : 0);
         }
     };
 
@@ -130,7 +146,19 @@ const TopHeader = ({ isActive, user, logout, profilePicElement, headerClass }) =
                                         )}
                                         <NavLink 
                                             to={`/profile/${user.userId || user.id}`}
-                                            onClick={(e) => closeModalAndNavigate(`/profile/${user.userId || user.id}`, e)}
+                                            onClick={(e) => {
+                                                // Run gallery cleanup if available
+                                                if (window.__galleryCleanup) {
+                                                    e.preventDefault();
+                                                    setIsDropdownOpen(false); // Close dropdown first
+
+                                                    window.__galleryCleanup();
+                                                    // Navigate after a small delay to ensure cleanup completes
+                                                        window.location.href = `/profile/${user.userId || user.id}`;
+                                                } else {
+                                                    closeModalAndNavigate(`/profile/${user.userId || user.id}`, e);
+                                                }
+                                            }}
                                         >
                                             Profile
                                         </NavLink>

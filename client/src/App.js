@@ -80,21 +80,11 @@ function AppContent() {
         <Route path="/" element={<Home />} />
         <Route 
           path="/gallery" 
-          element={
-            <React.Suspense fallback={<div>Loading...</div>}>
-              <ErrorBoundary>
-                <Gallery key="persistent-gallery" />
-              </ErrorBoundary>
-            </React.Suspense>
-          } 
+          element={<Gallery key="persistent-gallery" />}
         />
         <Route path="/imagegenerator" element={<ImageGenerator />} />
         <Route path="/following" element={<Following />} />
-        <Route path="/profile/:id" element={
-          <ErrorBoundary>
-            <Profile />
-          </ErrorBoundary>
-        } />
+        <Route path="/profile/:id" element={<Profile />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/settings" element={<Settings />} />

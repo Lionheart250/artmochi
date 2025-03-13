@@ -41,7 +41,21 @@ const SideHeader = ({
                                 <span>Following</span>
                             </NavLink>
                             {user ? (
-                                <NavLink to={`/profile/${user.userId || user.id}`} className="side-nav-link">
+                                <NavLink 
+                                    to={`/profile/${user.userId || user.id}`} 
+                                    className="side-nav-link"
+                                    onClick={(e) => {
+                                        // Run gallery cleanup if available
+                                        if (window.__galleryCleanup) {
+                                            e.preventDefault();
+                                            window.__galleryCleanup();
+                                            // Navigate after a small delay to ensure cleanup completes
+                                            setTimeout(() => {
+                                                window.location.href = `/profile/${user.userId || user.id}`;
+                                            }, 10);
+                                        }
+                                    }}
+                                >
                                     {profilePicElement}
                                     <span>Profile</span>
                                 </NavLink>
