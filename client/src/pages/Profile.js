@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
 import { jwtDecode } from 'jwt-decode'; // Ensure jwt-decode is installed
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -14,8 +14,75 @@ import { ReactComponent as CommentIcon } from '../assets/icons/comment.svg';
 import { ReactComponent as ShareIcon } from '../assets/icons/share.svg';
 import { ReactComponent as BookmarkIcon } from '../assets/icons/bookmark.svg';
 import LazyImage from '../components/LazyImage';
+import { useModal } from '../context/ModalContext';
+import TransitionOverlay from '../components/TransitionOverlay';
 
+// Replace the useLayoutEffect at the beginning of your component with this more robust version
 const Profile = () => {
+    const profileRef = useRef(null);
+    
+    // IMPORTANT - Add the missing showOverlay state
+    const [showOverlay, setShowOverlay] = useState(false);
+    
+    // This must be the very first hook in your component
+    useLayoutEffect(() => {
+        // Immediately clean up DOM before any React rendering
+        const cleanupDOM = () => {
+            // Remove any overlay elements that might be interfering with React's DOM operations
+            const overlays = document.querySelectorAll('.modal-transition-overlay');
+            overlays.forEach(el => {
+                if (el && el.parentNode) {
+                    try {
+                        // Use removeChild instead of remove() for better browser compatibility
+                        el.parentNode.removeChild(el);
+                    } catch (e) {
+                        console.warn('Error removing overlay during mount:', e);
+                    }
+                }
+            });
+            
+            // Remove any lingering modal classes that might affect DOM state
+            if (document.body) {
+                document.body.classList.remove('modal-open');
+                document.body.classList.remove('modal-closing');
+            }
+        };
+        
+        // Execute cleanup synchronously before React renders
+        cleanupDOM();
+        
+        // Set up a mutation observer to detect and handle any stray overlay elements
+        // that might get added during the component's lifecycle
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach(mutation => {
+                if (mutation.addedNodes.length > 0) {
+                    // Check if any added nodes are problematic overlays from Gallery
+                    mutation.addedNodes.forEach(node => {
+                        if (node.classList && 
+                            node.classList.contains('modal-transition-overlay') &&
+                            !node.dataset.profileOwned) {
+                            // If it's an overlay not created by this component, remove it
+                            try {
+                                node.parentNode.removeChild(node);
+                            } catch (e) {
+                                console.warn('Error removing dynamic overlay:', e);
+                            }
+                        }
+                    });
+                }
+            });
+        });
+        
+        // Start observing the document body for added nodes
+        observer.observe(document.body, { childList: true, subtree: true });
+        
+        return () => {
+            // Clean up when Profile component unmounts
+            observer.disconnect();
+            cleanupDOM();
+        };
+    }, []);
+
     const { id } = useParams();
     const { user } = useAuth();
     const { profilePicture, setProfilePicture } = useProfile();
@@ -51,7 +118,8 @@ const Profile = () => {
     const [postsCount, setPostsCount] = useState(0);
     const [likesCount, setLikesCount] = useState(0);
     const [isFollowing, setIsFollowing] = useState(false);
-
+    // 2. Replace your openModal function with this version based on Gallery's:
+    const modalContext = useModal();
     // Add new state variables
     const [showFollowersModal, setShowFollowersModal] = useState(false);
     const [showFollowingModal, setShowFollowingModal] = useState(false);
@@ -449,16 +517,121 @@ const Profile = () => {
             }
         };
 
-// Update your closeModal function to match Gallery.js pattern
+// Use this corrected openModal function
+const openModal = (image) => {
+    // Save profile-specific state
+    const stateToSave = {
+        page: page,
+        scrollPosition: window.scrollY,
+        activeTab: activeTab
+    };
+    sessionStorage.setItem('profileState', JSON.stringify(stateToSave));
+    
+    // Set modal image state correctly
+    setModalImage(image.image_url);
+    setActiveImageId(image.id);
+    
+    // Fetch data for this image
+    fetchImageDetails(image.id);
+    
+    // Use the correct URL path for profile
+    const newUrl = `/profile/${id}/image/${image.id}`;
+    
+    // Don't try to store the whole location object
+    customHistory.push(newUrl, { 
+        fromProfile: true,
+        profileId: id
+    });
+    
+    // Add modal-open class to body
+    document.body.classList.add('modal-open');
+};
+
+// And this corrected closeModal function
 const closeModal = () => {
+  // Get saved state from sessionStorage
+  const savedState = JSON.parse(sessionStorage.getItem('profileState'));
+  
+  if (!savedState || typeof savedState.scrollPosition !== 'number') {
+    console.error('Missing valid profile state - cannot restore position');
     setModalImage(null);
     setActiveImageId(null);
+    if (document && document.body) {
+      document.body.classList.remove('modal-open');
+    }
+    return;
+  }
+  
+  const scrollPos = savedState.scrollPosition;
+  
+  // CRITICAL: Safely disable history functions temporarily
+  const originalPushState = window.history.pushState;
+  const originalReplaceState = window.history.replaceState;
+  window.history.pushState = function() { return; };
+  window.history.replaceState = function() { return; };
+  
+  // Show overlay using the TransitionOverlay component
+  setShowOverlay(true);
+  
+  // Notify header immediately
+  document.dispatchEvent(new CustomEvent('modalclosing', {
+    detail: { closing: true }
+  }));
+  
+  // Wait for overlay to appear
+  setTimeout(() => {
+    // Close modal
+    setModalImage(null);
+    setActiveImageId(null);
+    document.body.classList.remove('modal-open');
     
-    // Just like Gallery.js - let the ImageModal handle body class cleanup
-    
-    // Refetch stats to reflect any changes from the modal
-    fetchUserStats();
+    // After another tiny delay to allow state updates
+    setTimeout(() => {
+      // Restore scroll position
+      window.scrollTo(0, scrollPos);
+      
+      // Restore history functions
+      window.history.pushState = originalPushState;
+      window.history.replaceState = originalReplaceState;
+      
+      // Update URL with profile path
+      window.history.replaceState(null, '', `/profile/${id}`);
+      
+      // Wait a moment, then hide overlay
+      setTimeout(() => {
+        setShowOverlay(false);
+      }, 300);
+    }, 10);
+  }, 20);
 };
+
+// 4. Add this useEffect to save/restore state
+useEffect(() => {
+    // Try to restore previous profile state
+    const savedState = sessionStorage.getItem('profileState');
+    if (savedState) {
+        try {
+            const parsed = JSON.parse(savedState);
+            // Restore tab
+            if (parsed.activeTab) {
+                handleTabChange(parsed.activeTab);
+            }
+        } catch (e) {
+            console.error('Failed to parse saved profile state:', e);
+            sessionStorage.removeItem('profileState');
+        }
+    }
+    
+    // Set up cleanup function to save state on unmount
+    return () => {
+        const stateToSave = {
+            page: page,
+            scrollPosition: window.scrollY,
+            activeTab: activeTab
+        };
+        sessionStorage.setItem('profileState', JSON.stringify(stateToSave));
+    };
+}, []); // Empty dependencies to run only on mount/unmount
 
     const fetchAllData = async (imageId) => {
         const token = localStorage.getItem('token');
@@ -533,18 +706,6 @@ const closeModal = () => {
     
         } catch (error) {
             console.error('Error fetching data:', error);
-        }
-    };
-
-    const openModal = async (image) => {
-        try {
-            setModalImage(image.image_url);  // Change this to match Gallery.js
-            setActiveImageId(image.id);
-            await fetchImageDetails(image.id);
-            navigate(`?id=${image.id}`, { replace: true });
-            document.body.classList.add('modal-open');
-        } catch (error) {
-            console.error('Error fetching image details:', error);
         }
     };
 
@@ -1146,6 +1307,37 @@ const handleTabChange = (tab) => {
     }
 };
 
+    // Add this at the beginning of your Profile component
+    useEffect(() => {
+        // Wait a tiny moment to let any lingering transitions complete
+        setTimeout(() => {
+            // Clean up any leftover overlays from Gallery
+            document.querySelectorAll('.modal-transition-overlay').forEach(el => {
+                if (el && el.parentNode) {
+                    try {
+                        el.parentNode.removeChild(el);
+                    } catch (e) {
+                        console.warn('Error removing overlay:', e);
+                    }
+                }
+            });
+        }, 50);
+        
+        // Add unmount cleanup
+        return () => {
+            // Same cleanup as in Gallery when Profile unmounts
+            document.querySelectorAll('.modal-transition-overlay').forEach(el => {
+                if (el && el.parentNode) {
+                    try {
+                        el.parentNode.removeChild(el);
+                    } catch (e) {
+                        console.warn('Error removing overlay:', e);
+                    }
+                }
+            });
+        };
+    }, []);
+
     return (
         <div className="profile-container">
             <div className="profile-header-wrapper">
@@ -1490,6 +1682,14 @@ const handleTabChange = (tab) => {
                         </div>
                     </div>
                 </div>
+            )}
+            {/* Add TransitionOverlay */}
+            {showOverlay && (
+                <TransitionOverlay 
+                    show={showOverlay}
+                    onComplete={() => setShowOverlay(false)}
+                    duration={300}
+                />
             )}
         </div>    
     );

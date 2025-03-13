@@ -1729,7 +1729,7 @@ select.gallery-category {
   pointer-events: none !important;
   background: rgba(13, 2, 33, 0.8) !important;
   box-shadow: 
-    0 0 0 1px rgba(255, 255, 255, 0.2) !important,
+    0 0 0 1px rgba(255, 255, 255, 0.2)
     0 0 10px rgba(var(--circuit-blue-rgb), 0.6) !important;
 }
 

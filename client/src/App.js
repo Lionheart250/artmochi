@@ -15,6 +15,7 @@ import Footer from './components/Footer';
 import { AuthProvider } from './context/AuthContext';
 import { ProfileProvider } from './context/ProfileContext';
 import { SubscriptionProvider } from './features/subscriptions/store/SubscriptionContext';
+import { ModalProvider } from './context/ModalContext';
 import Subscription from './pages/Subscription';
 import ImageModal from './components/ImageModal';
 import './App.css';
@@ -23,6 +24,7 @@ import { customHistory } from './utils/CustomHistory';
 import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
+  // History state protection for smooth transitions
   useEffect(() => {
     const originalPush = window.history.pushState;
     const originalReplace = window.history.replaceState;
@@ -53,11 +55,13 @@ function App() {
     <ProfileProvider>
       <AuthProvider>
         <SubscriptionProvider>
-          <Router navigator={customHistory} location={window.location.pathname}>
-            <ErrorBoundary>
-              <AppContent />
-            </ErrorBoundary>
-          </Router>
+          <ModalProvider>
+            <Router navigator={customHistory} location={window.location.pathname}>
+              <ErrorBoundary>
+                <AppContent />
+              </ErrorBoundary>
+            </Router>
+          </ModalProvider>
         </SubscriptionProvider>
       </AuthProvider>
     </ProfileProvider>
@@ -126,59 +130,22 @@ function AppContent() {
 function ModalWrapper() {
   const { imageId } = useParams();
   const navigate = useNavigate();
-  const image = findImageById(imageId); // Implement this function
+  
+  // Simple function to find image - replace with your actual implementation
+  const findImage = (id) => {
+    // This would typically fetch from your app state or API
+    return { id, image_url: `/api/images/${id}` };
+  };
+  
+  const image = findImage(imageId);
 
   return (
     <ImageModal
       isOpen={true}
       onClose={() => navigate(-1)}
-      modalImage={image}
+      modalImage={image.image_url}
+      activeImageId={imageId}
     />
-  );
-}
-
-// Add this helper function to locate an image by ID
-// This is a placeholder - you'll need to implement proper fetching
-function findImageById(id) {
-  // Try to get from recent images in state/context
-  // You might need to adjust this based on where your image data is stored
-  return null; // This will cause the component to fetch from API
-}
-
-// Update your ImageDetailPage function to use React Router v6 hooks
-function ImageDetailPage() {
-  const { imageId } = useParams(); // v6 way to get params
-  const [image, setImage] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchImage() {
-      try {
-        const response = await fetch(`/api/images/${imageId}`);
-        const data = await response.json();
-        setImage(data);
-      } catch (error) {
-        console.error('Error fetching image:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchImage();
-  }, [imageId]);
-
-  if (loading) {
-    return <div className="loading-spinner">Loading...</div>;
-  }
-
-  if (!image) {
-    return <div className="error-message">Image not found</div>;
-  }
-
-  return (
-    <div className="image-detail-page">
-      {/* Similar content to your ImageModal but as a page */}
-    </div>
   );
 }
 
