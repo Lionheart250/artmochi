@@ -731,7 +731,8 @@ button.lora-selector span {
 
 @media (max-width: 1024px) {
   .loraselector-popup {
-    margin-left: 60px;
+    margin-left: 70px;
+    
   }
   .lora-content {
     flex-direction: column;
