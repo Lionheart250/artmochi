@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
 import './EmailVerification.css';
+import '../components/GeometricEffects.css';
 
 const EmailVerification = () => {
     const [status, setStatus] = useState('verifying');
@@ -39,6 +40,26 @@ const EmailVerification = () => {
 
     return (
         <div className="verification-container">
+            <div className="background-effects">
+                <div className="terminal-grid"></div>
+                <div className="scan-lines"></div>
+                <div className="horizontal-scan"></div>
+                <div className="hexagon-overlay"></div>
+                <div className="sigil-flash"></div>
+                <div className="micro-sigils"></div>
+                <div className="ambient-pulse"></div>
+                <div className="glitch-scan"></div>
+                
+                {/* Circuit nodes - add the number you want */}
+                <div className="circuit-connections">
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                </div>
+                </div>
             {status === 'verifying' && (
                 <div className="verification-message">
                     <h2>Verifying your email...</h2>

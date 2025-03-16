@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'; // Import useAuth to access th
 import { useProfile } from '../context/ProfileContext';
 import './Signup.css';
 import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Add these imports at the top
+import '../components/GeometricEffects.css';
 
 // Add validatePassword function above the Signup component
 const validatePassword = (password) => {
@@ -150,6 +151,26 @@ function Signup() {
 
   return (
     <div className="signup-container">
+      <div className="background-effects">
+                <div className="terminal-grid"></div>
+                <div className="scan-lines"></div>
+                <div className="horizontal-scan"></div>
+                <div className="hexagon-overlay"></div>
+                <div className="sigil-flash"></div>
+                <div className="micro-sigils"></div>
+                <div className="ambient-pulse"></div>
+                <div className="glitch-scan"></div>
+                
+                {/* Circuit nodes - add the number you want */}
+                <div className="circuit-connections">
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                </div>
+                </div>
         <h2 className="signup-page-heading">Sign Up</h2>
         <form onSubmit={handleSubmit} className="signup-form">
             <div className="signup-form-group">

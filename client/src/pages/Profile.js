@@ -16,6 +16,7 @@ import { ReactComponent as BookmarkIcon } from '../assets/icons/bookmark.svg';
 import LazyImage from '../components/LazyImage';
 import { useModal } from '../context/ModalContext';
 import TransitionOverlay from '../components/TransitionOverlay';
+import '../components/GeometricEffects.css';
 
 // Replace the useLayoutEffect at the beginning of your component with this more robust version
 const Profile = () => {
@@ -1387,6 +1388,26 @@ useEffect(() => {
 
     return (
         <div className="profile-container">
+            <div className="background-effects">
+                <div className="terminal-grid"></div>
+                <div className="scan-lines"></div>
+                <div className="horizontal-scan"></div>
+                <div className="hexagon-overlay"></div>
+                <div className="sigil-flash"></div>
+                <div className="micro-sigils"></div>
+                <div className="ambient-pulse"></div>
+                <div className="glitch-scan"></div>
+                
+                {/* Circuit nodes - add the number you want */}
+                <div className="circuit-connections">
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                </div>
+                </div>
             <div className="profile-header-wrapper">
                 <div className="profile-header">
     {/* Left side: Profile picture */}

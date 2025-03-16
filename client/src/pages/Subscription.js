@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useSubscription } from '../features/subscriptions/store/SubscriptionContext';
 import { subscriptionApi } from '../features/subscriptions/api/subscriptionApi';
-
+import '../components/GeometricEffects.css';
 import './Subscription.css';
 
 const Subscription = () => {
@@ -64,6 +64,26 @@ const Subscription = () => {
 
     return (
         <div className="page-container subscription-page">
+            <div className="background-effects">
+                <div className="terminal-grid"></div>
+                <div className="scan-lines"></div>
+                <div className="horizontal-scan"></div>
+                <div className="hexagon-overlay"></div>
+                <div className="sigil-flash"></div>
+                <div className="micro-sigils"></div>
+                <div className="ambient-pulse"></div>
+                <div className="glitch-scan"></div>
+                
+                {/* Circuit nodes - add the number you want */}
+                <div className="circuit-connections">
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                </div>
+                </div>
             <div className="content-area">
                 <div className="plans-header">
                     <h2>Choose Your Plan</h2>

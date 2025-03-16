@@ -5,6 +5,7 @@ import { getImageUrl } from '../utils/imageUtils';
 import './Settings.css';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useSubscription } from '../features/subscriptions/store/SubscriptionContext';
+import '../components/GeometricEffects.css';
 
 const validatePassword = (password) => {
     const requirements = {
@@ -201,6 +202,26 @@ const Settings = () => {
 
     return (
         <div className="settings-container">
+            <div className="background-effects">
+                <div className="terminal-grid"></div>
+                <div className="scan-lines"></div>
+                <div className="horizontal-scan"></div>
+                <div className="hexagon-overlay"></div>
+                <div className="sigil-flash"></div>
+                <div className="micro-sigils"></div>
+                <div className="ambient-pulse"></div>
+                <div className="glitch-scan"></div>
+                
+                {/* Circuit nodes - add the number you want */}
+                <div className="circuit-connections">
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                </div>
+                </div>
             <div className="settings-sidebar">
                 <button 
                     className={`settings-nav-btn ${activeSection === 'profile' ? 'active' : ''}`}

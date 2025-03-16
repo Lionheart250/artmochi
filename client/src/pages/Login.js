@@ -4,6 +4,7 @@ import { jwtDecode } from 'jwt-decode';
 import { useAuth } from '../context/AuthContext'; // Import useAuth to access the AuthContext
 import { useProfile } from '../context/ProfileContext';
 import './Login.css';
+import '../components/GeometricEffects.css';
 
 const Login = () => {
     const { setProfilePicture } = useProfile();
@@ -102,6 +103,26 @@ const Login = () => {
 
     return (
         <div className="login-container">
+            <div className="background-effects">
+                <div className="terminal-grid"></div>
+                <div className="scan-lines"></div>
+                <div className="horizontal-scan"></div>
+                <div className="hexagon-overlay"></div>
+                <div className="sigil-flash"></div>
+                <div className="micro-sigils"></div>
+                <div className="ambient-pulse"></div>
+                <div className="glitch-scan"></div>
+                
+                {/* Circuit nodes - add the number you want */}
+                <div className="circuit-connections">
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                </div>
+                </div>
             <h2 className="login-heading">Login</h2>
             <form id="login-form" className="login-form" onSubmit={handleSubmit}>
                 <div className="login-form-group">

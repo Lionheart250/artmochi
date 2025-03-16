@@ -3,10 +3,12 @@
     display: flex;
     gap: 2rem;
     padding: 2.5rem;
-    margin-left: 10.5rem;
-    margin-top: 2rem;
-    color: var(--text-primary);
+    margin-left: 12.5rem;
+    margin-top: 0;
+    color: var(--signal);
     max-width: 1400px;
+    font-family: "IBM Plex Mono", monospace;
+    position: relative;
 }
 
 /* ========== SETTINGS SIDEBAR ========== */
@@ -15,13 +17,33 @@
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--bg-element);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border-light);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    border-radius: 12px;
+    border-radius: 0;
     padding: 1.5rem 1rem;
     height: fit-content;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Scanner line effect */
+.settings-sidebar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--signal), transparent);
+    animation: status-scan 8s linear infinite;
+    z-index: 2;
+}
+
+@keyframes status-scan {
+    0% { left: -50%; }
+    100% { left: 100%; }
 }
 
 .settings-nav-btn {
@@ -29,35 +51,72 @@
     text-align: left;
     background: none;
     border: none;
-    border-radius: 8px;
-    color: rgba(255, 255, 255, 0.8);
+    border-radius: 0;
+    color: var(--accent-secondary);
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all var(--transition-speed);
     font-weight: 500;
     font-size: 0.95rem;
+    font-family: "IBM Plex Mono", monospace;
+    position: relative;
 }
 
 .settings-nav-btn:hover {
     background: rgba(255, 255, 255, 0.05);
-    color: white;
+    color: var(--signal);
+    transform: translateX(2px);
 }
 
 .settings-nav-btn.active {
-    background: linear-gradient(135deg, #6a11cb, #2575fc);
-    box-shadow: 0 4px 12px rgba(42, 117, 252, 0.3);
-    color: white;
+    background: var(--bg-element);
+    box-shadow: 0 0 20px var(--accent-glow);
+    color: var(--signal);
     font-weight: 600;
+    border: 1px solid var(--accent);
+}
+
+/* Active button indicator line */
+.settings-nav-btn.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 70%;
+    background: var(--accent);
+    box-shadow: var(--text-glow);
 }
 
 /* ========== SETTINGS CONTENT ========== */
 .settings-content {
     flex: 1;
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--bg-element);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border-light);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    border-radius: 16px;
+    border-radius: 0;
     padding: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Scanner line effect */
+.settings-content::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: -100%;
+    width: 50%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--signal), transparent);
+    animation: status-scan-reverse 12s linear infinite;
+    z-index: 2;
+}
+
+@keyframes status-scan-reverse {
+    0% { right: -50%; }
+    100% { right: 100%; }
 }
 
 .settings-section {
@@ -68,9 +127,22 @@
     font-size: 1.75rem;
     font-weight: 700;
     margin-bottom: 1.5rem;
-    background: linear-gradient(90deg, #fff, #ccc);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--signal);
+    text-shadow: var(--text-glow);
+    letter-spacing: 1px;
+    position: relative;
+    display: inline-block;
+}
+
+.settings-section h2::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 0;
+    width: 80px;
+    height: 2px;
+    background: var(--accent);
+    box-shadow: var(--text-glow);
 }
 
 /* ========== FORM ELEMENTS ========== */
@@ -88,43 +160,48 @@
 }
 
 .form-group label {
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--accent-secondary);
     font-size: 0.95rem;
     font-weight: 500;
+    font-family: "IBM Plex Mono", monospace;
 }
 
 .form-group input {
     padding: 0.9rem;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0;
+    border: 1px solid var(--border-light);
     background: rgba(0, 0, 0, 0.3);
-    color: #fff;
-    font-size: 1rem;
-    transition: all 0.2s ease;
+    color: var(--signal);
+    font-size: 0.95rem;
+    transition: all var(--transition-speed);
+    font-family: "IBM Plex Mono", monospace;
 }
 
 .form-group input:focus {
     outline: none;
-    border-color: rgba(106, 17, 203, 0.5);
-    box-shadow: 0 0 0 2px rgba(106, 17, 203, 0.2);
+    border-color: var(--accent);
+    box-shadow: 0 0 15px var(--accent-glow);
 }
 
 .verification-status {
     display: inline-block;
     padding: 0.3rem 0.6rem;
-    border-radius: 4px;
+    border-radius: 0;
     font-size: 0.8rem;
     margin-left: 0.5rem;
+    font-family: "IBM Plex Mono", monospace;
 }
 
 .verification-status.verified {
-    background: rgba(0, 200, 83, 0.15);
-    color: #00c853;
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--accent);
+    border: 1px solid var(--accent);
 }
 
 .verification-status.unverified {
-    background: rgba(255, 77, 77, 0.15);
-    color: #ff4d4d;
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--accent-secondary);
+    border: 1px solid var(--border-light);
 }
 
 /* ========== PROFILE PICTURE STYLES ========== */
@@ -144,13 +221,14 @@
     border-radius: 50%;
     overflow: hidden;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border: 3px solid rgba(255, 255, 255, 0.15);
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+    border: 3px solid var(--border-light);
 }
 
 .settings-avatar-label:hover {
     transform: scale(1.03);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 25px var(--accent-glow);
+    border-color: var(--accent);
 }
 
 .settings-avatar {
@@ -158,7 +236,7 @@
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
-    transition: filter 0.3s ease;
+    transition: filter var(--transition-speed);
 }
 
 .settings-avatar-overlay {
@@ -167,27 +245,36 @@
     left: 0;
     width: 100%;
     height: 100%;
-    border-radius: 50%;
     background: rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity var(--transition-speed);
+    /* Scanner effect on hover */
+    background-image: repeating-linear-gradient(
+        transparent 0px,
+        rgba(255, 255, 255, 0.03) 1px,
+        transparent 2px,
+        transparent 4px
+    );
 }
 
 .settings-avatar-overlay svg {
     width: 32px;
     height: 32px;
-    fill: white;
+    fill: var(--signal);
     margin-bottom: 0.5rem;
+    filter: drop-shadow(0 0 5px var(--accent-glow));
 }
 
 .settings-avatar-text {
-    color: white;
+    color: var(--signal);
     font-size: 1rem;
     font-weight: 600;
+    text-shadow: var(--text-glow);
+    font-family: "IBM Plex Mono", monospace;
 }
 
 .settings-avatar-label:hover .settings-avatar-overlay {
@@ -201,20 +288,45 @@
 /* ========== ACTION BUTTONS ========== */
 .settings-form button {
     padding: 0.9rem 1.2rem;
-    border-radius: 8px;
-    border: none;
-    background: linear-gradient(135deg, #6a11cb, #2575fc);
-    color: #ffffff;
-    font-size: 1rem;
+    border-radius: 0;
+    border: 1px solid var(--accent);
+    background: var(--bg-element);
+    color: var(--signal);
+    font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all var(--transition-speed);
     align-self: flex-start;
+    box-shadow: 0 0 15px var(--accent-glow);
+    position: relative;
+    overflow: hidden;
+    font-family: "IBM Plex Mono", monospace;
 }
 
-.settings-form button:hover {
+/* Button shine effect */
+.settings-form button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.1), 
+        transparent);
+    transition: left 0.5s;
+    z-index: 0;
+}
+
+.settings-form button:hover:not(:disabled)::before {
+    left: 100%;
+    transition: left 0.5s;
+}
+
+.settings-form button:hover:not(:disabled) {
     transform: translateY(-3px);
-    box-shadow: 0 8px 16px rgba(42, 117, 252, 0.3);
+    box-shadow: 0 0 25px var(--accent-glow);
 }
 
 .settings-form button:disabled {
@@ -222,6 +334,7 @@
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
+    border-color: var(--border-light);
 }
 
 /* ========== PASSWORD INPUT ========== */
@@ -246,8 +359,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: rgba(255, 255, 255, 0.6);
-    transition: color 0.2s ease;
+    color: var(--accent-secondary);
+    transition: color var(--transition-speed);
     box-shadow: none !important;
     min-width: unset !important;
     width: auto !important;
@@ -255,17 +368,19 @@
 }
 
 .eye-toggle-btn:hover {
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--signal);
 }
 
 /* ========== PASSWORD REQUIREMENTS ========== */
 .password-requirements {
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--accent-secondary);
     font-size: 0.85rem;
     margin-top: 0.75rem;
     background: rgba(0, 0, 0, 0.2);
-    border-radius: 8px;
+    border-radius: 0;
     padding: 0.75rem 1rem;
+    border: 1px solid var(--border-light);
+    font-family: "IBM Plex Mono", monospace;
 }
 
 .password-requirements ul {
@@ -276,7 +391,7 @@
 
 .password-requirements li {
     margin-bottom: 0.4rem;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--accent-secondary);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -284,7 +399,8 @@
 }
 
 .password-requirements li.valid {
-    color: #4CAF50;
+    color: var(--accent);
+    text-shadow: var (--text-glow);
 }
 
 .password-requirements li::before {
@@ -295,29 +411,33 @@
 
 .password-requirements li.valid::before {
     content: "✓";
-    color: #4CAF50;
+    color: var(--accent);
+    text-shadow: var(--text-glow);
 }
 
 /* ========== MESSAGES ========== */
 .settings-message {
     margin: 1rem 0;
     padding: 0.9rem 1rem;
-    border-radius: 8px;
+    border-radius: 0;
     font-size: 0.9rem;
     text-align: center;
     animation: fadeIn 0.3s ease;
+    font-family: "IBM Plex Mono", monospace;
+    border: 1px solid var(--border-light);
 }
 
 .settings-message.success {
-    background: rgba(0, 200, 83, 0.1);
-    color: #00c853;
-    border: 1px solid rgba(0, 200, 83, 0.2);
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    text-shadow: var(--text-glow);
 }
 
 .settings-message.error {
-    background: rgba(255, 77, 77, 0.1);
-    color: #ff4d4d;
-    border: 1px solid rgba(255, 77, 77, 0.2);
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--accent-secondary);
+    border: 1px solid var(--accent-secondary);
 }
 
 /* ========== CURRENT EMAIL DISPLAY ========== */
@@ -325,31 +445,48 @@
     margin-bottom: 1.5rem;
     padding: 1rem;
     background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    border-radius: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    font-family: "IBM Plex Mono", monospace;
 }
 
 .verification-sent-message {
     padding: 1rem;
-    background: rgba(255, 193, 7, 0.1);
-    color: #ffc107;
-    border: 1px solid rgba(255, 193, 7, 0.2);
-    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 0;
     margin-top: 1rem;
+    font-family: "IBM Plex Mono", monospace;
 }
 
 /* ========== SUBSCRIPTION SECTION ========== */
 .subscription-info {
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--bg-element);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border-light);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    border-radius: 12px;
+    border-radius: 0;
     padding: 1.5rem;
     margin-top: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Scanner line effect */
+.subscription-info::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: -100%;
+    width: 50%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--signal), transparent);
+    animation: status-scan-reverse 8s linear infinite;
+    z-index: 2;
 }
 
 .subscription-info .info-item {
@@ -363,59 +500,93 @@
 .subscription-info .info-item label {
     display: block;
     font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--accent-secondary);
     margin-bottom: 0.5rem;
+    font-family: "IBM Plex Mono", monospace;
 }
 
 .subscription-info .info-item p {
     font-size: 1.1rem;
-    color: #ffffff;
+    color: var(--signal);
     margin: 0;
+    font-family: "IBM Plex Mono", monospace;
 }
 
 .subscription-info .settings-btn {
-    background: linear-gradient(135deg, #6a11cb, #2575fc);
-    color: #ffffff;
-    border: none;
+    background: var(--bg-element);
+    color: var(--signal);
+    border: 1px solid var(--accent);
     padding: 0.9rem 1.2rem;
-    border-radius: 8px;
+    border-radius: 0;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all var(--transition-speed);
     margin-top: 1.5rem;
+    box-shadow: 0 0 15px var(--accent-glow);
+    position: relative;
+    overflow: hidden;
+    font-family: "IBM Plex Mono", monospace;
+}
+
+/* Button shine effect */
+.subscription-info .settings-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.1), 
+        transparent);
+    transition: left 0.5s;
+    z-index: 0;
+}
+
+.subscription-info .settings-btn:hover::before {
+    left: 100%;
+    transition: left 0.5s;
 }
 
 .subscription-info .settings-btn:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 16px rgba(42, 117, 252, 0.3);
+    box-shadow: 0 0 25px var(--accent-glow);
 }
 
 /* Status Badge */
 .subscription-info .status {
     display: inline-block;
     padding: 0.3rem 0.7rem;
-    border-radius: 20px;
+    border-radius: 0;
     font-size: 0.8rem;
     font-weight: 600;
     text-transform: capitalize;
     margin-left: 0.5rem;
+    font-family: "IBM Plex Mono", monospace;
+    border: 1px solid var(--border-light);
 }
 
 .subscription-info .status.active {
-    background: rgba(0, 200, 83, 0.15);
-    color: #00c853;
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--accent);
+    border-color: var(--accent);
+    text-shadow: var(--text-glow);
+    box-shadow: 0 0 10px var(--accent-glow);
 }
 
 .subscription-info .status.canceled,
 .subscription-info .status.expired {
-    background: rgba(255, 77, 77, 0.15);
-    color: #ff4d4d;
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--accent-secondary);
+    border-color: var(--accent-secondary);
 }
 
 .subscription-info .status.pending {
-    background: rgba(255, 193, 7, 0.15);
-    color: #ffc107;
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--accent);
+    border-color: var(--accent);
 }
 
 /* ========== ANIMATIONS ========== */
@@ -424,23 +595,32 @@
     to { opacity: 1; }
 }
 
+@keyframes scanEffect {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+}
+
 /* ========== RESPONSIVE STYLES ========== */
 @media (max-width: 1024px) {
     .settings-container {
         flex-direction: column;
         padding: 1.5rem;
-        margin-left: 5rem; /* Consistent with other pages */
-        margin-top: 4rem;
-        width: calc(100% - 8rem); /* Take up full width minus sidebar */
+        margin-left: 6rem;
+        margin-top: 3rem;
+        width: calc(100% - 8rem);
         gap: 1.5rem;
     }
 
     .settings-sidebar {
-        width: calc(100% - 2rem);
+        width: 100%; /* Make full width */
         flex-direction: row;
         flex-wrap: wrap;
         gap: 0.5rem;
         padding: 1rem;
+    }
+
+    .settings-content {
+        width: 100%; /* Make full width to match sidebar */
     }
 
     .settings-nav-btn {
@@ -449,6 +629,14 @@
         padding: 0.75rem;
         font-size: 0.9rem;
         text-align: center;
+    }
+    
+    .settings-nav-btn.active::before {
+        left: 0;
+        top: 0;
+        transform: none;
+        width: 100%;
+        height: 3px;
     }
 }
 
@@ -459,12 +647,14 @@
         width: 90%;
     }
 
-    .settings-nav-btn {
-        min-width: calc(50% - 0.5rem);
+    .settings-sidebar,
+    .settings-content {
+        width: 100%; /* Ensure both have same width */
+        padding: 1rem; /* Make padding consistent */
     }
 
-    .settings-content {
-        padding: 1.5rem;
+    .settings-nav-btn {
+        min-width: calc(50% - 0.5rem);
     }
 
     .settings-section h2 {
@@ -487,14 +677,16 @@
         width: 95%;
     }
 
+    .settings-sidebar,
+    .settings-content {
+        width: 100%;
+        padding: 1rem;
+    }
+
     .settings-nav-btn {
         min-width: 100%;
         padding: 0.6rem;
         font-size: 0.85rem;
-    }
-
-    .settings-content {
-        padding: 1rem;
     }
 
     .form-group label {

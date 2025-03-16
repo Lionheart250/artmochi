@@ -13,6 +13,7 @@ import ImageModal from '../components/ImageModal';
 import { artisticLoras, realisticLoras } from '../components/LoraSelector';
 import { customHistory } from '../utils/CustomHistory';
 import LazyImage from '../components/LazyImage';
+import '../components/GeometricEffects.css';
 
 const Following = () => {
     const { user } = useAuth();
@@ -714,6 +715,26 @@ const fetchImageDetails = async (imageId) => {
     // Updated render with LazyImage
     return (
         <div className="following-container">
+            <div className="background-effects">
+                <div className="terminal-grid"></div>
+                <div className="scan-lines"></div>
+                <div className="horizontal-scan"></div>
+                <div className="hexagon-overlay"></div>
+                <div className="sigil-flash"></div>
+                <div className="micro-sigils"></div>
+                <div className="ambient-pulse"></div>
+                <div className="glitch-scan"></div>
+                
+                {/* Circuit nodes - add the number you want */}
+                <div className="circuit-connections">
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                </div>
+                </div>
             <h1>Following</h1>
             
             {loading && page === 1 ? (
@@ -733,14 +754,14 @@ const fetchImageDetails = async (imageId) => {
                             }}>
                                 <img 
                                     className="following-user-avatar"
-                                    src={getImageUrl(image.profile_picture, 'profile')} 
-                                    alt={image.username}
+                                    src={getImageUrl(imageUserDetails[image.id]?.profile_picture || image.profile_picture, 'profile')} 
+                                    alt={imageUserDetails[image.id]?.username || image.username || 'User'}
                                     onError={(e) => {
                                         e.target.onerror = null;
                                         e.target.src = '/default-avatar.png';
                                     }}
                                 />
-                                <span>{image.username}</span>
+                                <span>{imageUserDetails[image.id]?.username || image.username || 'User'}</span>
                             </div>
                             <LazyImage 
                                 src={image.image_url} 

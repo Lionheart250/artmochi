@@ -13,6 +13,7 @@ import { runwareService } from '../services/runwareService';
 import SelectedLoras from '../components/SelectedLoras';
 // Add these imports at the top
 import { artisticLoras, realisticLoras, loraExamples } from '../components/LoraSelector';
+import '../components/GeometricEffects.css';
 // Add this mapping near your other constants
 const aspectRatioMapping = {
     'Portrait': '9:16',
@@ -976,6 +977,26 @@ useEffect(() => {
         )}
         
         <div className="image-generator-container">
+        <div className="background-effects">
+                <div className="terminal-grid"></div>
+                <div className="scan-lines"></div>
+                <div className="horizontal-scan"></div>
+                <div className="hexagon-overlay"></div>
+                <div className="sigil-flash"></div>
+                <div className="micro-sigils"></div>
+                <div className="ambient-pulse"></div>
+                <div className="glitch-scan"></div>
+                
+                {/* Circuit nodes - add the number you want */}
+                <div className="circuit-connections">
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                </div>
+                </div>
             {/* Form Side */}
             <div className="image-generator-form-container">
                 <div className="content-wrapper">
