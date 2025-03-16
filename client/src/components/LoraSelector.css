@@ -235,7 +235,7 @@ button.lora-selector span {
 .section-header {
   position: sticky;
   top: 0;
-  background: var(--bg-element);
+  background: #000;
   z-index: 10;
   padding: 12px 16px;
   border-bottom: 1px solid var(--border-light);
@@ -729,14 +729,16 @@ button.lora-selector span {
   }
 }
 
-/* ========= Mobile & Responsive Design ========= */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
+  .loraselector-popup {
+    margin-left: 60px;
+  }
   .lora-content {
     flex-direction: column;
   }
   
   .thumbnail-strip {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 4px;
   }
 
@@ -801,32 +803,115 @@ button.lora-selector span {
   }
 }
 
-/* Smaller screens */
-@media (max-width: 480px) {
+/* ========= Mobile & Responsive Design ========= */
+@media (max-width: 1024px) {
   .loraselector-popup {
-    width: 100%;
-    height: 100%;
-    max-height: 100vh;
-    border-radius: 0;
+    width: 90%;
+    max-width: 1600px; /* Increased to allow more space */
   }
   
-  .lora-grid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  }
-  
-  .lora-actions {
-    flex-direction: column;
+  .lora-content {
+    flex-direction: row; /* Keep side-by-side columns */
+    gap: 16px;
   }
   
   .thumbnail-strip {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(4, 1fr); /* Reduce number of thumbnails per row */
+  }
+  
+  .lora-actions {
+    position: sticky; /* Use sticky instead of fixed */
+    bottom: 0;
+    background: var(--bg-main);
+    border-top: 1px solid var(--border-light);
+    padding: 12px 16px;
+    box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.5);
+    z-index: 500;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    backdrop-filter: blur(10px);
+  }
+}
+
+@media (max-width: 768px) {
+
+  .loraselector-popup {
+    margin-left: 0px;
+}
+  .lora-content {
+    flex-direction: row;
+  }
+  
+  .thumbnail-strip {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+  }
+
+  .lora-action-btn {
+    min-width: 100px;
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+  
+  /* Fixed Action Buttons */
+  .lora-actions {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg-main);
+    border-top: 1px solid var(--border-light);
+    padding: 12px 16px;
+    box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.5);
+    z-index: 500;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    backdrop-filter: blur(10px);
+  }
+
+  .lora-action-btn {
+    flex: 1;
+    font-size: 14px;
+    padding: 12px 10px;
+    min-height: 44px;
+  }
+  
+  .lora-content {
+    padding-bottom: 80px;
+    max-height: calc(90vh - 80px);
+  }
+  
+  .preview-modal {
+    width: 90vw;
+    max-height: 80vh;
+    padding: 16px;
+    border-radius: 0;
+    overflow-y: auto;
+  }
+  
+  .preview-main-image img {
+    max-height: 50vh;
+    border-radius: 0;
+  }
+  
+  .preview-thumbnails {
+    gap: 8px;
+    margin-top: 12px;
+  }
+  
+  .preview-thumbnails img {
+    width: 50px;
+    height: 50px;
+    border-radius: 0;
+    margin: 4px;
   }
 }
 
 /* iOS Specific Fixes */
 @supports (-webkit-touch-callout: none) {
   .lora-column {
-    padding-bottom: 150px;
     -webkit-overflow-scrolling: touch;
   }
   
@@ -834,11 +919,6 @@ button.lora-selector span {
   .lora-item,
   .lora-action-btn {
     -webkit-tap-highlight-color: transparent;
-  }
-  
-  .lora-column,
-  .preview-modal {
-    -webkit-overflow-scrolling: touch;
   }
 }
 
