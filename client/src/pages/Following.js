@@ -43,9 +43,33 @@ const Following = () => {
     };
 
     const closeModal = () => {
+        // Set animation closing class first
+        document.body.classList.add('modal-closing');
+        
+        // Force DOM reflow to ensure animation works
+        void document.body.offsetHeight;
+        
+        // Dispatch event for header transition
+        document.dispatchEvent(new CustomEvent('modalclosing', {
+            detail: { closing: true }
+        }));
+        
+        // Update state and remove classes
         setModalOpen(false);
         setModalImage(null);
         setActiveImageId(null);
+        
+        // Remove both classes we added
+        document.body.classList.remove('modal-open');
+        document.body.classList.remove('modal-in-profile');
+        
+        // Clean up closing class after animation
+        setTimeout(() => {
+            document.body.classList.remove('modal-closing');
+        }, 300); // Match your animation duration
+        
+        // Update URL if needed
+        customHistory.push('/following', { fromImageView: true });
     };
 
     const handleLike = async (imageId) => {
@@ -247,8 +271,8 @@ const Following = () => {
         setSelectedImage(images[newIndex].image_url);
         
         // Update URL
-        const newUrl = `/image/${images[newIndex].id}`;
-        customHistory.replace(newUrl);
+        const newUrl = `/following/image/${images[newIndex].id}`;
+        customHistory.replace(newUrl, { fromFollowing: true });
         
         // Fetch details for the new image
         fetchImageDetails(images[newIndex].id);
@@ -574,8 +598,15 @@ const fetchImageDetails = async (imageId) => {
         // Fetch data for this image
         fetchImageDetails(image.id);
         
-        // Add modal-open class to body
+        // CRITICAL: Add both classes for consistent header behavior
         document.body.classList.add('modal-open');
+        document.body.classList.add('modal-in-profile'); // Add this class to force top header
+        
+        // Create URL for history (like in other components)
+        const newUrl = `/following/image/${image.id}`;
+        customHistory.push(newUrl, { 
+            fromFollowing: true
+        });
     };
 
     // Add these functions

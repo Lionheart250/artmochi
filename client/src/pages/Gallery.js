@@ -491,11 +491,10 @@ const cleanupDOM = useCallback(() => {
         setSelectedImage(images[newIndex].image_url);
         
         // Update URL using PUSH (not replace) to create proper browser history
-        const newUrl = `/image/${images[newIndex].id}`;
-        customHistory.push(newUrl, { 
-          background: location,
-          fromGallery: true
-        });
+        const newUrl = `/gallery/image/${images[newIndex].id}`;
+        customHistory.replace(newUrl, { fromGallery: true }); 
+
+        
         
         // Fetch details for the new image if needed
         if (typeof fetchImageDetails === 'function') {
@@ -524,7 +523,7 @@ const cleanupDOM = useCallback(() => {
         fetchImageDetails(image.id);
         
         // Update URL using customHistory for proper back button support
-        const newUrl = `/image/${image.id}`;
+        const newUrl = `/gallery/image/${image.id}`;
         customHistory.push(newUrl, { 
             background: location,
             fromGallery: true
@@ -1275,40 +1274,34 @@ useEffect(() => {
         });
     };
 
-    // Replace your current initCustomDropdowns function with this one
-function initCustomDropdowns() {
-    // Store references to all dropdown option containers
+// Fix the initCustomDropdowns function with a truly working click outside handler
+const initCustomDropdowns = () => {
     const allOptionContainers = [];
     
-    // First, create custom dropdowns
     document.querySelectorAll('.gallery-sort, .gallery-time-range, .gallery-aspect-ratio, .gallery-category').forEach(dropdown => {
-        // Skip if already processed
         if (dropdown.style.display === 'none') return;
         
         const wrapper = document.createElement('div');
         wrapper.className = 'custom-dropdown-wrapper';
         
-        // Create the selected display
         const selected = document.createElement('div');
         selected.className = 'custom-dropdown-selected';
         selected.textContent = dropdown.options[dropdown.selectedIndex].text;
         
-        // Create the options container
         const options = document.createElement('div');
         options.className = 'custom-dropdown-options';
         allOptionContainers.push(options);
         
-        // Hide the original select element but keep it in the DOM for form submission
         dropdown.style.display = 'none';
         
-        // Add the new elements to the DOM
         Array.from(dropdown.options).forEach(option => {
             const optionElement = document.createElement('div');
             optionElement.className = 'custom-dropdown-option';
             optionElement.textContent = option.text;
             optionElement.dataset.value = option.value;
             
-            optionElement.addEventListener('click', () => {
+            optionElement.addEventListener('click', (e) => {
+                e.stopPropagation(); // Stop propagation
                 dropdown.value = option.value;
                 dropdown.dispatchEvent(new Event('change', { bubbles: true }));
                 selected.textContent = option.text;
@@ -1319,16 +1312,14 @@ function initCustomDropdowns() {
         });
         
         selected._clickHandler = (e) => {
-            e.stopPropagation();
+            e.stopPropagation(); // Prevent click from reaching document
             
-            // Close all other dropdowns first
             allOptionContainers.forEach(container => {
                 if (container !== options && container.classList.contains('show')) {
                     container.classList.remove('show');
                 }
             });
             
-            // Toggle this dropdown
             options.classList.toggle('show');
         };
         
@@ -1338,16 +1329,48 @@ function initCustomDropdowns() {
         wrapper.appendChild(options);
         dropdown.parentNode.insertBefore(wrapper, dropdown);
     });
+
+    // REAL FIX HERE - Make sure to remove old handler and add a new global one
+    if (typeof window._closeAllDropdowns === 'function') {
+        document.removeEventListener('click', window._closeAllDropdowns);
+    }
     
-    // Close dropdown when clicking elsewhere
-    document.removeEventListener('click', window._closeAllDropdowns);
-    window._closeAllDropdowns = () => {
-        allOptionContainers.forEach(container => {
-            container.classList.remove('show');
-        });
+    // Create global click handler
+    window._closeAllDropdowns = function(event) {
+        // Only close if click is outside dropdown
+        const target = event.target;
+        if (!target.closest('.custom-dropdown-wrapper')) {
+            allOptionContainers.forEach(container => {
+                container.classList.remove('show');
+            });
+        }
     };
+    
+    // Add click handler directly to document
     document.addEventListener('click', window._closeAllDropdowns);
-}
+};
+
+// Add this after your initCustomDropdowns function
+useEffect(() => {
+    // Function to close all dropdowns when clicking elsewhere
+    const closeDropdownsOnOutsideClick = (e) => {
+      // Only run if we didn't click on a dropdown element
+      if (!e.target.closest('.custom-dropdown-wrapper')) {
+        // Find all open dropdown option elements and close them
+        document.querySelectorAll('.custom-dropdown-options.show').forEach(dropdown => {
+          dropdown.classList.remove('show');
+        });
+      }
+    };
+  
+    // Add the handler directly to the document
+    document.addEventListener('click', closeDropdownsOnOutsideClick);
+    
+    // Clean up on unmount
+    return () => {
+      document.removeEventListener('click', closeDropdownsOnOutsideClick);
+    };
+  }, []);
 
 // Also update your useEffect to guarantee removal of old dropdowns before creating new ones
 useEffect(() => {
@@ -1358,7 +1381,7 @@ useEffect(() => {
     // Wait a bit for React to update the DOM
     setTimeout(() => {
         initCustomDropdowns();
-    }, 100);
+    }, 20);
     
     return () => {
         // Clean up on unmount
@@ -1450,9 +1473,57 @@ useEffect(() => {
             loadNextPage(2);
         }
     }, [galleryState, page]);
+    
 
     return (
         <div className="gallery-page">
+            {/* Enhanced background visual effects - no text */}
+            <div className="background-effects">
+                {/* Terminal grid and scan lines */}
+                <div className="terminal-grid"></div>
+                <div className="scan-lines"></div>
+                
+                {/* Lain-inspired horizontal scan effect */}
+                <div className="horizontal-scan"></div>
+                
+                {/* Hexagon pattern overlay like NERV interface */}
+                <div className="hexagon-overlay"></div>
+                
+                {/* Ambient pulse background */}
+                <div className="ambient-pulse"></div>
+                
+                {/* EVA-like data blocks that appear and disappear */}
+                <div className="data-blocks">
+                    <div className="data-block"></div>
+                    <div className="data-block"></div>
+                    <div className="data-block"></div>
+                    <div className="data-block"></div>
+                    <div className="data-block"></div>
+                </div>
+                
+                {/* Circuit nodes and connections */}
+                <div className="circuit-connections">
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-node"></div>
+                    <div className="circuit-connection" style={{top: '15%', left: '20%', width: '30%'}}></div>
+                    <div className="circuit-connection" style={{top: '35%', left: '10%', width: '40%'}}></div>
+                    <div className="circuit-connection" style={{top: '65%', left: '25%', width: '20%'}}></div>
+                    <div className="circuit-connection" style={{top: '10%', right: '30%', width: '15%'}}></div>
+                    <div className="circuit-connection" style={{top: '60%', right: '10%', width: '20%'}}></div>
+                </div>
+            </div>
+            
+            {/* Overlay to close dropdowns when clicking elsewhere */}
+            <div className="custom-dropdown-overlay"></div>
+            
             <div className="gallery-container">
                 {error && <div className="error-message">{error}</div>}
                 <>

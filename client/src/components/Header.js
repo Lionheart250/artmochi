@@ -94,7 +94,13 @@ const Header = () => {
         updatePosition();
         
         // Resize handler with debounce
-        const debouncedResize = debounce(updatePosition, 100);
+        const debouncedResize = debounce(() => {
+            updatePosition();
+            // Check if we need to force top header for image modal
+            if (document.body.classList.contains('modal-open')) {
+                forceHeaderPosition('top');
+            }
+        }, 100);
         window.addEventListener('resize', debouncedResize);
         
         // Track when modal closing has been handled to prevent duplicates
@@ -162,6 +168,60 @@ const Header = () => {
         };
     }, [updatePosition, handleModalClosing]);
 
+    // Add specific detection for ImageModal open in profile view
+    useEffect(() => {
+        // Function to check if image modal is open and force top header
+        const checkForImageModal = () => {
+            // Look for modal-open class AND make sure we're in profile
+            if (document.body.classList.contains('modal-open') && 
+                location.pathname.includes('/profile')) {
+                console.log("📸 Image modal detected in profile view, forcing TOP header");
+                forceHeaderPosition('top');
+            }
+        };
+        
+        // Set up observer specifically for modal-open class
+        const modalObserver = new MutationObserver((mutations) => {
+            mutations.forEach(mutation => {
+                if (mutation.attributeName === 'class') {
+                    if (document.body.classList.contains('modal-open')) {
+                        checkForImageModal();
+                    }
+                }
+            });
+        });
+        
+        // Start observing
+        modalObserver.observe(document.body, { attributes: true });
+        
+        // Check immediately in case we're already in this state
+        checkForImageModal();
+        
+        // Clean up
+        return () => {
+            modalObserver.disconnect();
+        };
+    }, [location.pathname, forceHeaderPosition]);
+
+    // Add this to your existing useEffect in Header.js that handles events
+    useEffect(() => {
+      // Add event listener for forced header position
+      const handleForceHeaderPosition = (e) => {
+        if (e.detail && e.detail.position) {
+          console.log(`📸 Header position forced to: ${e.detail.position}`);
+          forceHeaderPosition(e.detail.position);
+        }
+      };
+      
+      // Listen for our custom event
+      document.addEventListener('forceheaderposition', handleForceHeaderPosition);
+      
+      // Clean up listener on unmount
+      return () => {
+        document.removeEventListener('forceheaderposition', handleForceHeaderPosition);
+      };
+    }, [forceHeaderPosition]);
+
     // Toggle more menu
     const toggleMoreMenu = () => setIsMoreMenuOpen(!isMoreMenuOpen);
 
@@ -216,6 +276,7 @@ const Header = () => {
                     toggleMoreMenu={toggleMoreMenu}
                     moreButtonRef={moreButtonRef}
                     headerClass={sideHeaderClass}
+                    isMoreMenuOpen={isMoreMenuOpen} // Add this prop
                 />
             )}
             

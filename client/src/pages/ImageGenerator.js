@@ -1041,43 +1041,6 @@ useEffect(() => {
                             onClose={() => setIsLoraOpen(false)}
                             onWeightChange={handleWeightChange}  // This should now work correctly
                         />
-                        <div className={`image-generator-creative-section ${mode === 'upscale' ? 'disabled' : ''}`}>
-                            <label className="image-generator-label">Creative Control</label>
-                            <div className="image-generator-creative-buttons">
-                                <button
-                                    type="button"
-                                    className={`image-generator-creative-btn ${distilledCfgScale === 2 ? 'selected' : ''}`}
-                                    onClick={() => setDistilledCfgScale(2)}
-                                    disabled={mode === 'upscale'}
-                                >
-                                    Very Creative
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`image-generator-creative-btn ${distilledCfgScale === 3.5 ? 'selected' : ''}`}
-                                    onClick={() => setDistilledCfgScale(3.5)}
-                                    disabled={mode === 'upscale'}
-                                >
-                                    Creative
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`image-generator-creative-btn ${distilledCfgScale === 5 ? 'selected' : ''}`}
-                                    onClick={() => setDistilledCfgScale(5)}
-                                    disabled={mode === 'upscale'}
-                                >
-                                    Subtle
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`image-generator-creative-btn ${distilledCfgScale === 7 ? 'selected' : ''}`}
-                                    onClick={() => setDistilledCfgScale(7)}
-                                    disabled={mode === 'upscale'}
-                                >
-                                    Strict
-                                </button>
-                            </div>
-                        </div>
                         {/* Update the aspect ratio section to show disabled state during img2img */}
                         <div className={`image-generator-aspect-section ${mode === 'upscale' || isImageToImage ? 'disabled' : ''}`}>
                           <label className="image-generator-label">

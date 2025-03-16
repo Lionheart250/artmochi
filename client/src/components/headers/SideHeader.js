@@ -14,10 +14,11 @@ const SideHeader = ({
     profilePicElement, 
     toggleMoreMenu, 
     moreButtonRef, 
-    headerClass 
+    headerClass,
+    isMoreMenuOpen // Add this prop
 }) => {
     return (
-        <header className={`header side-header ${!isActive ? 'hidden' : ''} ${headerClass}`}>
+        <header className={`header side-header ${!isActive ? 'hidden' : ''} ${headerClass} ${isMoreMenuOpen ? 'drawer-open' : ''}`}>
             <div className="header-container">
                 <Link to="/" className="logo-link" style={{ textDecoration: 'none' }}>
                     <div className="logo">
@@ -30,15 +31,15 @@ const SideHeader = ({
                         <>
                             <NavLink to="/gallery" className="side-nav-link">
                                 <ExploreIcon className="nav-icon" />
-                                <span>Explore</span>
+                                <span className="side-nav-text">Explore</span>
                             </NavLink>
                             <NavLink to="/imagegenerator" className="side-nav-link">
                                 <CreateIcon className="nav-icon" />
-                                <span>Create</span>
+                                <span className="side-nav-text">Create</span>
                             </NavLink>
                             <NavLink to="/following" className="side-nav-link">
                                 <FollowingIcon className="nav-icon" />
-                                <span>Following</span>
+                                <span className="side-nav-text">Following</span>
                             </NavLink>
                             {user ? (
                                 <NavLink 
@@ -57,17 +58,17 @@ const SideHeader = ({
                                     }}
                                 >
                                     {profilePicElement}
-                                    <span>Profile</span>
+                                    <span className="side-nav-text">Profile</span>
                                 </NavLink>
                             ) : (
                                 <NavLink to="/login" className="side-nav-link">
                                     <img src="/default-avatar.png" alt="Sign In" className="nav-icon header-profile-pic" />
-                                    <span>Sign In</span>
+                                    <span className="side-nav-text">Sign In</span>
                                 </NavLink>
                             )}
                             <NavLink to="/subscription" className="side-nav-link">
                                 <UpgradeIcon className="nav-icon" />
-                                <span>Upgrade</span>
+                                <span className="side-nav-text">Upgrade</span>
                             </NavLink>
                             {/*<NavLink to="/credits" className="side-nav-link">
                                 <CreditsIcon className="nav-icon" />
@@ -75,7 +76,7 @@ const SideHeader = ({
                             </NavLink> */}
                             <NavLink to="/settings" className="side-nav-link">
                                 <SettingsIcon className="nav-icon" />
-                                <span>Settings</span>
+                                <span className="side-nav-text">Settings</span>
                             </NavLink>
                             <button 
                                 className="side-nav-link more-menu-button" 
@@ -83,7 +84,7 @@ const SideHeader = ({
                                 ref={moreButtonRef}
                             >
                                 <MoreIcon className="nav-icon" />
-                                <span>More</span>
+                                <span className="side-nav-text">More</span>
                             </button>
                         </>
                     )}

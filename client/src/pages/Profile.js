@@ -545,6 +545,7 @@ const openModal = (image) => {
     
     // Add modal-open class to body
     document.body.classList.add('modal-open');
+    
 };
 
 // And this corrected closeModal function
@@ -734,8 +735,8 @@ useEffect(() => {
         setSelectedImage(images[newIndex].image_url);
         
         // Update URL
-        const newUrl = `/image/${images[newIndex].id}`;
-        customHistory.replace(newUrl);
+        const newUrl = `/profile/${id}/image/${images[newIndex].id}`;
+        customHistory.replace(newUrl, { fromProfile: true, profileId: id });
         
         // Fetch details for the new image
         fetchImageDetails(images[newIndex].id);

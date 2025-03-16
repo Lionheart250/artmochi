@@ -9,7 +9,7 @@
   padding-top: 60px; /* Add top padding for standard header */
   box-sizing: border-box; /* Include padding in width calculation */
   background: var(--bg-primary); /* Use your site's background color */
-  z-index: 99999;
+  z-index: 9999;
   display: block; /* Changed from flex to block for full-page feel */
   animation: modalReveal 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
   overflow-y: auto;

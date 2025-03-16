@@ -23,6 +23,44 @@ import './styles/theme.css';
 import { customHistory } from './utils/CustomHistory';
 import ErrorBoundary from './components/ErrorBoundary';
 
+// Setup global error handler for DOM insertion errors
+if (typeof window !== 'undefined' && !window.__insertionErrorHandlerAdded) {
+  window.__insertionErrorHandlerAdded = true;
+  
+  // Last-resort error handling for DOM insertion errors
+  const originalError = console.error;
+  console.error = (...args) => {
+    if (args[0] && typeof args[0] === 'string' && 
+        args[0].includes('insertBefore') && 
+        args[0].includes('not a child of this node')) {
+      console.log('Suppressing DOM insertion error');
+      
+      // Clean up DOM
+      document.querySelectorAll('.modal-transition-overlay').forEach(el => {
+        if (el && el.parentNode) {
+          try { el.parentNode.removeChild(el); } catch (e) {}
+        }
+      });
+      document.body.classList.remove('modal-open');
+      document.body.classList.remove('modal-closing');
+      
+      return;
+    }
+    originalError.apply(console, args);
+  };
+  
+  // Also handle window errors
+  window.addEventListener('error', event => {
+    if (event.error && 
+        event.error.message && 
+        event.error.message.includes('insertBefore') && 
+        event.error.message.includes('not a child of this node')) {
+      event.preventDefault();
+      return false;
+    }
+  }, true);
+}
+
 function App() {
   // History state protection for smooth transitions
   useEffect(() => {

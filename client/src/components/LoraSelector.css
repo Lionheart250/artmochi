@@ -1,11 +1,11 @@
 /* ========= Core Elements & Basic Styling ========= */
 button.lora-selector {
-  background: rgba(26, 16, 37, 0.7);
+  background: var(--bg-element);
   padding: 1rem;
-  border-radius: var(--radius-md);
+  border-radius: 0;
   margin: 1rem 0;
-  border: 1px solid rgba(255, 46, 135, 0.2);
-  color: var(--text-primary);
+  border: 1px solid var(--border-light);
+  color: var(--accent);
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
@@ -13,8 +13,9 @@ button.lora-selector {
               border-color 0.3s ease;
   position: relative;
   overflow: hidden;
-  box-shadow: var(--shadow-soft);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   will-change: transform, box-shadow;
+  font-family: "IBM Plex Mono", monospace;
 }
 
 button.lora-selector::before {
@@ -24,7 +25,7 @@ button.lora-selector::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(45deg, var(--primary), #ff5277);
+  background: linear-gradient(45deg, var(--accent), var(--accent-bright));
   opacity: 0;
   transition: opacity 0.3s ease;
   z-index: 0;
@@ -32,12 +33,12 @@ button.lora-selector::before {
 
 button.lora-selector:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-medium);
-  border-color: rgba(255, 46, 135, 0.4);
+  box-shadow: 0 0 20px var(--accent-glow);
+  border-color: var(--accent);
 }
 
 button.lora-selector:hover::before {
-  opacity: 0.15;
+  opacity: 0.1;
 }
 
 button.lora-selector span {
@@ -67,17 +68,15 @@ button.lora-selector span {
   width: 90%;
   max-width: 1200px;
   max-height: 90vh;
-  background: rgba(13, 2, 33, 0.95);
-  border-radius: var(--radius-lg);
+  background: var(--bg-main);
+  border-radius: 0;
   position: relative;
   overflow: hidden;
-  color: var(--text-primary);
-  border: 1px solid rgba(255, 46, 135, 0.3);
+  color: var(--signal);
+  border: 1px solid var(--border-accent);
   transform: translateZ(0);
   opacity: 1;
-  box-shadow: 
-    0 10px 40px rgba(0, 0, 0, 0.5),
-    0 0 100px rgba(255, 46, 135, 0.2);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
   will-change: transform;
 }
 
@@ -92,7 +91,7 @@ button.lora-selector span {
   background: 
     repeating-linear-gradient(
       transparent 0px,
-      rgba(0, 233, 255, 0.03) 1px,
+      rgba(255, 255, 255, 0.03) 1px,
       transparent 2px,
       transparent 4px
     );
@@ -110,12 +109,12 @@ button.lora-selector span {
   right: -2px;
   bottom: -2px;
   background: linear-gradient(135deg, 
-    rgba(0, 233, 255, 0.7) 0%, 
+    var(--accent) 0%, 
     transparent 20%, 
     transparent 80%, 
-    rgba(255, 46, 135, 0.7) 100%);
+    var(--accent) 100%);
   z-index: -1;
-  border-radius: var(--radius-lg);
+  border-radius: 0;
   opacity: 0.3;
   pointer-events: none;
 }
@@ -124,18 +123,18 @@ button.lora-selector span {
 .loraselector-popup-header {
   position: sticky;
   top: 0;
-  background: rgba(21, 10, 40, 0.95);
+  background: var(--bg-element);
   z-index: 100;
   padding: 16px;
-  border-bottom: 1px solid rgba(255, 46, 135, 0.2);
+  border-bottom: 1px solid var(--border-light);
   display: flex;
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
   padding-right: 60px;
   background-image: 
-    radial-gradient(circle at 10% 50%, rgba(0, 233, 255, 0.1) 0%, transparent 15%),
-    radial-gradient(circle at 90% 50%, rgba(255, 46, 135, 0.1) 0%, transparent 15%);
+    radial-gradient(circle at 10% 50%, rgba(255, 255, 255, 0.05) 0%, transparent 15%),
+    radial-gradient(circle at 90% 50%, rgba(255, 255, 255, 0.05) 0%, transparent 15%);
   overflow: hidden;
 }
 
@@ -151,15 +150,15 @@ button.lora-selector span {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: var(--primary);
-  text-shadow: 0 0 10px rgba(255, 46, 135, 0.5);
+  color: var(--accent);
+  text-shadow: var(--text-glow);
 }
 
 /* High-tech close button */
 .loraselector-close-button {
-  background: rgba(255, 46, 135, 0.15);
+  background: rgba(255, 255, 255, 0.1);
   border: none;
-  color: var(--text-primary);
+  color: var(--signal);
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -185,9 +184,9 @@ button.lora-selector span {
 }
 
 .loraselector-close-button:hover {
-  background: rgba(255, 46, 135, 0.3);
+  background: rgba(255, 255, 255, 0.2);
   transform: rotate(90deg);
-  box-shadow: 0 0 15px rgba(255, 46, 135, 0.4);
+  box-shadow: 0 0 15px var(--accent-glow);
 }
 
 /* ========= Content Layout ========= */
@@ -208,7 +207,7 @@ button.lora-selector span {
   padding: 0 12px;
   max-height: 100%;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 46, 135, 0.3) transparent;
+  scrollbar-color: var(--accent-secondary) transparent;
   overscroll-behavior: contain;
   scroll-behavior: smooth;
 }
@@ -218,28 +217,28 @@ button.lora-selector span {
 }
 
 .lora-column::-webkit-scrollbar-track {
-  background: rgba(13, 2, 33, 0.5);
+  background: var(--bg-element);
   border-radius: 10px;
 }
 
 .lora-column::-webkit-scrollbar-thumb {
-  background: rgba(255, 46, 135, 0.3);
+  background: var(--accent-secondary);
   border-radius: 10px;
-  border: 1px solid rgba(13, 2, 33, 0.5);
+  border: 1px solid var(--bg-element);
 }
 
 .lora-column::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 46, 135, 0.5);
+  background: var(--accent);
 }
 
 /* ========= Section Headers ========= */
 .section-header {
   position: sticky;
   top: 0;
-  background: rgba(21, 10, 40, 0.98);
+  background: var(--bg-element);
   z-index: 10;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(255, 46, 135, 0.2);
+  border-bottom: 1px solid var(--border-light);
   margin: 0 0 12px 0;
   display: flex;
   align-items: center;
@@ -250,7 +249,7 @@ button.lora-selector span {
 }
 
 .section-header:hover {
-  background: rgba(37, 26, 53, 0.98);
+  background: rgba(30, 30, 30, 0.98);
   transform: translateY(-1px);
 }
 
@@ -258,14 +257,15 @@ button.lora-selector span {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: var(--teal);
+  color: var(--accent);
   position: relative;
   padding-left: 15px;
   letter-spacing: 0.5px;
   transition: color 0.3s ease, transform 0.3s ease;
+  font-family: "IBM Plex Mono", monospace;
 }
 
-/* Cyberpunk accent line */
+/* Accent line */
 .section-header h3::before {
   content: '';
   position: absolute;
@@ -274,13 +274,14 @@ button.lora-selector span {
   transform: translateY(-50%);
   height: 18px;
   width: 3px;
-  background: linear-gradient(to bottom, var(--primary), var(--teal));
+  background: var(--accent);
   border-radius: 2px;
   transition: height 0.3s ease;
+  box-shadow: var(--text-glow);
 }
 
 .section-header:hover h3 {
-  color: var(--primary);
+  color: var(--signal);
   transform: translateX(2px);
 }
 
@@ -299,9 +300,9 @@ button.lora-selector span {
 
 /* Item styling */
 .lora-item {
-  background: rgba(26, 16, 37, 0.7);
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 46, 135, 0.2);
+  background: var(--bg-element);
+  border-radius: 0;
+  border: 1px solid var(--border-light);
   padding: 14px;
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
               background-color 0.3s ease,
@@ -315,7 +316,7 @@ button.lora-selector span {
   user-select: none;
   position: relative;
   overflow: hidden;
-  box-shadow: var(--shadow-soft);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
   will-change: transform;
   content-visibility: auto;
   contain-intrinsic-size: 0 180px;
@@ -323,21 +324,17 @@ button.lora-selector span {
 }
 
 .lora-item:hover {
-  background: rgba(37, 26, 53, 0.8);
+  background: rgba(30, 30, 30, 0.8);
   transform: translateY(-3px);
-  border-color: rgba(255, 46, 135, 0.4);
-  box-shadow: 
-    0 10px 20px rgba(0, 0, 0, 0.3),
-    0 0 15px rgba(255, 46, 135, 0.2);
+  border-color: var(--accent);
+  box-shadow: 0 0 15px var(--accent-glow);
 }
 
 /* Selected state */
 .lora-item.selected {
-  background: rgba(255, 46, 135, 0.1);
-  border-color: rgba(255, 46, 135, 0.5);
-  box-shadow: 
-    0 10px 30px rgba(0, 0, 0, 0.2),
-    0 0 20px rgba(255, 46, 135, 0.25);
+  background: rgba(40, 40, 40, 0.7);
+  border-color: var(--accent);
+  box-shadow: 0 0 20px var(--accent-glow);
   transform: translateY(-3px);
 }
 
@@ -346,7 +343,7 @@ button.lora-selector span {
   display: flex;
   align-items: center;
   gap: 12px;
-  color: var(--text-primary);
+  color: var(--signal);
   font-weight: 500;
   font-size: 14px;
   transition: color 0.3s ease;
@@ -354,10 +351,11 @@ button.lora-selector span {
   padding: 4px;
   -webkit-tap-highlight-color: transparent;
   position: relative;
+  font-family: "IBM Plex Mono", monospace;
 }
 
 .lora-item:hover label {
-  color: var(--primary);
+  color: var(--signal);
 }
 
 /* Custom checkbox */
@@ -367,9 +365,9 @@ button.lora-selector span {
   appearance: none;
   width: 22px;
   height: 22px;
-  border: 2px solid rgba(255, 46, 135, 0.3);
-  border-radius: 6px;
-  background: rgba(13, 2, 33, 0.5);
+  border: 2px solid var(--accent-secondary);
+  border-radius: 0;
+  background: var(--bg-element);
   cursor: pointer;
   position: relative;
   display: flex;
@@ -396,15 +394,15 @@ button.lora-selector span {
 }
 
 .lora-item input[type="checkbox"]:checked {
-  background: var(--primary);
-  border-color: var(--primary);
-  box-shadow: 0 0 12px rgba(255, 46, 135, 0.3);
+  background: var(--accent);
+  border-color: var(--signal);
+  box-shadow: var(--text-glow);
 }
 
 .lora-item input[type="checkbox"]:hover {
-  border-color: var(--primary);
+  border-color: var(--accent);
   transform: scale(1.05);
-  box-shadow: 0 0 8px rgba(255, 46, 135, 0.2);
+  box-shadow: 0 0 8px var(--accent-glow);
 }
 
 /* Custom range slider */
@@ -413,7 +411,7 @@ button.lora-selector span {
   appearance: none;
   width: 95%;
   height: 4px;
-  background: linear-gradient(90deg, var(--primary), var(--teal));
+  background: var(--accent-secondary);
   border-radius: 2px;
   outline: none;
   cursor: pointer;
@@ -427,17 +425,17 @@ button.lora-selector span {
   appearance: none;
   width: 18px;
   height: 18px;
-  background: white;
-  border: 2px solid var(--primary);
+  background: var(--bg-element);
+  border: 2px solid var(--signal);
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 0 10px rgba(255, 46, 135, 0.4);
+  box-shadow: var(--text-glow);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .lora-item input[type="range"]::-webkit-slider-thumb:hover {
   transform: scale(1.2);
-  box-shadow: 0 0 15px rgba(255, 46, 135, 0.6);
+  box-shadow: 0 0 15px var(--accent-glow);
 }
 
 /* ========= Thumbnail Grid ========= */
@@ -457,22 +455,20 @@ button.lora-selector span {
   height: 100%;
   aspect-ratio: 1/1;
   overflow: hidden;
-  border-radius: var(--radius-sm);
-  background: rgba(15, 10, 30, 0.7);
-  box-shadow: var(--shadow-soft);
+  border-radius: 0;
+  background: var(--bg-element);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   transform-origin: center;
   cursor: pointer;
   will-change: transform;
   contain: layout;
-  background-image: linear-gradient(45deg, rgba(15, 10, 30, 0.7), rgba(26, 16, 37, 0.7));
+  background-image: linear-gradient(45deg, var(--bg-element), rgba(30, 30, 30, 0.7));
 }
 
 .thumbnail-container:hover {
   transform: scale(1.05) translateY(-2px);
-  box-shadow: 
-    0 8px 20px rgba(0, 0, 0, 0.3),
-    0 0 15px rgba(255, 46, 135, 0.3);
+  box-shadow: 0 0 15px var(--accent-glow);
 }
 
 .mini-thumbnail {
@@ -539,12 +535,12 @@ button.lora-selector span {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: rgba(13, 2, 33, 0.95);
-  border: 1px solid rgba(0, 233, 255, 0.2);
-  color: white;
-  box-shadow: var(--shadow-strong);
+  background: var(--bg-main);
+  border: 1px solid var(--accent);
+  color: var(--signal);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
   padding: 20px;
-  border-radius: var(--radius-lg);
+  border-radius: 0;
   max-width: 90vw;
   max-height: 90vh;
   overflow-y: auto;
@@ -559,9 +555,9 @@ button.lora-selector span {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: rgba(255, 46, 135, 0.15);
+  background: rgba(255, 255, 255, 0.1);
   border: none;
-  color: white;
+  color: var(--signal);
   font-size: 24px;
   cursor: pointer;
   display: flex;
@@ -573,8 +569,8 @@ button.lora-selector span {
 
 .preview-close-button:hover {
   transform: rotate(90deg);
-  background: rgba(255, 46, 135, 0.3);
-  box-shadow: 0 0 15px rgba(255, 46, 135, 0.4);
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 15px var(--accent-glow);
 }
 
 .preview-modal h4 {
@@ -582,8 +578,9 @@ button.lora-selector span {
   font-weight: 600;
   font-size: 24px;
   text-align: center;
-  color: var(--primary);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  color: var(--accent);
+  text-shadow: var(--text-glow);
+  font-family: "IBM Plex Mono", monospace;
 }
 
 .preview-main-image {
@@ -598,18 +595,14 @@ button.lora-selector span {
   max-width: 100%;
   max-height: 60vh;
   object-fit: contain;
-  border-radius: var(--radius-md);
-  box-shadow: 
-    0 10px 30px rgba(0, 0, 0, 0.3),
-    0 0 30px rgba(255, 46, 135, 0.15);
+  border-radius: 0;
+  box-shadow: 0 0 30px var(--accent-glow);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .preview-main-image img:hover {
   transform: scale(1.02);
-  box-shadow: 
-    0 15px 35px rgba(0, 0, 0, 0.4),
-    0 0 40px rgba(255, 46, 135, 0.2);
+  box-shadow: 0 0 50px var(--accent-glow);
 }
 
 .preview-thumbnails {
@@ -624,7 +617,7 @@ button.lora-selector span {
   width: 70px;
   height: 70px;
   object-fit: cover;
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   transition: transform 0.3s ease, opacity 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
   opacity: 0.5;
@@ -639,9 +632,9 @@ button.lora-selector span {
 
 .preview-thumbnails img.active {
   opacity: 1;
-  border-color: var(--primary);
+  border-color: var(--accent);
   transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(255, 46, 135, 0.4);
+  box-shadow: var(--text-glow);
 }
 
 /* ========= Action Buttons ========= */
@@ -649,11 +642,12 @@ button.lora-selector span {
   display: flex;
   gap: 16px;
   justify-content: space-between;
+  min-width: 360px;
   padding: 16px;
   flex-wrap: wrap;
   align-items: center;
-  border-top: 1px solid rgba(255, 46, 135, 0.2);
-  background: rgba(21, 10, 40, 0.95);
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-element);
   position: sticky;
   bottom: 0;
   left: 0;
@@ -664,7 +658,7 @@ button.lora-selector span {
 
 .lora-action-btn {
   padding: 12px 20px;
-  border-radius: var(--radius-md);
+  border-radius: 0;
   font-weight: 600;
   transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
   min-width: 120px;
@@ -672,21 +666,22 @@ button.lora-selector span {
   cursor: pointer;
   letter-spacing: 0.5px;
   -webkit-tap-highlight-color: transparent;
+  font-family: "IBM Plex Mono", monospace;
 }
 
 .lora-action-btn.primary {
-  background: linear-gradient(135deg, var(--primary) 0%, #ff5277 100%);
-  color: white;
-  border: none;
-  box-shadow: 0 4px 15px rgba(255, 46, 135, 0.3);
+  background: var(--bg-element);
+  color: var(--signal);
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 20px var(--accent-glow);
   position: relative;
   overflow: hidden;
 }
 
 .lora-action-btn.secondary {
-  background: rgba(26, 16, 37, 0.7);
-  color: var(--text-secondary);
-  border: 1px solid rgba(255, 46, 135, 0.2);
+  background: var(--bg-element);
+  color: var(--accent-secondary);
+  border: 1px solid var(--border-light);
 }
 
 .lora-action-btn:hover {
@@ -694,14 +689,15 @@ button.lora-selector span {
 }
 
 .lora-action-btn.primary:hover {
-  background: linear-gradient(135deg, #ff405e, #ff6b8b);
-  box-shadow: 0 6px 20px rgba(255, 46, 135, 0.4);
+  background: rgba(30, 30, 30, 0.9);
+  box-shadow: 0 0 30px var(--accent-glow);
 }
 
 .lora-action-btn.secondary:hover {
-  background: rgba(37, 26, 53, 0.8);
-  border-color: rgba(255, 46, 135, 0.4);
-  box-shadow: var(--shadow-soft);
+  background: rgba(30, 30, 30, 0.8);
+  border-color: var(--accent);
+  box-shadow: 0 0 15px var(--accent-glow);
+  color: var(--signal);
 }
 
 .lora-action-btn:disabled {
@@ -756,8 +752,8 @@ button.lora-selector span {
     bottom: 0;
     left: 0;
     right: 0;
-    background: rgba(13, 2, 33, 0.98);
-    border-top: 1px solid rgba(255, 46, 135, 0.3);
+    background: var(--bg-main);
+    border-top: 1px solid var(--border-light);
     padding: 12px 16px;
     box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.5);
     z-index: 500;
@@ -783,13 +779,13 @@ button.lora-selector span {
     width: 90vw;
     max-height: 80vh;
     padding: 16px;
-    border-radius: 12px;
+    border-radius: 0;
     overflow-y: auto;
   }
   
   .preview-main-image img {
     max-height: 50vh;
-    border-radius: 8px;
+    border-radius: 0;
   }
   
   .preview-thumbnails {
@@ -800,7 +796,7 @@ button.lora-selector span {
   .preview-thumbnails img {
     width: 50px;
     height: 50px;
-    border-radius: 6px;
+    border-radius: 0;
     margin: 4px;
   }
 }

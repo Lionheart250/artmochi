@@ -156,6 +156,25 @@ const ImageModal = ({
     };
   }, [isOpen, navigateImage]);
 
+  // Add this useEffect to the ImageModal.js component
+  useEffect(() => {
+    if (isOpen) {
+      // Force header to TOP position when modal opens
+      document.dispatchEvent(new CustomEvent('forceheaderposition', {
+        detail: { position: 'top' }
+      }));
+      
+      // Mark body with both classes for redundancy
+      document.body.classList.add('modal-open');
+      document.body.classList.add('modal-in-profile');
+    }
+    
+    return () => {
+      // Cleanup when modal closes or unmounts
+      document.body.classList.remove('modal-in-profile');
+    };
+  }, [isOpen]);
+
   // Add this effect to reset expanded prompts when the active image changes
   useEffect(() => {
     // Reset expanded prompt state when activeImageId changes
@@ -302,18 +321,30 @@ const ImageModal = ({
   useEffect(() => {
     // When activeImageId changes, update URL and history
     if (isOpen && activeImageId) {
-      const newUrl = `/image/${activeImageId}`;
+      // Determine the correct URL path based on context
+      let newUrl;
+      const currentPathname = window.location.pathname;
+      
+      // Check which view we're in and create appropriate URL
+      if (currentPathname.includes('/profile/')) {
+        const profileId = currentPathname.split('/profile/')[1]?.split('/')[0];
+        newUrl = `/profile/${profileId}/image/${activeImageId}`;
+      } 
+      else if (currentPathname.includes('/following')) {
+        newUrl = `/following/image/${activeImageId}`;
+      } 
+      else {
+        // Default to gallery
+        newUrl = `/gallery/image/${activeImageId}`; 
+      }
       
       // Don't add duplicate entries
       if (window.location.pathname !== newUrl) {
-        if (isNavigatingWithArrowKeys.current) {
-          // When using arrow keys, replace the current URL
-          customHistory.replace(newUrl);
-        } else {
-          // When directly opening, add a new history entry
-          customHistory.push(newUrl);
-          
-          // Store current URL before navigation
+        // Always PUSH new history entries for each image
+        customHistory.push(newUrl);
+        
+        // Store current URL before navigation
+        if (!isNavigatingWithArrowKeys.current) {
           previousUrls.current.push(window.location.pathname);
         }
       }
