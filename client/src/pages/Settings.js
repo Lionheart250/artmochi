@@ -6,6 +6,7 @@ import './Settings.css';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useSubscription } from '../features/subscriptions/store/SubscriptionContext';
 import '../components/GeometricEffects.css';
+import '../components/ChromeEffects.css';
 
 const validatePassword = (password) => {
     const requirements = {
@@ -202,6 +203,20 @@ const Settings = () => {
 
     return (
         <div className="settings-container">
+            {/* Add SVG Filters for liquid metal effect */}
+            <svg className="svg-filters">
+                <defs>
+                    <filter id="liquid-metal-filter">
+                        <feGaussianBlur in="SourceGraphic" stdDeviation="0.5" result="blur" />
+                        <feSpecularLighting in="blur" specularExponent="35" lightingColor="#ffffff" 
+                            surfaceScale="1.5" result="specular">
+                            <fePointLight x="50" y="50" z="150" />
+                        </feSpecularLighting>
+                        <feComposite in="SourceGraphic" in2="specular" operator="arithmetic" 
+                            k1="0" k2="1" k3="1" k4="0" />
+                    </filter>
+                </defs>
+            </svg>
             <div className="background-effects">
                 <div className="terminal-grid"></div>
                 <div className="scan-lines"></div>
@@ -222,21 +237,21 @@ const Settings = () => {
                     <div className="circuit-node"></div>
                 </div>
                 </div>
-            <div className="settings-sidebar">
+            <div className="settings-sidebar liquid-metal liquid-metal-panel">
                 <button 
-                    className={`settings-nav-btn ${activeSection === 'profile' ? 'active' : ''}`}
+                    className={`settings-nav-btn liquid-metal liquid-metal-button ${activeSection === 'profile' ? 'active' : ''}`}
                     onClick={() => setActiveSection('profile')}
                 >
                     Profile
                 </button>
                 <button 
-                    className={`settings-nav-btn ${activeSection === 'subscription' ? 'active' : ''}`}
+                    className={`settings-nav-btn liquid-metal liquid-metal-button ${activeSection === 'subscription' ? 'active' : ''}`}
                     onClick={() => setActiveSection('subscription')}
                 >
                     Subscription
                 </button>
                 <button 
-                    className={`settings-nav-btn ${activeSection === 'security' ? 'active' : ''}`}
+                    className={`settings-nav-btn liquid-metal liquid-metal-button ${activeSection === 'security' ? 'active' : ''}`}
                     onClick={() => setActiveSection('security')}
                 >
                     Security
@@ -247,7 +262,7 @@ const Settings = () => {
                 {activeSection === 'profile' && (
                     <div className="settings-section">
                         <h3>Profile Settings</h3>
-                        <div className="settings-profile-container">
+                        <div className="settings-profile-container liquid-metal liquid-metal-avatar">
                             <label htmlFor="settings-avatar-input" className="settings-avatar-label">
                                 <img 
                                     src={tempProfilePicture || headerProfilePic || '/default-avatar.png'}
