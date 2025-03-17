@@ -18,95 +18,105 @@
   opacity: 1;
 }
 
-/* Professional placeholder styling */
+/* High-quality TV Static Effect - completely revised */
 .lazy-image-placeholder {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #121212;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background-color: #080808;
   overflow: hidden;
+  animation: flicker 8s infinite step-end;
 }
 
-.placeholder-content {
-  width: 100%;
-  height: 100%;
-  position: relative;
+/* Primary static layer - this is the main noise */
+.lazy-image-placeholder::before {
+  content: "";
+  position: absolute;
+  top: -100%;
+  left: -100%;
+  right: -100%;
+  bottom: -100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 1024 1024' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='5' stitchTiles='stitch' seed='0'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='3' intercept='-0.2'/%3E%3CfeFuncG type='linear' slope='3' intercept='-0.2'/%3E%3CfeFuncB type='linear' slope='3' intercept='-0.2'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.2;
+  transform: scale(1.5);
+  animation: staticMove 0.15s steps(3) infinite;
+  mix-blend-mode: screen;
 }
 
-.placeholder-lines {
+/* Secondary static overlay for more texture */
+.lazy-image-placeholder::after {
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
+  right: 0;
+  bottom: 0;
+  /* Horizontal scan lines */
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.02) 0px,
+    rgba(255, 255, 255, 0.05) 1px,
+    rgba(255, 255, 255, 0.02) 2px,
+    rgba(0, 0, 0, 0.1) 3px,
+    rgba(0, 0, 0, 0.1) 4px
+  );
+  /* Add some noise to scan lines as well */
+  background-blend-mode: overlay;
+  animation: scanlineMove 6s linear infinite;
+  pointer-events: none;
 }
 
-.placeholder-line {
+/* Insert another element for vertical hold issues */
+.lazy-image-container:has(.lazy-image-placeholder:not(.loaded))::after {
+  content: "";
   position: absolute;
-  background: linear-gradient(90deg, transparent, rgba(12, 240, 255, 0.5), transparent);
-  height: 2px;
-  width: 100%;
-  animation-name: placeholderLine;
-  animation-duration: 2s;
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(transparent 30%, rgba(0, 0, 0, 0.3) 30.3%, transparent 30.6%);
+  opacity: 0;
+  animation: verticalHoldIssue 6s infinite;
+  pointer-events: none;
+  z-index: 2;
 }
 
-.placeholder-line-1 {
-  top: 20%;
-  animation-delay: 0s;
+/* Improved animations for more realistic static */
+@keyframes staticMove {
+  0% { transform: translate(0, 0) scale(1.5); }
+  25% { transform: translate(-1%, 1%) scale(1.5); }
+  50% { transform: translate(1%, -0.5%) scale(1.5); }
+  75% { transform: translate(-0.5%, -1%) scale(1.5); }
+  100% { transform: translate(0, 0) scale(1.5); }
 }
 
-.placeholder-line-2 {
-  top: 50%;
-  animation-delay: 0.5s;
+@keyframes scanlineMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 1024px; }
 }
 
-.placeholder-line-3 {
-  top: 80%;
-  animation-delay: 1s;
+@keyframes flicker {
+  0%, 5%, 10%, 15%, 20%, 25%, 30%, 35%, 40%, 45%, 50%, 55%, 60%, 65%, 70%, 75%, 80%, 85%, 90%, 95%, 100% { opacity: 1; }
+  2%, 57%, 62%, 97% { opacity: 0.8; }
+  3%, 37%, 76% { opacity: 0.6; }
+  17%, 23% { opacity: 0.2; transform: translateX(2px); }
+  18% { opacity: 0.8; transform: translateX(-2px); }
+  19% { opacity: 1; transform: translateX(0); }
+  88% { opacity: 0.4; transform: translateX(-1px); }
+  89% { opacity: 0.8; transform: translateX(1px); }
 }
 
-.placeholder-grid {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-gap: 2px;
-  width: 40px;
-  height: 40px;
+@keyframes verticalHoldIssue {
+  0%, 95%, 100% { opacity: 0; transform: translateY(0); }
+  30%, 40% { opacity: 0.5; transform: translateY(30px); }
+  31%, 39% { opacity: 0.2; transform: translateY(0); }
+  32%, 38% { opacity: 0.5; transform: translateY(20px); }
+  33%, 37% { opacity: 0.2; transform: translateY(0); }
 }
 
-.placeholder-grid-item {
-  background-color: rgba(255, 0, 102, 0.3);
-  animation: placeholderPulse 1.5s infinite ease-in-out alternate;
-}
-
-.placeholder-grid-item:nth-child(1) {
-  animation-delay: 0s;
-}
-
-.placeholder-grid-item:nth-child(2) {
-  animation-delay: 0.3s;
-}
-
-.placeholder-grid-item:nth-child(3) {
-  animation-delay: 0.6s;
-}
-
-.placeholder-grid-item:nth-child(4) {
-  animation-delay: 0.9s;
-}
-
-/* Error state styling */
+/* Error state styling - keep monochromatic */
 .lazy-image-error {
   position: absolute;
   top: 0;
@@ -125,7 +135,7 @@
 .error-icon {
   width: 30px;
   height: 30px;
-  border: 2px solid #ff0066;
+  border: 2px solid #ffffff;
   border-radius: 50%;
   position: relative;
   margin-bottom: 10px;
@@ -135,7 +145,7 @@
 .error-icon::after {
   content: '';
   position: absolute;
-  background-color: #ff0066;
+  background-color: #ffffff;
   top: 50%;
   left: 50%;
 }
@@ -158,7 +168,7 @@
 
 .error-message {
   font-family: 'Roboto Mono', monospace;
-  color: #ff0066;
+  color: #ffffff;
   font-size: 12px;
   text-align: center;
   max-width: 90%;

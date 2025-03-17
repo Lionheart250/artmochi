@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import './LazyImage.css';
 
 // Simple global state tracker
 if (typeof window !== 'undefined') {
@@ -238,21 +239,7 @@ const LazyImage = ({ src, alt, className, onClick, columnIndex, onLoadStart, onL
     >
       {/* Professional placeholder with animation */}
       {!isLoaded && (
-        <div className="lazy-image-placeholder">
-          <div className="placeholder-content">
-            <div className="placeholder-lines">
-              <div className="placeholder-line placeholder-line-1"></div>
-              <div className="placeholder-line placeholder-line-2"></div>
-              <div className="placeholder-line placeholder-line-3"></div>
-            </div>
-            <div className="placeholder-grid">
-              <div className="placeholder-grid-item"></div>
-              <div className="placeholder-grid-item"></div>
-              <div className="placeholder-grid-item"></div>
-              <div className="placeholder-grid-item"></div>
-            </div>
-          </div>
-        </div>
+        <div className="lazy-image-placeholder"></div>
       )}
       
       {/* Stylish error state */}
