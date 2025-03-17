@@ -6,7 +6,6 @@ import './Settings.css';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useSubscription } from '../features/subscriptions/store/SubscriptionContext';
 import '../components/GeometricEffects.css';
-import '../components/ChromeEffects.css';
 
 const validatePassword = (password) => {
     const requirements = {
