@@ -32,9 +32,6 @@ const LazyImage = ({ src, alt, className, onClick, columnIndex, onLoadStart, onL
   const isMobile = typeof window !== 'undefined' && window.__imageLoadingState ? 
     window.__imageLoadingState.isMobile : false;
   
-  // Base64 encoded simple dark gradient placeholder
-  const placeholderImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAEhgJAi2Nw0wAAAABJRU5ErkJggg==";
-  
   // Notify parent when starting load
   useEffect(() => {
     if (isInView && !isLoaded && !hasError && typeof onLoadStart === 'function') {
@@ -201,6 +198,37 @@ const LazyImage = ({ src, alt, className, onClick, columnIndex, onLoadStart, onL
     return `${apiUrl}?url=${encodeURIComponent(originalUrl)}&width=${width || targetWidth}`;
   }
 
+  // Update your error handling in the img onError handler
+  function handleImageError() {
+    if (canvasDataUrl) {
+      setCanvasDataUrl(null);
+      
+      // Try original source next
+      if (!displayOriginal) {
+        setDisplayOriginal(true);
+        return; // Don't mark as error yet, try original first
+      }
+    }
+    
+    // Only mark as error if both canvas and original src fail
+    setHasError(true);
+    setIsLoaded(true);
+  }
+  
+  // Add a function to get appropriate src with fallbacks
+  function getImageSource() {
+    if (canvasDataUrl) {
+      return canvasDataUrl;
+    }
+    
+    if (displayOriginal) {
+      return src;
+    }
+    
+    // Use optimized URL by default
+    return getOptimizedUrl(src);
+  }
+
   return (
     <div 
       ref={containerRef}
@@ -208,24 +236,38 @@ const LazyImage = ({ src, alt, className, onClick, columnIndex, onLoadStart, onL
       onClick={onClick}
       style={{ position: 'relative', overflow: 'hidden' }}
     >
-      {(!isLoaded || !isInView) && (
-        <div className="lazy-image-placeholder" 
-          style={{
-            backgroundImage: `url(${placeholderImage})`,
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'rgba(10, 5, 20, 0.2)'
-          }} 
-        />
+      {/* Professional placeholder with animation */}
+      {!isLoaded && (
+        <div className="lazy-image-placeholder">
+          <div className="placeholder-content">
+            <div className="placeholder-lines">
+              <div className="placeholder-line placeholder-line-1"></div>
+              <div className="placeholder-line placeholder-line-2"></div>
+              <div className="placeholder-line placeholder-line-3"></div>
+            </div>
+            <div className="placeholder-grid">
+              <div className="placeholder-grid-item"></div>
+              <div className="placeholder-grid-item"></div>
+              <div className="placeholder-grid-item"></div>
+              <div className="placeholder-grid-item"></div>
+            </div>
+          </div>
+        </div>
       )}
       
-      {isInView && (
+      {/* Stylish error state */}
+      {hasError && (
+        <div className="lazy-image-error">
+          <div className="error-icon"></div>
+          <div className="error-message">{alt || 'Image could not be loaded'}</div>
+        </div>
+      )}
+      
+      {/* Image itself - hidden until loaded */}
+      {isInView && !hasError && (
         <img
           ref={imgRef}
-          src={canvasDataUrl || getOptimizedUrl(src)} // Always use canvas data URL or optimized src
+          src={getImageSource()}
           alt={alt}
           className={`lazy-image ${isLoaded ? 'loaded' : 'loading'}`}
           style={{
@@ -239,15 +281,7 @@ const LazyImage = ({ src, alt, className, onClick, columnIndex, onLoadStart, onL
           onLoad={() => {
             if (!isLoaded) setIsLoaded(true);
           }}
-          onError={() => {
-            if (canvasDataUrl) {
-              setCanvasDataUrl(null); // Try original if optimized fails
-              setDisplayOriginal(true);
-            } else {
-              setHasError(true);
-              setIsLoaded(true);
-            }
-          }}
+          onError={handleImageError}
         />
       )}
     </div>
