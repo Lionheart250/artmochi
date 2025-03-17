@@ -34,7 +34,7 @@ const path = require('path');
 const fs = require('fs');
 const helmet = require('helmet');
 const { uploadToS3 } = require('./src/config/s3');
-const { S3Client, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, DeleteObjectCommand, HeadObjectCommand } = require('@aws-sdk/client-s3');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const { categorizeImage } = require('./services/imageService');
@@ -79,67 +79,93 @@ const corsOptions = {
 
 // Add this after your imports and before your routes
 const getOptimizedImage = async (imageUrl, options = {}) => {
+  try {
+    const {
+      width = null,
+      format = 'webp',
+      quality = 80
+    } = options;
+    
+    // Create a consistent cache key based on the original URL and optimization parameters
+    const urlHash = crypto.createHash('md5').update(imageUrl).digest('hex');
+    const cacheKey = `optimized/${urlHash}-${width || 'orig'}.${format}`;
+    
+    // Check if this optimized version already exists in S3
     try {
-      const {
-        width = null,
-        format = 'webp',
-        quality = 80
-      } = options;
-      
-      // Download the original image
-      const response = await axios({
-        url: imageUrl,
-        responseType: 'arraybuffer'
-      });
-      
-      // Process with Sharp
-      let sharpInstance = sharp(response.data);
-      
-      // Get original metadata
-      const metadata = await sharpInstance.metadata();
-      
-      // Resize if width is specified
-      if (width && width < metadata.width) {
-        sharpInstance = sharpInstance.resize({ 
-          width,
-          withoutEnlargement: true
-        });
-      }
-      
-      // Convert format
-      if (format === 'webp') {
-        sharpInstance = sharpInstance.webp({ quality });
-      } else if (format === 'jpeg' || format === 'jpg') {
-        sharpInstance = sharpInstance.jpeg({ quality });
-      } else if (format === 'avif') {
-        sharpInstance = sharpInstance.avif({ quality });
-      }
-      
-      // Process the image
-      const buffer = await sharpInstance.toBuffer();
-      
-      // Upload to S3
-      const key = `optimized/${Date.now()}-${crypto.randomUUID()}.${format}`;
-      const contentType = `image/${format}`;
-      const s3Result = await uploadToS3(buffer, key, contentType, {
-        CacheControl: 'public, max-age=31536000' // 1 year cache
-      });
-      
-      if (!s3Result.success) {
-        throw new Error('Failed to upload optimized image to S3');
-      }
-      
-      return {
-        url: s3Result.url,
-        width: metadata.width,
-        height: metadata.height,
-        format
+      const headParams = {
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: cacheKey
       };
-    } catch (error) {
-      console.error('Image optimization error:', error);
-      return { error: 'Failed to optimize image', originalUrl: imageUrl };
+      
+      // Try to get the object metadata (much faster than downloading)
+      await s3Client.send(new HeadObjectCommand(headParams));
+      
+      // If we get here, the optimized version exists - return its URL directly
+      console.log(`Cache hit for ${cacheKey}`);
+      return {
+        url: `https://${process.env.S3_BUCKET_NAME}.s3.amazonaws.com/${cacheKey}`,
+        cached: true,
+        width: width
+      };
+    } catch (err) {
+      // Object doesn't exist in S3, we'll need to create it
+      console.log(`Cache miss for ${cacheKey}, generating new optimized image`);
     }
-  };
+    
+    // Download the original image
+    const response = await axios({
+      url: imageUrl,
+      responseType: 'arraybuffer'
+    });
+    
+    // Process with Sharp
+    let sharpInstance = sharp(response.data);
+    
+    // Get original metadata
+    const metadata = await sharpInstance.metadata();
+    
+    // Resize if width is specified and image is larger
+    if (width && width < metadata.width) {
+      sharpInstance = sharpInstance.resize({ 
+        width,
+        withoutEnlargement: true
+      });
+    }
+    
+    // Convert format
+    if (format === 'webp') {
+      sharpInstance = sharpInstance.webp({ quality });
+    } else if (format === 'jpeg' || format === 'jpg') {
+      sharpInstance = sharpInstance.jpeg({ quality });
+    } else if (format === 'avif') {
+      sharpInstance = sharpInstance.avif({ quality });
+    }
+    
+    // Process the image
+    const buffer = await sharpInstance.toBuffer();
+    
+    // Upload to S3 with the cache key (consistent naming)
+    const contentType = `image/${format}`;
+    const s3Result = await uploadToS3(buffer, cacheKey, contentType, {
+      CacheControl: 'public, max-age=31536000' // 1 year cache
+    });
+    
+    if (!s3Result.success) {
+      throw new Error('Failed to upload optimized image to S3');
+    }
+    
+    return {
+      url: s3Result.url,
+      width: width || metadata.width,
+      height: metadata.height,
+      format,
+      cached: false
+    };
+  } catch (error) {
+    console.error('Image optimization error:', error);
+    return { error: 'Failed to optimize image', originalUrl: imageUrl };
+  }
+};
 
 // 1. First, move the CORS setup to the very top of your middleware stack
 app.use(cors(corsOptions));
