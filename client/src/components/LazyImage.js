@@ -3,10 +3,16 @@ import React, { useState, useEffect, useRef } from 'react';
 // Simple global state tracker
 if (typeof window !== 'undefined') {
   if (!window.__imageLoadingState) {
+    // Detect if mobile
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+    
     window.__imageLoadingState = {
       // Track concurrent loads
       activeLoads: 0,
-      maxConcurrent: 8
+      maxConcurrent: isMobile ? 4 : 8,
+      isMobile: isMobile
     };
   }
 }
@@ -16,11 +22,15 @@ const LazyImage = ({ src, alt, className, onClick, columnIndex, onLoadStart, onL
   const [isInView, setIsInView] = useState(false);
   const [canvasDataUrl, setCanvasDataUrl] = useState(null);
   const [hasError, setHasError] = useState(false);
-  const [displayOriginal, setDisplayOriginal] = useState(false);
+  const [displayOriginal, setDisplayOriginal] = useState(true); // DEFAULT TO TRUE until server endpoint exists
   const containerRef = useRef(null);
   const isProcessingRef = useRef(false);
   const imgRef = useRef(null);
   const hasStartedLoadingRef = useRef(false);
+  
+  // Add this line to define isMobile
+  const isMobile = typeof window !== 'undefined' && window.__imageLoadingState ? 
+    window.__imageLoadingState.isMobile : false;
   
   // Base64 encoded simple dark gradient placeholder
   const placeholderImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAEhgJAi2Nw0wAAAABJRU5ErkJggg==";
@@ -63,7 +73,7 @@ const LazyImage = ({ src, alt, className, onClick, columnIndex, onLoadStart, onL
         setIsInView(true);
         observer.disconnect();
       }
-    }, 500); // half second fallback
+    }, 500); // half second fallbackk
     
     return () => {
       if (observer) observer.disconnect();
@@ -153,7 +163,6 @@ const LazyImage = ({ src, alt, className, onClick, columnIndex, onLoadStart, onL
           
           // Make sure we call the callback with the column index
           if (typeof onLoadComplete === 'function') {
-            console.log(`Image in column ${columnIndex} loaded, calling completion callback`);
             onLoadComplete(columnIndex);
           }
         }
@@ -171,10 +180,26 @@ const LazyImage = ({ src, alt, className, onClick, columnIndex, onLoadStart, onL
         }
       };
       
-      // Start loading the image
+      // Start loading the image - use original since optimization API doesn't exist yet
       img.src = src;
     }
   }, [isInView, isLoaded, hasError, src, columnIndex, onLoadStart, onLoadComplete]);
+
+  function getOptimizedUrl(originalUrl, width = null) {
+    // Skip optimization for data URLs or already optimized images
+    if (originalUrl.startsWith('data:') || originalUrl.includes('/optimized-image')) {
+      return originalUrl;
+    }
+    
+    // Use smaller images for mobile
+    const isMobile = typeof window !== 'undefined' && window.__imageLoadingState ? 
+      window.__imageLoadingState.isMobile : false;
+      
+    const targetWidth = isMobile ? 600 : 1200;
+    
+    const apiUrl = `${process.env.REACT_APP_API_URL}/optimized-image`;
+    return `${apiUrl}?url=${encodeURIComponent(originalUrl)}&width=${width || targetWidth}`;
+  }
 
   return (
     <div 
@@ -200,7 +225,7 @@ const LazyImage = ({ src, alt, className, onClick, columnIndex, onLoadStart, onL
       {isInView && (
         <img
           ref={imgRef}
-          src={canvasDataUrl || src}
+          src={canvasDataUrl || getOptimizedUrl(src)} // Always use canvas data URL or optimized src
           alt={alt}
           className={`lazy-image ${isLoaded ? 'loaded' : 'loading'}`}
           style={{

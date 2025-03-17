@@ -1,5 +1,10 @@
 const { RekognitionClient, DetectLabelsCommand } = require('@aws-sdk/client-rekognition');
 const fetch = require('node-fetch');  // Add this import
+const sharp = require('sharp');
+const axios = require('axios');
+const { uploadToS3 } = require('../src/config/s3');
+const path = require('path');
+const crypto = require('crypto');
 
 const rekognition = new RekognitionClient({
     region: process.env.AWS_REGION,
@@ -61,7 +66,6 @@ const getImageAspectRatio = async (imageUrl) => {
         const buffer = Buffer.from(arrayBuffer);
         
         // Use sharp to get image dimensions
-        const sharp = require('sharp');
         const metadata = await sharp(buffer).metadata();
         
         const { width, height } = metadata;
@@ -139,8 +143,108 @@ const detectContentCategories = async (imageUrl) => {
     }
 };
 
+// Add this new function to your imageService.js
+const getOptimizedImage = async (imageUrl, options = {}) => {
+  try {
+    const {
+      width = null,
+      format = 'webp',
+      quality = 80,
+      generateThumbnail = false
+    } = options;
+    
+    // Check if we already have a cached optimized version
+    const urlHash = crypto.createHash('md5').update(`${imageUrl}-w${width}-f${format}-q${quality}`).digest('hex');
+    const cacheKey = `optimized/${urlHash}.${format}`;
+    
+    // First check if this optimized version already exists in S3
+    try {
+      const headParams = {
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: cacheKey
+      };
+      
+      // Try to get the object
+      await s3Client.send(new HeadObjectCommand(headParams));
+      
+      // If this succeeds, the optimized version exists, return the URL
+      return {
+        url: `https://${process.env.S3_BUCKET_NAME}.s3.amazonaws.com/${cacheKey}`,
+        fromCache: true
+      };
+    } catch (err) {
+      // Object doesn't exist - we'll create it
+    }
+    
+    // Download the original image
+    const response = await axios({
+      url: imageUrl,
+      responseType: 'arraybuffer'
+    });
+    
+    // Process with Sharp
+    let sharpInstance = sharp(response.data);
+    
+    // Get original metadata
+    const metadata = await sharpInstance.metadata();
+    
+    // Resize if width is specified
+    if (width && width < metadata.width) {
+      sharpInstance = sharpInstance.resize({ 
+        width,
+        withoutEnlargement: true
+      });
+    }
+    
+    // Convert format
+    if (format === 'webp') {
+      sharpInstance = sharpInstance.webp({ quality });
+    } else if (format === 'jpeg' || format === 'jpg') {
+      sharpInstance = sharpInstance.jpeg({ quality });
+    } else if (format === 'avif') {
+      sharpInstance = sharpInstance.avif({ quality });
+    }
+    
+    // Process the image
+    const buffer = await sharpInstance.toBuffer();
+    
+    // Upload to S3
+    const contentType = `image/${format}`;
+    const s3Result = await uploadToS3(buffer, cacheKey, contentType, {
+      CacheControl: 'public, max-age=31536000' // 1 year cache
+    });
+    
+    // If requested, also generate a small thumbnail for faster initial loading
+    if (generateThumbnail) {
+      const thumbWidth = Math.min(metadata.width, 100);
+      const thumbnail = await sharp(response.data)
+        .resize({ width: thumbWidth })
+        .webp({ quality: 60 })
+        .toBuffer();
+      
+      const thumbKey = `thumbnails/${urlHash}-thumb.webp`;
+      await uploadToS3(thumbnail, thumbKey, 'image/webp', {
+        CacheControl: 'public, max-age=31536000'
+      });
+    }
+    
+    return {
+      url: s3Result.url,
+      width: metadata.width,
+      height: metadata.height,
+      format,
+      originalFormat: metadata.format,
+      fromCache: false
+    };
+  } catch (error) {
+    console.error('Image optimization error:', error);
+    return { error: 'Failed to optimize image', originalUrl: imageUrl };
+  }
+};
+
 module.exports = {
     categorizeImage,
     getImageAspectRatio,
-    categoryMapping
+    categoryMapping,
+    getOptimizedImage // New function export
 };

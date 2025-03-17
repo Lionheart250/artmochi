@@ -41,6 +41,9 @@ const { categorizeImage } = require('./services/imageService');
 const app = express();
 const port = process.env.PORT || 3000;
 const { Runware } = require('@runware/sdk-js');
+const spdy = require('spdy');
+const sharp = require('sharp');
+
 
 const s3Client = new S3Client({
     credentials: {
@@ -73,6 +76,70 @@ const corsOptions = {
     exposedHeaders: ['Content-Range', 'X-Content-Range'],
     maxAge: 86400 // 24 hours
 };
+
+// Add this after your imports and before your routes
+const getOptimizedImage = async (imageUrl, options = {}) => {
+    try {
+      const {
+        width = null,
+        format = 'webp',
+        quality = 80
+      } = options;
+      
+      // Download the original image
+      const response = await axios({
+        url: imageUrl,
+        responseType: 'arraybuffer'
+      });
+      
+      // Process with Sharp
+      let sharpInstance = sharp(response.data);
+      
+      // Get original metadata
+      const metadata = await sharpInstance.metadata();
+      
+      // Resize if width is specified
+      if (width && width < metadata.width) {
+        sharpInstance = sharpInstance.resize({ 
+          width,
+          withoutEnlargement: true
+        });
+      }
+      
+      // Convert format
+      if (format === 'webp') {
+        sharpInstance = sharpInstance.webp({ quality });
+      } else if (format === 'jpeg' || format === 'jpg') {
+        sharpInstance = sharpInstance.jpeg({ quality });
+      } else if (format === 'avif') {
+        sharpInstance = sharpInstance.avif({ quality });
+      }
+      
+      // Process the image
+      const buffer = await sharpInstance.toBuffer();
+      
+      // Upload to S3
+      const key = `optimized/${Date.now()}-${crypto.randomUUID()}.${format}`;
+      const contentType = `image/${format}`;
+      const s3Result = await uploadToS3(buffer, key, contentType, {
+        CacheControl: 'public, max-age=31536000' // 1 year cache
+      });
+      
+      if (!s3Result.success) {
+        throw new Error('Failed to upload optimized image to S3');
+      }
+      
+      return {
+        url: s3Result.url,
+        width: metadata.width,
+        height: metadata.height,
+        format
+      };
+    } catch (error) {
+      console.error('Image optimization error:', error);
+      return { error: 'Failed to optimize image', originalUrl: imageUrl };
+    }
+  };
 
 // 1. First, move the CORS setup to the very top of your middleware stack
 app.use(cors(corsOptions));
@@ -1107,6 +1174,45 @@ app.post('/images', cors(corsOptions), optionalAuthenticateToken, async (req, re
         res.status(500).json({ error: 'Database error' });
     }
 });
+
+app.get('/optimized-image', async (req, res) => {
+    try {
+      const { url, width, format = 'webp', quality = 80 } = req.query;
+      
+      if (!url) {
+        return res.status(400).json({ error: 'URL parameter is required' });
+      }
+      
+      // Detect if request is from mobile
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        req.headers['user-agent']
+      );
+      
+      // Default widths based on device type
+      let targetWidth = width ? parseInt(width) : null;
+      if (!targetWidth && isMobile) {
+        targetWidth = 600; // Default for mobile devices
+      } else if (!targetWidth) {
+        targetWidth = 1200; // Default for desktop
+      }
+      
+      const result = await getOptimizedImage(url, {
+        width: targetWidth,
+        format,
+        quality: parseInt(quality)
+      });
+      
+      if (result.error) {
+        return res.status(500).json({ error: result.error });
+      }
+      
+      // Redirect to the optimized image URL
+      res.redirect(result.url);
+    } catch (error) {
+      console.error('Image optimization error:', error);
+      res.status(500).json({ error: 'Failed to serve optimized image' });
+    }
+  });
 
 app.get('/categories', cors(corsOptions), async (req, res) => {
     try {
@@ -3227,8 +3333,16 @@ const ensureFreeTierFallback = async (client, userId) => {
     }
 };
 
-// Start server
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+// Start the server
+if (process.env.NODE_ENV === 'production') {
+  // Let Railway handle HTTPS
+  app.listen(port, () => {
+    console.log(`Server running on port ${port} with Railway-provided SSL`);
   });
+} else {
+  // Development environment - simple HTTP server
+  app.listen(port, () => {
+    console.log(`HTTP server running on port ${port}`);
+  });
+}
 

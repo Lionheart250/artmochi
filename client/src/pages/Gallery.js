@@ -1474,6 +1474,81 @@ useEffect(() => {
         }
     }, [galleryState, page]);
     
+    // Add this function after your component declarations
+
+const ImageLoader = {
+    queue: [],
+    activeLoads: 0,
+    maxConcurrent: 4,
+    priorityThreshold: 500, // px from viewport edge
+    
+    init() {
+      // Reset on page load
+      this.queue = [];
+      this.activeLoads = 0;
+    },
+    
+    add(imageObj, priority = 0) {
+      // Add to queue with priority (0 = highest)
+      this.queue.push({ imageObj, priority });
+      this.queue.sort((a, b) => a.priority - b.priority);
+      this.processQueue();
+    },
+    
+    processQueue() {
+      if (this.activeLoads >= this.maxConcurrent || this.queue.length === 0) return;
+      
+      const { imageObj } = this.queue.shift();
+      this.activeLoads++;
+      
+      // Start loading the image
+      const img = new Image();
+      img.onload = img.onerror = () => {
+        this.activeLoads--;
+        this.processQueue();
+      };
+      img.src = imageObj.url;
+    },
+    
+    prioritize(imageId) {
+      // Move an image to the front of the queue
+      const index = this.queue.findIndex(item => item.imageObj.id === imageId);
+      if (index !== -1) {
+        const item = this.queue[index];
+        item.priority = -1; // Highest priority
+        this.queue.splice(index, 1);
+        this.queue.unshift(item);
+      }
+    }
+  };
+  
+  // Initialize on component mount
+  useEffect(() => {
+    ImageLoader.init();
+  }, []);
+  
+  // Update your useInView hook to prioritize images
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          const imageId = entry.target.dataset.imageId;
+          if (entry.isIntersecting) {
+            // Prioritize this image
+            ImageLoader.prioritize(imageId);
+          }
+        });
+      },
+      { rootMargin: '200px' }
+    );
+    
+    // Observe all image containers
+    document.querySelectorAll('.gallery-item').forEach(el => {
+      observer.observe(el);
+    });
+    
+    return () => observer.disconnect();
+  }, [images]);
 
     return (
         <div className="gallery-page">
