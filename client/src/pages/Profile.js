@@ -95,6 +95,7 @@ const Profile = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [images, setImages] = useState([]);
     const [modalImage, setModalImage] = useState(null);
+    const [selectedImage, setSelectedImage] = useState(null); 
     const [activeImageId, setActiveImageId] = useState(null);
     const [likes, setLikes] = useState({});
     const [comments, setComments] = useState({});
@@ -1210,14 +1211,32 @@ const fetchPaginatedImages = async (pageNum) => {
         
         const data = await response.json();
         
-        if (data.images.length === 0) {
+        // Check if we received fewer images than requested (indicating end of data)
+        if (data.images.length === 0 || data.images.length < imagesPerPage) {
             setHasMore(false);
+        }
+        
+        // IMPORTANT: Check for duplicate images before adding to state
+        if (pageNum === 1) {
+            // For first page, just set the images
+            setImages(data.images);
         } else {
-            // Append new images rather than replacing
-            setImages(prev => pageNum === 1 ? data.images : [...prev, ...data.images]);
+            // For subsequent pages, filter out duplicates
+            setImages(prev => {
+                const existingIds = new Set(prev.map(img => img.id));
+                const newImages = data.images.filter(img => !existingIds.has(img.id));
+                
+                // If we got no new unique images, we've reached the end
+                if (newImages.length === 0) {
+                    setHasMore(false);
+                }
+                
+                return [...prev, ...newImages];
+            });
         }
     } catch (error) {
         console.error('Error fetching paginated images:', error);
+        setHasMore(false); // Stop trying on error
     } finally {
         setLoading(false);
         loadingInProgress.current = false;
@@ -1273,23 +1292,26 @@ const fetchProfileData = async () => {
 useEffect(() => {
     const observer = new IntersectionObserver(
         (entries) => {
-            if (entries[0].isIntersecting && hasMore && !loading && !loadingInProgress.current) {
-                setPage(prev => prev + 1);
+            const entry = entries[0];
+            if (entry && entry.isIntersecting && hasMore && !loading && !loadingInProgress.current) {
+                console.log('Loading next page', page + 1);
+                setPage(prevPage => prevPage + 1);
             }
         },
-        { threshold: 0.1 }
+        { threshold: 0.1, rootMargin: '200px' }
     );
     
-    if (loadingRef.current) {
-        observer.observe(loadingRef.current);
+    const currentRef = loadingRef.current;
+    if (currentRef) {
+        observer.observe(currentRef);
     }
     
     return () => {
-        if (loadingRef.current) {
-            observer.unobserve(loadingRef.current);
+        if (currentRef) {
+            observer.unobserve(currentRef);
         }
     };
-}, [hasMore, loading]);
+}, [hasMore, loading, page]); // Added page as dependency
 
 // Effect to fetch when page changes
 useEffect(() => {
@@ -1300,11 +1322,19 @@ useEffect(() => {
 
 // Update the tab handling to reset pagination
 const handleTabChange = (tab) => {
-    setActiveTab(tab);
-    setPage(1);
-    setHasMore(true);
+    if (tab === activeTab) return; // Don't change if already active
     
-    if (tab === 'likes' && isOwnProfile) {
+    setActiveTab(tab);
+    setPage(1); // Reset to page 1
+    setHasMore(true); // Reset hasMore flag
+    setImages([]); // Clear current images
+    
+    // Fetch appropriate data based on tab
+    if (tab === 'posts') {
+        fetchPaginatedImages(1); // Fetch first page of posts
+    } else if (tab === 'private' && isOwnProfile) {
+        fetchPaginatedImages(1); // This will filter private images in render
+    } else if (tab === 'likes' && isOwnProfile) {
         fetchLikedImagesWithDetails(1);
     }
 };

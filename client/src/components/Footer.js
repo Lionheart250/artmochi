@@ -115,34 +115,13 @@ const Footer = () => {
             {/* Footer content remains the same */}
             <div className="footer-content">
                 {/* Tech "data packets" */}
-                {dataPackets.map(packet => (
-                    <div 
-                        key={packet.id}
-                        className="footer-data-packet"
-                        style={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '0%',
-                            width: '8px',
-                            height: '3px',
-                            background: 'rgba(0, 210, 255, 0.9)',
-                            borderRadius: '4px',
-                            boxShadow: '0 0 10px rgba(0, 210, 255, 0.7)',
-                            transform: 'translateY(-50%)',
-                            animation: `data-travel ${6/packet.speed}s linear forwards`,
-                            animationDelay: `${Math.random() * 0.5}s`,
-                            zIndex: 10
-                        }}
-                    />
-                ))}
-                
                 <div className="footer-brand">
                     <h3>ArtMochi</h3>
                 </div>
                 <div className="footer-links">
                     <a href="/about">About</a>
                     <a href="/privacy">Privacy</a>
-                    <a href="/terms">Terms</a>
+                    <a href="/terms" className="terms-link">Terms</a> {/* Add specific class */}
                 </div>
                 
                 {/* Circuit node points */}

@@ -1,8 +1,13 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 
 const LiquidMetal = () => {
   const mountRef = useRef(null);
+  const [isReady, setIsReady] = useState(false);
+  const rendererRef = useRef(null);
+  const sceneRef = useRef(null);
+  const uniformsRef = useRef(null);
+  const resizeTimeoutRef = useRef(null);
   
   useEffect(() => {
     let scene, camera, renderer, uniforms, material, mesh;
@@ -12,14 +17,21 @@ const LiquidMetal = () => {
     const init = () => {
       // Create scene
       scene = new THREE.Scene();
+      sceneRef.current = scene;
       
       // Create camera (orthographic for full screen shader)
       camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
       
-      // Create renderer
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      // Create renderer with preserveDrawingBuffer to prevent flicker on scroll
+      renderer = new THREE.WebGLRenderer({ 
+        antialias: true, 
+        alpha: true,
+        preserveDrawingBuffer: true,
+        powerPreference: "high-performance"
+      });
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // Limit to 1.5 on mobile
+      rendererRef.current = renderer;
       
       // Replace any existing canvas
       if (mountRef.current.childNodes.length > 0) {
@@ -60,6 +72,7 @@ const LiquidMetal = () => {
         iridescenceStrength: { value: 0.2 },   // Color shifting amount
         streakIntensity: { value: 0.15 }       // Anisotropic streak amount
       };
+      uniformsRef.current = uniforms;
       
       // Enhanced shader material for hyper-reflective Sorayama chrome
       material = new THREE.ShaderMaterial({
@@ -222,27 +235,63 @@ const LiquidMetal = () => {
       mesh = new THREE.Mesh(geometry, material);
       scene.add(mesh);
       
-      // Add window resize handler
-      window.addEventListener('resize', onWindowResize);
+      // Detect if mobile
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        // Lower quality on mobile for better performance
+        renderer.setPixelRatio(1.0); // Force to 1.0 on mobile
+        uniforms.scale.value = 2.0; // Slightly larger scale for mobile
+      }
+
+      setIsReady(true);
     };
     
-    // Animation loop - slowed down for smoother reflections
+    // Simple animation loop - consistent speed regardless of scrolling
     const animate = () => {
-      uniforms.time.value += 0.004; // Slower movement for more realistic chrome
-      renderer.render(scene, camera);
+      // Always animate at constant speed
+      if (uniformsRef.current) {
+        uniformsRef.current.time.value += 0.003; // Keep consistent animation speed
+      }
+      
+      // Always render
+      if (rendererRef.current && sceneRef.current) {
+        rendererRef.current.render(sceneRef.current, camera);
+      }
+      
       animationFrameId = requestAnimationFrame(animate);
     };
-    
-    // Handle window resize
+
+    // Simplified - just keep track of window dimensions for rendering quality
     const onWindowResize = () => {
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      uniforms.resolution.value.x = window.innerWidth;
-      uniforms.resolution.value.y = window.innerHeight;
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+      
+      // Use a timeout to limit resize operations on mobile
+      resizeTimeoutRef.current = setTimeout(() => {
+        if (rendererRef.current && uniformsRef.current) {
+          const width = window.innerWidth;
+          const height = window.innerHeight;
+          
+          rendererRef.current.setSize(width, height);
+          uniformsRef.current.resolution.value.x = width;
+          uniformsRef.current.resolution.value.y = height;
+        }
+      }, 300);
     };
     
     // Initialize and start animation
     init();
     animate();
+    
+    // Add event listeners
+    window.addEventListener('resize', onWindowResize);
+    
+    // Setup viewport meta tag for mobile
+    const viewportMeta = document.createElement('meta');
+    viewportMeta.name = 'viewport';
+    viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+    document.head.appendChild(viewportMeta);
     
     // Cleanup on unmount
     return () => {
@@ -250,11 +299,29 @@ const LiquidMetal = () => {
       cancelAnimationFrame(animationFrameId);
       if (mesh) scene.remove(mesh);
       if (material) material.dispose();
-      renderer.dispose();
+      if (renderer) renderer.dispose();
+      document.head.removeChild(viewportMeta);
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
     };
   }, []);
   
-  return <div ref={mountRef} className="liquid-metal-container" />;
+  return (
+    <div 
+      ref={mountRef} 
+      className="liquid-metal-container" 
+      style={{
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        width: '100%', 
+        height: '100%',
+        zIndex: -1,
+        overflow: 'hidden'
+      }}
+    />
+  );
 };
 
 export default LiquidMetal;

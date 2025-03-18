@@ -243,8 +243,8 @@ body.holographic-cursor::after {
   min-width: 380px; /* Prevent shrinking */
   padding: 0; /* Remove padding from main container */
   overflow: hidden; /* Handle overflow in child containers */
-  background: var(--bg-secondary); /* Use your site's secondary background */
-  border-left: 1px solid rgba(var(--circuit-blue-rgb), 0.2);
+  background: rgba(22, 22, 25, 0.95); /* Slightly lighter than pure black */
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -321,7 +321,8 @@ body.holographic-cursor::after {
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  color: var(--text-primary);
+  color: rgba(255, 255, 255, 0.95); /* Almost white */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
   display: inline-block;
 }
 
@@ -332,7 +333,7 @@ body.holographic-cursor::after {
 
 .image-creation-date {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.7); /* Light gray */
 }
 
 /* Better organization of info content - more TikTok-like */
@@ -348,6 +349,8 @@ body.holographic-cursor::after {
   padding: 20px;
   border-bottom: 1px solid rgba(var(--circuit-blue-rgb), 0.2);
   flex-shrink: 0; /* Prevent header from shrinking */
+  background: rgba(28, 28, 32, 0.9); /* Slightly lighter than the panel */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* Better content area - scrollable with padding */
@@ -377,16 +380,24 @@ body.holographic-cursor::after {
 .image-modal-prompt {
   margin-bottom: 20px;
   flex-shrink: 0; /* Prevent these sections from shrinking */
+  position: relative;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
 }
 
 .prompt-text {
   font-size: 15px;
   line-height: 1.5;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.85); /* Lighter text color */
   max-height: 80px;
   overflow: hidden;
   position: relative;
   transition: max-height 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+  line-height: 1.5;
+  background: rgba(35, 35, 40, 0.5); /* Subtle background for contrast */
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .prompt-text.expanded {
@@ -443,13 +454,21 @@ body.holographic-cursor::after {
 .image-modal-loras {
   margin-bottom: 20px;
   flex-shrink: 0; /* Prevent these sections from shrinking */
+  position: relative;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
 }
 
 .metadata-heading {
   font-size: 15px;
   font-weight: 500;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.9);
   margin-bottom: 10px;
+  font-weight: 500;
+  font-size: 15px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
 }
 
 .lora-pills {
@@ -468,6 +487,11 @@ body.holographic-cursor::after {
   font-size: 13px;
   display: inline-block;
   transition: all 0.2s ease;
+  background: rgba(40, 40, 45, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.9);
+  padding: 5px 12px;
+  margin-bottom: 4px;
 }
 
 .lora-pill:hover {
@@ -475,6 +499,8 @@ body.holographic-cursor::after {
   border-color: rgba(var(--circuit-blue-rgb), 0.5);
   transform: translateY(-2px);
   box-shadow: 0 3px 10px rgba(var(--circuit-blue-rgb), 0.15);
+  background: rgba(50, 50, 55, 0.9);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 /* Categories section */
@@ -630,6 +656,9 @@ body.holographic-cursor::after {
   display: flex;
   flex-direction: column;
   flex: 1;
+  position: relative;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
 }
 
 .image-comments-heading {
@@ -639,6 +668,12 @@ body.holographic-cursor::after {
   color: var(--text-primary);
   padding-bottom: 5px;
   border-bottom: 1px solid rgba(var(--circuit-blue-rgb), 0.1);
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  font-size: 15px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
 }
 
 .image-comments-list {
@@ -662,6 +697,11 @@ body.holographic-cursor::after {
   opacity: 1;
   visibility: visible;
   animation: commentIn 0.4s ease-out forwards;
+  background: rgba(40, 40, 45, 0.6); /* Slightly lighter than background */
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 10px;
 }
 
 .image-comment-item:hover {
@@ -717,6 +757,8 @@ body.holographic-cursor::after {
   color: var(--text-primary);
   cursor: pointer;
   transition: color 0.2s ease;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
 }
 
 .image-comment-username:hover {
@@ -731,7 +773,8 @@ body.holographic-cursor::after {
 .image-comment-text {
   font-size: 14px;
   line-height: 1.4;
-  color: var(--text-primary); /* Use primary text color */
+  color: rgba(255, 255, 255, 0.85); /* Much lighter than before */
+  line-height: 1.4;
   margin: 4px 0 6px;
   white-space: normal; /* Allow text wrapping */
   word-break: break-word; /* Break long words */
@@ -793,6 +836,9 @@ body.holographic-cursor::after {
   padding: 0;
   width: 100%;
   display: flex;
+  background: rgba(30, 30, 35, 0.95); /* Slightly lighter background */
+  padding: 12px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .image-comment-input {
@@ -813,6 +859,9 @@ body.holographic-cursor::after {
   color: white;
   font-size: 14px;
   transition: all 0.2s ease;
+  background: rgba(45, 45, 50, 0.8); /* Much lighter input field */
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .image-comment-input:focus {
@@ -824,6 +873,8 @@ body.holographic-cursor::after {
   background: rgba(30, 10, 60, 0.6);
   border-color: rgba(var(--circuit-blue-rgb), 0.6);
   box-shadow: 0 0 15px rgba(var(--circuit-blue-rgb), 0.2);
+  background: rgba(55, 55, 60, 0.9);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .image-comment-submit {
@@ -1050,10 +1101,18 @@ body.holographic-cursor::after {
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 20px;
+  background: rgba(35, 35, 40, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .image-side-action-btn.liked {
   color: rgb(255, 50, 120);
+}
+
+.image-side-action-btn:hover {
+  background: rgba(45, 45, 50, 0.9);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: scale(1.05);
 }
 
 .image-side-action-label {
@@ -1488,6 +1547,11 @@ body.holographic-cursor::after {
   margin-bottom: 10px;
   line-height: 1.3;
   flex-shrink: 0; /* Prevent these sections from shrinking */
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin-bottom: 12px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 /* Improve follow button for better visibility */
@@ -1501,6 +1565,12 @@ body.holographic-cursor::after {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  background: rgba(40, 40, 45, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.9);
+  padding: 4px 12px;
+  font-size: 13px;
+  border-radius: 4px;
 }
 
 .image-follow-btn:hover {
@@ -1511,6 +1581,9 @@ body.holographic-cursor::after {
 .image-follow-btn.following {
   background: rgba(255, 59, 92, 0.8);
   color: white;
+  background: rgba(255, 255, 255, 0.85);
+  color: rgba(20, 20, 25, 0.9);
+  font-weight: 600;
 }
 
 /* Toast notification for share success */

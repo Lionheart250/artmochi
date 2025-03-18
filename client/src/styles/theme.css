@@ -241,10 +241,17 @@ body {
 /* Interface Layer - now monochrome */
 .interface-layer {
   position: relative;
+  background: var(--bg-main);
+  border: 1px solid var(--border-light);
   padding: 4vh 4vw;
+  backdrop-filter: blur(5px);
+  box-shadow: 
+    0 0 30px rgba(0, 0, 0, 0.8),
+    0 0 50px rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  animation: subtle-pulse 8s ease-in-out infinite;
   z-index: var(--z-interface);
 }
 
@@ -369,7 +376,7 @@ body {
 .content-frame {
   position: relative;
   padding: 4vh 3vw;
-  background: #000000;
+  background: var(--bg-element);
   border: 1px solid var(--border-light);
   margin: 2vh 0 3vh;
   flex-grow: 1;

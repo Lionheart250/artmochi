@@ -139,12 +139,35 @@
 }
 
 .footer-links a {
-    color: rgba(255, 255, 255, 0.8);
-    text-decoration: none;
-    font-size: 14px;
-    transition: all 0.3s ease;
     position: relative;
-    padding: 0 2px;
+    text-decoration: none;
+    margin: 0 15px;
+    color: rgba(255, 255, 255, 0.8);
+    transition: color 0.3s ease;
+}
+
+/* Remove any decoration above the links */
+.footer-links a::before,
+.footer-links a::after {
+    display: none;
+}
+
+/* Add proper hover underline effect that only appears on hover */
+.footer-links a:hover::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -3px; /* Position below text */
+    width: 100%;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.9);
+    transform: scaleX(1);
+    transition: transform 0.3s ease;
+}
+
+/* Specific fix for the terms link if needed */
+.footer-links a.terms-link::before {
+    display: none !important;
 }
 
 .footer-links a:hover {
@@ -289,16 +312,53 @@
         left: 0%; 
         opacity: 0; 
     }
-    10% { 
+    5% { 
+        left: 5%;
         opacity: 1; 
     }
-    90% { 
+    95% { 
+        left: 95%;
         opacity: 1; 
     }
     100% { 
         left: 100%; 
         opacity: 0; 
     }
+}
+
+/* Data packets - keep existing styling but ensure animation duration is enough */
+.footer-data-packet {
+    position: absolute;
+    top: 50%;
+    left: 0%;
+    width: 8px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.9) !important; /* White instead of cyan */
+    border-radius: 4px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.7) !important; /* White glow instead of cyan */
+    transform: translateY(-50%);
+    animation: data-travel 8s linear forwards; /* Explicitly set duration here */
+    z-index: 10;
+}
+
+/* Circuit nodes - updated to monochromatic */
+.circuit-node-left, .circuit-node-right {
+    position: absolute;
+    top: 50%;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.7) !important; /* White instead of cyan */
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.5) !important; /* White glow instead of cyan */
+    transform: translateY(-50%);
+}
+
+.circuit-node-left {
+    left: 5%;
+}
+
+.circuit-node-right {
+    right: 5%;
 }
 
 /* Add responsive styles */
