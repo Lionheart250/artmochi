@@ -79,7 +79,7 @@ const SideHeader = ({
                                 <span className="side-nav-text">Settings</span>
                             </NavLink>
                             <button 
-                                className="side-nav-link more-menu-button" 
+                                className="side-nav-link more-menu-button"
                                 onClick={toggleMoreMenu}
                                 ref={moreButtonRef}
                             >

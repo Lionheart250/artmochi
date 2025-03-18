@@ -45,6 +45,80 @@
   touch-action: none; /* Prevents scrolling on touch */
 }
 
+/* ============= LIQUID METAL BACKGROUND ============= */
+.liquid-metal-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: var(--z-background);
+  pointer-events: none; /* Let interaction pass through */
+  overflow: hidden; /* Ensure no scrollbars */
+}
+
+.liquid-metal-container canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 1; /* Maximum opacity for true chrome look */
+  filter: contrast(1.4) brightness(1.1); /* Enhanced contrast */
+}
+
+/* ============= LIQUID METAL BACKGROUND - SORAYAMA CHROME STYLE ============= */
+.liquid-metal-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: var(--z-background);
+  pointer-events: none;
+  overflow: hidden; /* Ensure no scrollbars */
+}
+
+.liquid-metal-container canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 1; /* Maximum opacity for true chrome look */
+  filter: contrast(1.4) brightness(1.1); /* Enhanced contrast */
+}
+
+/* Add a subtle vignette to enhance the chrome effect */
+.liquid-metal-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 20%,
+    rgba(0, 0, 0, 0.9) 170%
+  );
+  pointer-events: none;
+}
+
+/* Add reflection hotspots for more realism */
+.liquid-metal-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.0) 0%, transparent 90%),
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 95%),
+    radial-gradient(circle at 40% 70%, rgba(255, 255, 255, 0.0) 0%, transparent 92%),
+    radial-gradient(circle at 65% 55%, rgba(255, 255, 255, 0.08) 0%, transparent 98%);
+  pointer-events: none;
+  z-index: 2;
+  mix-blend-mode: screen;
+}
+
 /* ============= CONTENT STRUCTURE ============= */
 .content-container {
   position: relative;
@@ -55,35 +129,17 @@
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - var(--header-height));
+
 }
 
 /* Main Interface Layer */
 .interface-layer {
   position: relative;
-  background: var(--bg-main);
   border: 1px solid var(--border-light);
   padding: 4vh 4vw;
-  backdrop-filter: blur(5px);
-  box-shadow: 
-    0 0 30px rgba(0, 0, 0, 0.8),
-    0 0 50px rgba(255, 255, 255, 0.05); /* Changed to white glow */
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  animation: subtle-pulse 8s ease-in-out infinite;
-}
-
-@keyframes subtle-pulse {
-  0%, 100% {
-    box-shadow: 
-      0 0 30px rgba(0, 0, 0, 0.8),
-      0 0 50px rgba(255, 255, 255, 0.05); /* Changed to white glow */
-  }
-  50% {
-    box-shadow: 
-      0 0 30px rgba(0, 0, 0, 0.8),
-      0 0 50px rgba(255, 255, 255, 0.1); /* Changed to white glow */
-  }
 }
 
 /* System Status Bar */

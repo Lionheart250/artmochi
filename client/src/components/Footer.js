@@ -1,30 +1,69 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import './Footer.css';
 
 const Footer = () => {
     const [isVisible, setIsVisible] = useState(false);
     const [dataPackets, setDataPackets] = useState([]);
+    const [shouldRender, setShouldRender] = useState(false);
     const location = useLocation();
+    const timeoutRef = useRef(null);
 
     useEffect(() => {
         const handleScroll = () => {
-            const scrollTop = window.scrollY;
+            // Get current scroll position
+            const scrollTop = window.scrollY || document.documentElement.scrollTop;
             const windowHeight = window.innerHeight;
             const documentHeight = document.documentElement.scrollHeight;
-
-            if (scrollTop + windowHeight >= documentHeight - 100) {
-                setIsVisible(true);
-            } else {
-                setIsVisible(false);
+            
+            // Check if user has scrolled to near bottom (within 20px)
+            const isNearBottom = scrollTop + windowHeight >= documentHeight - 20;
+            
+            // Update visibility state
+            setIsVisible(isNearBottom);
+            
+            // If becoming visible, ensure it's rendered
+            if (isNearBottom) {
+                setShouldRender(true);
+                if (timeoutRef.current) {
+                    clearTimeout(timeoutRef.current);
+                    timeoutRef.current = null;
+                }
+            } 
+            // If becoming invisible, delay the actual removal
+            else if (shouldRender) {
+                if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                timeoutRef.current = setTimeout(() => {
+                    setShouldRender(false);
+                }, 500); // Match this to your transition duration
             }
         };
 
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+        // Initial check in case user is already at bottom
+        handleScroll();
+        
+        // Add scroll event listener with throttle for performance
+        let scrollTimeout;
+        const throttledScroll = () => {
+            if (!scrollTimeout) {
+                scrollTimeout = setTimeout(() => {
+                    handleScroll();
+                    scrollTimeout = null;
+                }, 100);
+            }
+        };
+        
+        window.addEventListener('scroll', throttledScroll);
+        
+        // Clean up event listener
+        return () => {
+            window.removeEventListener('scroll', throttledScroll);
+            clearTimeout(scrollTimeout);
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        };
+    }, [shouldRender]);
 
-    // Create data packet animations
+    // Data packets effect remains the same
     useEffect(() => {
         if (!isVisible) return;
 
@@ -55,14 +94,27 @@ const Footer = () => {
     }, [isVisible, dataPackets.length]);
 
     // Only render footer on main pages
-    if (!['/', '/following'].includes(location.pathname)) {
+    if (!['/', '/following'].includes(location.pathname) || !shouldRender) {
         return null;
     }
 
     return (
-        <footer className={`footer bottom-footer ${isVisible ? 'visible' : ''}`}>
+        <footer 
+            className={`footer bottom-footer ${isVisible ? 'visible' : ''}`}
+            style={{
+                position: 'fixed',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                transform: `translateY(${isVisible ? '0' : '100%'})`,
+                transition: 'transform 0.5s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.5s cubic-bezier(0.165, 0.84, 0.44, 1)',
+                opacity: isVisible ? 1 : 0,
+                pointerEvents: isVisible ? 'auto' : 'none'
+            }}
+        >
+            {/* Footer content remains the same */}
             <div className="footer-content">
-                {/* Tech "data packets" that travel across footer */}
+                {/* Tech "data packets" */}
                 {dataPackets.map(packet => (
                     <div 
                         key={packet.id}
@@ -93,7 +145,7 @@ const Footer = () => {
                     <a href="/terms">Terms</a>
                 </div>
                 
-                {/* Circuit node points - purely decorative */}
+                {/* Circuit node points */}
                 <div className="circuit-node-left" style={{
                     position: 'absolute',
                     left: '5%',

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useProfile } from '../context/ProfileContext';
 import { useAuth } from '../context/AuthContext';
 import DitherBackground from '../components/DitherBackground';
+import LiquidMetal from '../components/LiquidMetal';
 import './Home.css';
 
 const Home = () => {
@@ -42,8 +43,8 @@ const Home = () => {
 
     return (
         <div className="home-container" ref={containerRef}>
-            {/* WebGL Dithered Background */}
-            <DitherBackground />
+            {/* Liquid Metal Background */}
+            <LiquidMetal />
             
             {/* Content Container */}
             <div className="content-container">

@@ -799,6 +799,65 @@ header::after,
     0 0 15px rgba(255, 255, 255, 0.3);
 }
 
+/* Fix the "More" menu button styling */
+.side-nav-link.more-menu-button {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  width: calc(100% - 16px);
+  text-align: left;
+  font-family: inherit;
+  font-size: inherit;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  margin: 0 8px;
+  border-radius: 6px;
+  height: 42px;
+  box-sizing: border-box;
+  margin-bottom: 8px;
+}
+
+/* Make sure hover styling matches other navigation items */
+.side-nav-link.more-menu-button:hover {
+  color: var(--accent);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Active state styling to match other nav items */
+.side-nav-link.more-menu-button.active,
+.drawer-open .side-nav-link.more-menu-button {
+  color: var(--accent) !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Make sure the icon is styled correctly */
+.side-nav-link.more-menu-button .nav-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+  opacity: 0.85;
+}
+
+/* Remove any specific :active state that might be causing the white/black highlight */
+.side-nav-link.more-menu-button:active {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--accent);
+  outline: none;
+}
+
+/* Add focus styling that matches the theme */
+.side-nav-link.more-menu-button:focus {
+  outline: none;
+}
+
 /* ========= Dropdown & More Menu ========= */
 
 .dropdown-menu {
