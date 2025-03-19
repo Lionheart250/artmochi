@@ -897,14 +897,12 @@ body.holographic-cursor::after {
 .image-side-actions {
   position: absolute;
   right: 20px;
-  bottom: 100px;
+  bottom: calc(120px + env(safe-area-inset-bottom, 20px));
   display: flex;
   flex-direction: column;
   gap: 15px;
   align-items: center;
   z-index: 10;
-  right: 20px;
-  bottom: 90px;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -1755,6 +1753,7 @@ body.holographic-cursor::after {
     transform: translateY(0);
     opacity: 1;
     pointer-events: auto;
+    padding-bottom: env(safe-area-inset-bottom, 20px);
   }
   
   .comments-close-button {
@@ -1825,6 +1824,7 @@ body.holographic-cursor::after {
     background: var(--bg-primary);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     padding: 15px;
+    padding-bottom: env(safe-area-inset-bottom, 0);
     z-index: 101;
   }
   
@@ -1992,13 +1992,13 @@ body.holographic-cursor::after {
 
   .mobile-info-container {
     position: absolute;
-    bottom: 0;
+    bottom: env(safe-area-inset-bottom, 0);
     left: 0;
     right: 0;
     margin-bottom: 3rem;
     width: 100%;
     padding: 15px;
-    padding-bottom: 60px;
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 20px));
     z-index: 20;
     transition: height 0.3s ease, background 0.3s ease;
     height: 130px; /* Default collapsed height */
@@ -2008,7 +2008,8 @@ body.holographic-cursor::after {
   /* When expanded, show all content */
   .mobile-info-container.expanded {
     height: auto;
-    max-height: 80vh;
+    max-height: 60vh;
+    bottom: env(safe-area-inset-bottom, 0);
     background: linear-gradient(
       to top,
       rgba(0, 0, 0, 0.95) 0%,
@@ -2018,7 +2019,7 @@ body.holographic-cursor::after {
     );
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 80px;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 20px));
   }
   
   /* Container for expandable content */
@@ -2052,7 +2053,7 @@ body.holographic-cursor::after {
   .mobile-info-toggle {
     position: absolute;
     right: 15px;
-    bottom: 20px;
+    bottom: calc(20px + env(safe-area-inset-bottom, 20px));
     width: 30px;
     height: 30px;
     display: flex;
@@ -2084,7 +2085,7 @@ body.holographic-cursor::after {
   /* Make sure mobile-user-info is always visible */
   .mobile-user-info {
     position: absolute;
-    bottom: 15px;
+    bottom: calc(20px + env(safe-area-inset-bottom, 20px));
     left: 15px;
     z-index: 30;
   }
@@ -2092,7 +2093,7 @@ body.holographic-cursor::after {
   /* Adjust title to be always visible */
   .mobile-image-title {
     position: absolute;
-    bottom: 75px;
+    bottom: calc(80px + env(safe-area-inset-bottom, 20px));
     left: 15px;
     max-width: 75%;
     z-index: 25;
