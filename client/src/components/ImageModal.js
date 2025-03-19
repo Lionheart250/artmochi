@@ -131,6 +131,18 @@ const ImageModal = ({
     }, 0);
   };
 
+  const handleUsernameClick = (userId) => {
+    if (!userId) return;
+    
+    // Close the modal first
+    handleClose();
+    
+    // Navigate to the user's profile
+    setTimeout(() => {
+      navigate(`/profile/${userId}`);
+    }, 300);
+  };
+
   // Now the rest of your effects can use handleClose
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -410,6 +422,14 @@ const ImageModal = ({
     }
   }, [activeImageId, images, loadThreshold, loadMoreImages]);
 
+  // State to control comment panel visibility
+  const [showComments, setShowComments] = useState(false);
+
+  // Toggle comments panel
+  const toggleComments = () => {
+    setShowComments(!showComments);
+  };
+
   // If modal is not open, don't render anything
   if (!isOpen || !modalImage || !activeImageId) return null;
 
@@ -518,7 +538,7 @@ const ImageModal = ({
               </div>
               
               <div className="image-side-action">
-                <button className="image-side-action-btn">
+                <button className="image-side-action-btn" onClick={toggleComments}>
                   {/* Comment icon */}
                   <svg viewBox="0 0 24 24" width="24" height="24">
                     <path fill="currentColor" d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z" />
@@ -537,6 +557,100 @@ const ImageModal = ({
                 <span className="image-side-action-label">Share</span>
               </div>
             </div>
+
+            {/* Mobile-only elements */}
+            {window.innerWidth <= 768 && (
+              <>
+                {/* Info overlay gradient for readability */}
+                <div className="image-info-overlay"></div>
+                
+                {/* Comments slide-up panel */}
+                <div className={`image-comments-section ${showComments ? 'active' : ''}`}>
+                  <button className="comments-close-button" onClick={() => setShowComments(false)}>
+                    <svg viewBox="0 0 24 24" width="18" height="18">
+                      <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                    </svg>
+                  </button>
+                  
+                  <h3 className="image-comments-heading">Comments ({(comments[activeImageId] || []).length})</h3>
+                  
+                  <ul className="image-comments-list">
+                    {(comments[activeImageId] || []).map(comment => (
+                      <li key={comment.id} className="image-comment-item">
+                        <div className="image-comment-avatar">
+                          <img 
+                            src={comment.profile_picture || '/default-avatar.png'} 
+                            alt={comment.username} 
+                            className="comment-avatar"
+                            onClick={() => handleUsernameClick(comment.user_id)}
+                          />
+                        </div>
+                        <div className="image-comment-content">
+                          <div className="image-comment-header">
+                            <span 
+                              className="image-comment-username"
+                              onClick={() => handleUsernameClick(comment.user_id)}
+                            >
+                              {comment.username}
+                            </span>
+                            <span className="image-comment-time">{formatTimestamp(comment.created_at)}</span>
+                          </div>
+                          <div className="image-comment-text">
+                            {comment.comment_text || comment.text || comment.comment || ""}
+                          </div>
+                          <div className="image-comment-actions">
+                            <button 
+                              className={`image-comment-like-btn ${commentLikes[comment.id] ? 'liked' : ''}`}
+                              onClick={() => handleCommentLike(comment.id, activeImageId)}
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                              </svg>
+                              <span>{comment.likes || 0}</span>
+                            </button>
+                            
+                            <button className="image-comment-reply-btn">Reply</button>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                    
+                    {(!comments[activeImageId] || comments[activeImageId].length === 0) && (
+                      <div className="no-comments-message">No comments yet. Be the first to comment!</div>
+                    )}
+                  </ul>
+                  
+                  <div className="comments-panel-footer">
+                    <div className="image-comment-form">
+                      <input 
+                        type="text" 
+                        className="image-comment-input" 
+                        placeholder="Add a comment..." 
+                        value={commentInput}
+                        onChange={(e) => setCommentInput(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && commentInput.trim()) {
+                            handleCommentSubmit(e); // CHANGED: Pass event object like desktop does
+                          }
+                        }}
+                      />
+                      <button 
+                        className="image-comment-submit"
+                        onClick={(e) => {
+                          if (commentInput.trim()) {
+                            handleCommentSubmit(e); // CHANGED: Pass event object like desktop does
+                          }
+                        }}
+                      >
+                        <svg viewBox="0 0 24 24" width="16" height="16">
+                          <path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
           
           {/* Info panel */}
