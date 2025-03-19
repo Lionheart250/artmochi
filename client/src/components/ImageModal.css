@@ -399,15 +399,8 @@ body.holographic-cursor::after {
 
 .prompt-text:not(.expanded)::after {
   content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  position: fixed;
   height: 30px;
-  background: linear-gradient(to bottom, 
-    rgba(0, 0, 0, 0) 0%,
-    var(--bg-secondary) 100%
-  );
 }
 
 .prompt-text::after {
@@ -903,12 +896,14 @@ body.holographic-cursor::after {
 .image-side-actions {
   position: absolute;
   right: 20px;
-  bottom: calc(120px + env(safe-area-inset-bottom, 20px));
+  bottom: 100px;
   display: flex;
   flex-direction: column;
   gap: 15px;
   align-items: center;
   z-index: 10;
+  right: 20px;
+  bottom: 90px;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -1459,7 +1454,6 @@ body.holographic-cursor::after {
     height: 100vh;
     max-height: 100vh;
     width: 100%;
-    padding-bottom: var(--sab);
     overflow: hidden;
   }
   
@@ -1698,7 +1692,7 @@ body.holographic-cursor::after {
   .image-side-actions {
     position: absolute;
     right: 15px;
-    bottom: calc(150px + var(--sab));
+    bottom: 120px;
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -1754,15 +1748,12 @@ body.holographic-cursor::after {
     pointer-events: none;
     padding: 15px;
     padding-top: 30px;
-    padding-bottom: calc(60px + var(--sab));
   }
   
   .image-comments-section.active {
     transform: translateY(0);
     opacity: 1;
     pointer-events: auto;
-    height: calc(100% - var(--sab));
-    padding-bottom: env(safe-area-inset-bottom, 20px);
   }
   
   .comments-close-button {
@@ -1827,13 +1818,12 @@ body.holographic-cursor::after {
   /* Comment footer with input */
   .comments-panel-footer {
     position: fixed;
-    bottom: var(--sab);
+    bottom: 0;
     left: 0;
     width: 100%;
     background: var(--bg-primary);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     padding: 15px;
-    padding-bottom: calc(15px + var(--sab));
     z-index: 101;
   }
   
@@ -1939,7 +1929,7 @@ body.holographic-cursor::after {
 
   .mobile-user-info {
     position: absolute;
-    bottom: calc(70px + var(--sab));
+    bottom: 20px;
     left: 15px;
     z-index: 20;
     display: flex;
@@ -1963,7 +1953,7 @@ body.holographic-cursor::after {
   /* Title positioning */
   .mobile-image-title {
     position: absolute;
-    bottom: calc(70px + var(--sab)); 
+    bottom: 80px;
     left: 15px;
     max-width: 80%;
     color: white;
@@ -2001,34 +1991,34 @@ body.holographic-cursor::after {
 
   .mobile-info-container {
     position: absolute;
-    bottom: var(--sab);
+    bottom: 0;
     left: 0;
     right: 0;
     margin-bottom: 3rem;
     width: 100%;
     padding: 15px;
-    padding-bottom: calc(100px + var(--sab));
-    z-index: 20;
+    padding-bottom: 60px;
+    z-index: 9999;
     transition: height 0.3s ease, background 0.3s ease;
     height: 130px; /* Default collapsed height */
-    overflow: hidden;
+    overflow: visible;
   }
   
   /* When expanded, show all content */
   .mobile-info-container.expanded {
     height: auto;
-    max-height: 60vh;
-    bottom: env(safe-area-inset-bottom, 0);
+    max-height: 96vh;
     background: linear-gradient(
       to top,
-      rgba(0, 0, 0, 0.95) 0%,
-      rgba(0, 0, 0, 0.8) 70%,
-      rgba(0, 0, 0, 0.6) 85%,
-      rgba(0, 0, 0, 0.3) 100%
+      rgba(0, 0, 0, 0.8) 0%,
+      rgba(0, 0, 0, 0.9) 70%,
+      rgba(0, 0, 0, 1) 85%,
+      rgba(0, 0, 0, 1) 100%
     );
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: calc(130px + var(--sab));
+    padding-bottom: 160px;
+    overflow: hidden;
   }
   
   /* Container for expandable content */
@@ -2048,8 +2038,7 @@ body.holographic-cursor::after {
     display: block; /* Show when expanded */
   }
 
-  .mobile-info-container.expanded .mobile-image-prompt,
-  .mobile-info-container.expanded .image-modal-loras {
+  .mobile-info-container.expanded .mobile-image-prompt {
     position: relative !important;
     bottom: auto !important;
     left: 15px !important;
@@ -2057,12 +2046,16 @@ body.holographic-cursor::after {
     margin-bottom: 20px !important;
     width: calc(100% - 30px) !important;
   }
+
+  .mobile-info-container.expanded .image-modal-loras {
+    margin-bottom: 15px !important;
+  }
   
   /* Toggle indicator */
   .mobile-info-toggle {
     position: absolute;
     right: 15px;
-    bottom: calc(70px + var(--sab));
+    bottom: 20px;
     width: 30px;
     height: 30px;
     display: flex;
@@ -2080,21 +2073,29 @@ body.holographic-cursor::after {
     transform: rotate(180deg);
   }
 
-  .mobile-image-prompt, 
-  .image-modal-loras {
+  .mobile-image-prompt {
     position: relative !important; /* Override absolute positioning */
     bottom: auto !important;
-    left: 15px !important;
+    left: auto !important;
     margin-bottom: 15px !important;
     z-index: 20 !important;
     max-width: 100% !important;
     color: white !important;
   }
   
+  .image-modal-loras {
+    position: relative !important; /* Override absolute positioning */
+    bottom: auto !important;
+    left: auto !important;
+    margin-bottom: 15px !important;
+    z-index: 20 !important;
+    max-width: 100% !important;
+  }
+  
   /* Make sure mobile-user-info is always visible */
   .mobile-user-info {
     position: absolute;
-    bottom: calc(70px + var(--sab));
+    bottom: 15px;
     left: 15px;
     z-index: 30;
   }
@@ -2102,7 +2103,7 @@ body.holographic-cursor::after {
   /* Adjust title to be always visible */
   .mobile-image-title {
     position: absolute;
-    bottom: calc(130px + var(--sab)); 
+    bottom: 75px;
     left: 15px;
     max-width: 75%;
     z-index: 25;
@@ -2110,6 +2111,7 @@ body.holographic-cursor::after {
 
 }
 
+/* iOS specific overrides */
 .ios-device .mobile-user-info {
   bottom: calc(100px + var(--sab)) !important;
 }
