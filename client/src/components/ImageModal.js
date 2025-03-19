@@ -53,6 +53,89 @@ const ImageModal = ({
   const originalScrollPosition = useRef(0);
   const [showLeftIndicator, setShowLeftIndicator] = useState(false);
   const [showRightIndicator, setShowRightIndicator] = useState(false);
+  const [expandedMobileInfo, setExpandedMobileInfo] = useState(false);
+
+  const toggleMobileInfo = () => {
+    setExpandedMobileInfo(!expandedMobileInfo);
+  };
+
+  const copyPromptToClipboard = (e, promptText) => {
+    // Stop event propagation so it doesn't trigger other click handlers
+    e.stopPropagation();
+    
+    // Get a safe reference to the element
+    const targetElement = e.currentTarget;
+    
+    // Safety check - if element is not valid, use a different approach
+    if (!targetElement || typeof targetElement.appendChild !== 'function') {
+      // Fallback - just copy to clipboard without visual feedback
+      navigator.clipboard.writeText(promptText)
+        .then(() => console.log("Copied to clipboard"))
+        .catch(err => console.error('Failed to copy:', err));
+      return;
+    }
+    
+    // Copy text to clipboard
+    navigator.clipboard.writeText(promptText)
+      .then(() => {
+        // Create the tooltip element
+        const tooltip = document.createElement('div');
+        tooltip.className = 'prompt-copy-tooltip';
+        tooltip.innerText = 'Copied to clipboard!';
+        tooltip.style.position = 'absolute';
+        tooltip.style.zIndex = '9999';
+        tooltip.style.background = 'rgba(0, 0, 0, 0.8)';
+        tooltip.style.color = 'white';
+        tooltip.style.padding = '5px 10px';
+        tooltip.style.borderRadius = '4px';
+        tooltip.style.fontSize = '12px';
+        tooltip.style.top = '-30px';
+        tooltip.style.right = '0';
+        tooltip.style.opacity = '0';
+        tooltip.style.transition = 'opacity 0.3s';
+        
+        // Set position relative to ensure tooltip positioning works
+        const currentPosition = window.getComputedStyle(targetElement).position;
+        if (currentPosition === 'static') {
+          targetElement.style.position = 'relative';
+        }
+        
+        // Append tooltip to the clicked element
+        targetElement.appendChild(tooltip);
+        
+        // Wait a bit to show the animation
+        setTimeout(() => {
+          tooltip.style.opacity = '1';
+        }, 10);
+        
+        // Remove tooltip after a delay
+        setTimeout(() => {
+          tooltip.style.opacity = '0';
+          setTimeout(() => {
+            // Check if the element still has the tooltip as a child before removing
+            if (targetElement && targetElement.contains(tooltip)) {
+              try {
+                targetElement.removeChild(tooltip);
+              } catch (error) {
+                console.log("Clean up error, already removed:", error);
+              }
+            }
+            
+            // Reset position if we changed it
+            if (currentPosition === 'static') {
+              targetElement.style.position = 'static';
+            }
+          }, 300);
+        }, 2000);
+      })
+      .catch(err => {
+        console.error('Failed to copy: ', err);
+        
+        // Show error message to user
+        alert('Failed to copy to clipboard. Please try again.');
+      });
+  };
+
   
   // Move the current image declaration up here, before the hooks
   const currentImage = isOpen && activeImageId ? 
@@ -93,6 +176,11 @@ const ImageModal = ({
     };
   }, [isOpen, isBodyLocked]);
 
+  useEffect(() => {
+    // Reset expanded state whenever activeImageId changes (navigation)
+    setExpandedMobileInfo(false);
+  }, [activeImageId]);
+
   const handleClose = () => {
     // IMMEDIATE actions before any animation or state changes
     // 1. Add modal-closing class to body
@@ -111,6 +199,7 @@ const ImageModal = ({
     
     // Now start modal closing animation
     setClosingAnimation(true);
+    setExpandedMobileInfo(false);
     
     // Remove other body classes
     document.body.classList.remove('modal-open');
@@ -561,9 +650,116 @@ const ImageModal = ({
             {/* Mobile-only elements */}
             {window.innerWidth <= 768 && (
               <>
-                {/* Info overlay gradient for readability */}
                 <div className="image-info-overlay"></div>
                 
+                {/* Mobile info section with expandable behavior */}
+                <div 
+                  className={`mobile-info-container ${expandedMobileInfo ? 'expanded' : ''}`}
+                  onClick={toggleMobileInfo}
+                >
+                  {/* Mobile user info - always visible */}
+                  <div className="mobile-user-info">
+                    <div className="user-avatar-wrapper">
+                      <img 
+                        src={imageUserDetails[activeImageId]?.profile_picture || '/default-avatar.png'} 
+                        alt={imageUserDetails[activeImageId]?.username || 'User'} 
+                        className="user-avatar"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleUsernameClick(imageUserDetails[activeImageId]?.user_id);
+                        }}
+                      />
+                      {imageUserDetails[activeImageId]?.is_premium && (
+                        <div className="premium-badge">
+                          <svg viewBox="0 0 24 24">
+                            <path d="M12 2L9.2 8.6L2 9.2L7.5 14.6L5.8 22L12 18.6L18.2 22L16.5 14.6L22 9.2L14.8 8.6L12 2Z" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                    <div className="mobile-user-details">
+                      <h4 onClick={(e) => {
+                        e.stopPropagation();
+                        handleUsernameClick(imageUserDetails[activeImageId]?.user_id);
+                      }}>
+                        {imageUserDetails[activeImageId]?.username}
+                      </h4>
+                      
+                      <div className="image-creation-date">
+                        {formatDate(images.find(img => img.id === activeImageId)?.created_at)}
+                      </div>
+                    </div>
+                    
+                    {user && imageUserDetails[activeImageId] && user.userId !== parseInt(imageUserDetails[activeImageId].user_id) && (
+                      <button 
+                        className={`image-follow-btn ${isFollowing ? 'following' : ''}`} 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleModalFollowToggle(imageUserDetails[activeImageId].user_id);
+                        }}
+                      >
+                        {isFollowing ? 'Following' : 'Follow'}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Mobile Title - always visible */}
+                  <div className="mobile-image-title">
+                    {images.find(img => img.id === activeImageId)?.title || 'Untitled'}
+                  </div>
+
+                  {/* Expandable content - only visible when expanded */}
+                  <div className="mobile-expandable-content">
+                    {/* Mobile Prompt */}
+                    <div className="mobile-image-prompt">
+                    <div 
+                      className={`prompt-text ${expandedPrompts.has(activeImageId) ? 'expanded' : ''}`}
+                      onClick={(e) => {
+                        // Make sure we're capturing the right element
+                        if (e.target === e.currentTarget) {
+                          copyPromptToClipboard(e, images.find(img => img.id === activeImageId)?.prompt);
+                        }
+                      }}
+                    >
+                      {images.find(img => img.id === activeImageId)?.prompt}
+                    </div>
+                      <button 
+                        className="show-more-btn" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          togglePrompt(activeImageId);
+                        }}
+                      >
+                        {expandedPrompts.has(activeImageId) ? 'Show less' : 'Show more'}
+                      </button>
+                    </div>
+
+                    {/* Mobile LoRAs section */}
+                    {images.find(img => img.id === activeImageId)?.loras_used && (
+                  <div className="image-modal-loras">
+                    <h4 className="metadata-heading">Styles Used:</h4>
+                    <div className="lora-pills">
+                      {(images.find(img => img.id === activeImageId)?.loras_used)?.map((lora, index) => (
+                        <span key={index} className="lora-pill">
+                          {getLoraName(lora.model)} ({lora.weight})
+                        </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Show indicator for expand/collapse - like TikTok's up/down arrow */}
+                  <div className="mobile-info-toggle">
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                      <path fill="currentColor" d={expandedMobileInfo ? 
+                        "M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" : 
+                        "M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"} 
+                      />
+                    </svg>
+                  </div>
+                </div>
+
                 {/* Comments slide-up panel */}
                 <div className={`image-comments-section ${showComments ? 'active' : ''}`}>
                   <button className="comments-close-button" onClick={() => setShowComments(false)}>
@@ -691,17 +887,17 @@ const ImageModal = ({
                     <div className="image-creation-date">
                       {formatDate(images.find(img => img.id === activeImageId)?.created_at)}
                     </div>
-                  </div>
                   
-                  {/* Privacy toggle if it's the user's own image */}
-                  {(isOwnProfile || isAdmin) && (
-                    <button 
-                      className={`privacy-toggle ${images.find(img => img.id === activeImageId)?.private ? 'private' : 'public'}`} 
-                      onClick={() => handlePrivacyToggle(activeImageId)}
-                    >
-                      {images.find(img => img.id === activeImageId)?.private ? 'Private' : 'Public'}
-                    </button>
-                  )}
+                    {/* Privacy toggle if it's the user's own image */}
+                    {(isOwnProfile || isAdmin) && (
+                      <button 
+                        className={`privacy-toggle ${images.find(img => img.id === activeImageId)?.private ? 'private' : 'public'}`} 
+                        onClick={() => handlePrivacyToggle(activeImageId)}
+                      >
+                        {images.find(img => img.id === activeImageId)?.private ? 'Private' : 'Public'}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
               
@@ -713,9 +909,17 @@ const ImageModal = ({
                 </div>
                 
                 <div className="image-modal-prompt">
-                  <div className={`prompt-text ${expandedPrompts.has(activeImageId) ? 'expanded' : ''}`}>
-                    {images.find(img => img.id === activeImageId)?.prompt}
-                  </div>
+                <div 
+                  className={`prompt-text ${expandedPrompts.has(activeImageId) ? 'expanded' : ''}`}
+                  onClick={(e) => {
+                    // Make sure we're capturing the right element
+                    if (e.target === e.currentTarget) {
+                      copyPromptToClipboard(e, images.find(img => img.id === activeImageId)?.prompt);
+                    }
+                  }}
+                >
+                  {images.find(img => img.id === activeImageId)?.prompt}
+                </div>
                   <button 
                     className="show-more-btn" 
                     onClick={() => togglePrompt(activeImageId)}

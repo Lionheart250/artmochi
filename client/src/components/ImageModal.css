@@ -162,7 +162,7 @@ body.holographic-cursor::after {
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
-  opacity: 0.9;
+  opacity: 1;
 }
 
 .image-modal-nav-left {
@@ -176,7 +176,6 @@ body.holographic-cursor::after {
 .image-modal-nav-left:hover,
 .image-modal-nav-right:hover {
   opacity: 1;
-  background: rgba(40, 40, 40, 0.5);
   box-shadow: 
     0 0 20px rgba(255, 255, 255, 0.3),
     0 0 40px rgba(255, 255, 255, 0.1);
@@ -382,8 +381,9 @@ body.holographic-cursor::after {
   line-height: 1.5;
   color: var(--text-secondary);
   max-height: 80px;
-  overflow: hidden;
+  overflow: auto;
   position: relative;
+  cursor: pointer;
   transition: max-height 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
@@ -402,6 +402,24 @@ body.holographic-cursor::after {
     rgba(0, 0, 0, 0) 0%,
     var(--bg-secondary) 100%
   );
+}
+
+.prompt-text::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 2px;
+  width: 18px;
+  height: 18px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='rgba(255,255,255,0.7)'%3E%3Cpath d='M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.prompt-text:hover::after {
+  opacity: 1;
 }
 
 .show-more-btn {
@@ -858,129 +876,6 @@ body.holographic-cursor::after {
   font-style: italic;
 }
 
-/* Responsive design */
-@media (max-width: 1200px) {
-  .image-modal-content {
-    width: 95%;
-  }
-  
-  .image-modal-info {
-    width: 35%;
-    padding: 20px;
-  }
-}
-
-@media (max-width: 1000px) {
-  .image-modal-info {
-    width: 40%;
-  }
-}
-
-@media (max-width: 900px) {
-  .image-modal-main {
-    flex-direction: column;
-    overflow-y: auto;
-  }
-  
-  .image-modal-image-container {
-    height: 50vh;
-    min-height: 300px;
-  }
-  
-  .image-modal-info {
-    width: 100%;
-    max-width: none;
-    height: auto;
-    min-width: 0;
-    max-height: 60vh; /* Limit height on mobile for better UX */
-  }
-  
-  /* Comment section for mobile */
-  .image-comments-list {
-    max-height: 300px;
-    max-height: 400px; /* Ensure there's enough space for comments on mobile */
-  }
-  
-  .image-close-button {
-    top: 10px;
-    right: 10px;
-  }
-  
-  .image-modal-nav-left {
-    left: 10px;
-  }
-  
-  .image-modal-nav-right {
-    right: 10px;
-  }
-}
-
-@media (max-width: 768px) {
-  .image-modal {
-    padding-left: 0;
-  }
-  
-  .image-modal-content {
-    width: 100%;
-    height: 100vh;
-    border-radius: 0;
-  }
-  
-  .image-modal-image-container {
-    height: 40vh;
-  }
-  
-  .image-modal-info {
-    padding: 16px 12px;
-    height: 55vh;
-  }
-  
-  .image-interaction-buttons {
-    gap: 8px;
-  }
-  
-  .image-action-btn {
-    padding: 6px 10px;
-    font-size: 13px;
-    flex-grow: 1;
-    justify-content: center;
-  }
-  
-  .image-info-header,
-  .image-info-body,
-  .image-info-footer {
-    padding: 15px 12px;
-  }
-}
-
-/* Fix for very small screens */
-@media (max-width: 400px) {
-  .image-action-btn {
-    padding: 5px 8px;
-    font-size: 12px;
-  }
-  
-  .image-user-info {
-    padding-bottom: 12px;
-    margin-bottom: 12px;
-  }
-}
-
-/* Fix for tall/skinny screens */
-@media (max-height: 700px) {
-  .image-modal-content {
-    height: 95vh;
-  }
-  
-  .image-modal-info {
-    padding: 15px;
-  }
-  
-  .image-comments-list {
-    max-height: 150px;
-  }
-}
-
 /* Special effects for comments */
 .image-comment-like-btn:active {
   transform: scale(1.3);
@@ -1124,51 +1019,6 @@ body.holographic-cursor::after {
   border-top: none;
   width: 100%;
 }
-
-/* Media queries for responsive layout */
-@media (max-width: 900px) {
-  .image-modal-main {
-    flex-direction: column;
-  }
-  
-  .image-modal-info {
-    width: 100%;
-    min-width: 0;
-    max-width: none;
-    height: 50vh;
-  }
-  
-  .image-modal-image-container {
-    height: 50vh;
-  }
-}
-
-@media (max-width: 768px) {
-  .image-modal {
-    padding-left: 0;
-  }
-  
-  .image-modal-content {
-    width: 100%;
-    height: 100vh;
-    border-radius: 0;
-  }
-  
-  .image-modal-image-container {
-    height: 45vh;
-  }
-  
-  .image-modal-info {
-    height: 55vh;
-  }
-  
-  .image-info-header,
-  .image-info-body,
-  .image-info-footer {
-    padding: 15px 12px;
-  }
-}
-
 /* Add a subtle pulsing effect to the liked hearts */
 @keyframes heartbeat {
   0% { transform: scale(1); }
@@ -1594,755 +1444,303 @@ body.holographic-cursor::after {
   opacity: 1;
 }
 
-/* TikTok-like Mobile Optimization */
-
-/* Mobile-specific layout improvements */
-@media (max-width: 768px) {
-  /* Full screen modal with no padding */
-  .image-modal {
-    padding: 0;
-    padding-top: 0; /* Remove top padding to utilize full screen */
-  }
-  
-  .image-modal-content {
-    width: 100%;
-    height: 100vh;
-    border-radius: 0;
-  }
-  
-  /* TikTok-style vertical layout */
-  .image-modal-main {
-    flex-direction: column;
-    height: 100%;
-    overflow: hidden; /* Prevent double scrolling */
-  }
-  
-  /* Make image container take 60% height */
-  .image-modal-image-container {
-    height: 60vh; /* Larger image area */
-    min-height: 0;
-    position: relative;
-  }
-  
-  /* Make info panel slide up from bottom */
-  .image-modal-info {
-    width: 100%;
-    height: 40vh; /* Smaller info area */
-    min-width: 0;
-    max-width: none;
-    border-left: none;
-    border-top: 1px solid var(--border-light);
-    border-top-left-radius: 15px;
-    border-top-right-radius: 15px;
-    position: relative;
-    box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.2);
-  }
-  
-  /* Handle swipe indicator like TikTok */
-  .image-info-header::before {
-    content: '';
-    position: absolute;
-    top: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 2px;
-    z-index: 10;
-  }
-  
-  /* More compact user info on mobile */
-  .image-info-header {
-    padding: 20px 15px 15px;
-    position: relative;
-  }
-  
-  /* Optimize info body and scroll behavior */
-  .image-info-body {
-    padding: 10px 15px 65px; /* Add bottom padding for comment input */
-    max-height: calc(40vh - 60px); /* Subtract header height */
-    overflow-y: auto;
-  }
-  
-  /* Fixed comment input at bottom like TikTok */
-  .image-info-footer {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background: var(--bg-secondary);
-    padding: 10px 15px;
-    z-index: 10;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  /* Move side actions to bottom right over image for mobile */
-  .image-side-actions {
-    right: 10px;
-    bottom: 10px;
-    flex-direction: column;
-  }
-  
-  /* Move close button to top left */
-  .image-close-button {
-    top: 10px;
-    left: 10px;
-    width: 32px;
-    height: 32px;
-    background: rgba(0, 0, 0, 0.5);
-  }
-  
-  /* Optimize navigation arrows */
-  .image-modal-nav-left {
-    left: 10px;
-    width: 40px;
-    height: 40px;
-  }
-  
-  .image-modal-nav-right {
-    right: 10px;
-    width: 40px;
-    height: 40px;
-  }
-  
-  /* Optimize comment sections for mobile */
-  .image-comment-item {
-    padding: 8px;
-    margin-bottom: 10px;
-  }
-  
-  /* Show more compact prompt */
-  .prompt-text {
-    max-height: 60px;
-  }
-  
-  /* Optimize title */
-  .image-modal-title {
-    font-size: 16px;
-    margin-bottom: 8px;
-  }
-  
-  /* Stack buttons in comment section for mobile */
-  .image-interaction-buttons {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  
-  /* Make deletion button more accessible on mobile */
-  .image-delete-section {
-    bottom: auto;
-    top: 10px;
-    right: 10px;
-    left: auto;
-  }
-  
-  .image-delete-button {
-    padding: 5px 10px;
-    font-size: 12px;
-  }
-}
-
-/* Special optimizations for very small screens */
-@media (max-width: 480px) {
-  /* Make image take more space on small phones */
-  .image-modal-image-container {
-    height: 55vh;
-  }
-  
-  .image-modal-info {
-    height: 45vh;
-  }
-  
-  /* More compact interface elements */
-  .user-avatar {
-    width: 36px;
-    height: 36px;
-  }
-  
-  /* Ensure minimum comment area height */
-  .image-info-body {
-    max-height: calc(45vh - 60px);
-  }
-  
-  /* Better organize buttons in limited space */
-  .image-action-btn {
-    padding: 5px 8px;
-    font-size: 12px;
-  }
-  
-  /* Improve comment input usability on small screens */
-  .image-comment-input {
-    font-size: 14px;
-    padding: 8px 40px 8px 12px;
-  }
-  
-  /* Ensure comment submit button is accessible */
-  .image-comment-submit {
-    width: 26px;
-    height: 26px;
-  }
-}
-
-/* Portrait vs Landscape handling */
-@media (max-width: 768px) and (orientation: landscape) {
-  /* Special case for landscape phones */
-  .image-modal-main {
-    flex-direction: row; /* Switch back to horizontal layout */
-  }
-  
-  .image-modal-image-container {
-    height: 100vh;
-    width: 60%;
-  }
-  
-  .image-modal-info {
-    width: 40%;
-    height: 100vh;
-    border-top: none;
-    border-left: 1px solid var(--border-light);
-  }
-  
-  /* Remove swipe indicator in landscape */
-  .image-info-header::before {
-    display: none;
-  }
-  
-  /* Adjust info body for landscape */
-  .image-info-body {
-    max-height: calc(100vh - 120px); /* Subtract header and footer height */
-  }
-}
-
-/* Enhanced TikTok App-Like Mobile Experience */
+/* ========= CLEAN MOBILE LAYOUT FOR IMAGE MODAL (768px and below) ========= */
 
 @media (max-width: 768px) {
-  /* Full immersion - no status bar padding */
-  .image-modal {
-    padding: 0;
-    padding-top: 0;
-    background-color: black; /* Pure black like TikTok */
-  }
-  
-  body.modal-open .standard-header {
-    display: none !important; /* Hide header completely on mobile for full TikTok feel */
-  }
-  
-  /* Full-bleed vertically scrollable container */
-  .image-modal-content {
-    width: 100vw;
+  /* Core containers */
+  .image-modal,
+  .image-modal-content,
+  .image-modal-main,
+  .image-modal-image-container {
     height: 100vh;
+    max-height: 100vh;
+    width: 100%;
     overflow: hidden;
   }
   
-  /* Pure TikTok-style layout */
-  .image-modal-main {
-    flex-direction: column;
-    height: 100%;
-  }
-  
-  /* Full height image container */
-  .image-modal-image-container {
-    height: 100vh; /* Take full height initially */
-    width: 100%;
-    position: relative;
-  }
-  
-  /* Overlay info panel - position info on top of image like TikTok */
+  /* Hide desktop info panel completely */
   .image-modal-info {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    min-width: 0;
-    max-width: none;
-    height: auto;
-    max-height: 70%; /* Can expand to show more content */
-    border-left: none;
-    background: transparent; /* Transparent background */
-    border-top: none; /* No top border */
-    z-index: 5;
-    display: flex;
-    flex-direction: column;
-    box-shadow: none;
+    display: none !important;
   }
   
-  /* TikTok-style gradient overlay for text readability */
-  .image-modal-info::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      to top,
-      rgba(0, 0, 0, 0.8) 0%,
-      rgba(0, 0, 0, 0.7) 30%,
-      rgba(0, 0, 0, 0.5) 60%,
-      rgba(0, 0, 0, 0) 100%
-    );
-    z-index: -1;
-    pointer-events: none;
+  /* Image positioning */
+  .image-modal-image {
+    width: auto;
+    max-width: 100%;
+    max-height: 100vh;
+    object-fit: contain;
   }
   
-  /* Remove rounded corners and shadow */
-  .image-modal-info {
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-  }
-  
-  /* Remove swipe indicator */
-  .image-info-header::before {
-    display: none;
-  }
-  
-  /* Position side actions directly on image */
-  .image-side-actions {
-    right: 15px;
-    bottom: 30%;
-    z-index: 20;
-  }
-  
-  /* Make side actions larger and more prominent */
-  .image-side-action {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 5px;
-    margin-top: 15px;
-  }
-  
-  .image-side-action-btn {
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-  }
-  
-  /* Make labels more visible */
-  .image-side-action-label {
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-    margin-top: 5px;
-  }
-  
-  /* Reposition header content to left bottom like TikTok */
-  .image-info-header {
-    padding: 0 15px 10px;
-    background: transparent;
-    border-bottom: none;
-    position: absolute;
-    bottom: 90px;
-    left: 0;
-    width: 100%;
-  }
-  
-  /* Simplified user info presentation */
-  .image-user-info {
-    margin-bottom: 0;
-  }
-  
-  .image-user-info::after {
-    display: none;
-  }
-  
-  /* Move prompt and title to bottom overlay */
-  .image-info-body {
-    padding: 0 15px 100px;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background: transparent;
-    overflow: visible;
-  }
-  
-  /* Make title more prominent */
-  .image-modal-title {
-    color: white;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-    font-size: 17px;
-    margin-bottom: 8px;
-    position: absolute;
-    bottom: 140px;
-    left: 15px;
-  }
-  
-  /* Style prompt like TikTok caption */
-  .prompt-text {
-    color: rgba(255, 255, 255, 0.9);
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-    background: transparent;
-    border: none;
-    position: absolute;
-    bottom: 50px;
-    left: 15px;
-    max-width: 80%;
-  }
-  
-  /* Move comment section to new slide-up panel */
-  .image-comments-section {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 60vh; /* Take 60% of screen */
-    background: var(--bg-primary);
-    border-top-left-radius: 15px;
-    border-top-right-radius: 15px;
-    z-index: 100;
-    transform: translateY(100%); /* Hidden by default */
-    opacity: 0;
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.3);
-  }
-  
-  .image-comments-section.visible {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  
-  /* Comment slide indicator like TikTok */
-  .image-comments-section::before {
-    content: '';
-    position: absolute;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 5px;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 3px;
-  }
-  
-  /* TikTok-style comment counter button to open comments */
-  .comments-counter-button {
-    position: absolute;
-    bottom: 30px;
-    right: 15px;
-    background: rgba(0, 0, 0, 0.5);
-    border: none;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-    padding: 5px;
-    z-index: 15;
-  }
-  
-  /* Fixed navigation controls on sides */
-  .image-modal-nav-left {
-    left: 5px;
-    opacity: 0.2;
-  }
-  
-  .image-modal-nav-right {
-    right: 5px;
-    opacity: 0.2;
-  }
-  
-  /* TikTok-style progress bar at top */
-  .tiktok-progress {
-    position: absolute;
-    top: env(safe-area-inset-top, 0);
-    left: 0;
-    width: 100%;
-    height: 3px;
-    background: rgba(255, 255, 255, 0.2);
-    z-index: 50;
-  }
-  
-  .tiktok-progress-bar {
-    height: 100%;
-    width: 0;
-    background: white;
-  }
-  
-  /* Bottom area styling */
-  .image-info-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    padding: 10px;
-    background: var(--bg-primary);
-    z-index: 101;
-  }
-  
-  /* Comment form - fixed to bottom */
-  .image-comment-form {
-    padding: 0;
-    margin: 0;
-  }
-  
-  .image-comment-input {
-    border-radius: 20px;
-    background: rgba(50, 50, 50, 0.8);
-  }
-  
-  /* Add swipe gestures hint */
-  .swipe-hints {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    padding: 0 20px;
-    pointer-events: none;
-    z-index: 5;
-    opacity: 0;
-  }
-  
-  .swipe-hints.visible {
-    animation: hintPulse 3s ease-in-out;
-  }
-  
-  .swipe-hint {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: rgba(0, 0, 0, 0.5);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  @keyframes hintPulse {
-    0%, 100% { opacity: 0; }
-    20%, 80% { opacity: 0.7; }
-  }
-  
-  /* Vertical swipe indicator */
-  .vertical-swipe-hint {
-    position: absolute;
-    bottom: env(safe-area-inset-bottom, 20px);
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-    z-index: 5;
-    animation: fadeInOut 3s infinite;
-  }
-  
-  @keyframes fadeInOut {
-    0%, 100% { opacity: 0; }
-    50% { opacity: 0.7; }
-  }
-  
-  /* Make close button smaller and more discrete */
+  /* Close button */
   .image-close-button {
-    top: env(safe-area-inset-top, 10px);
-    left: 10px;
-    width: 36px;
-    height: 36px;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 30;
-  }
-}
-
-/* Special case for extra tall phones */
-@media (max-width: 768px) and (min-height: 800px) {
-  .image-side-actions {
-    bottom: 35%;
-  }
-  
-  .image-info-header {
-    bottom: 120px;
-  }
-  
-  .image-modal-title {
-    bottom: 170px;
-  }
-  
-  .prompt-text {
-    bottom: 70px;
-  }
-}
-
-/* Fix missing comment access and close button in TikTok mobile view */
-
-@media (max-width: 768px) {
-  /* Make sure close button is visible and accessible */
-  .image-close-button {
-    top: env(safe-area-inset-top, 10px);
-    left: 10px;
+    top: 15px;
+    left: 15px;
     width: 36px;
     height: 36px;
     background: rgba(0, 0, 0, 0.6);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    z-index: 150; /* Highest z-index to ensure visibility */
-    opacity: 0.8;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  /* TikTok-style comment button - visible floating button to access comments */
-  .comments-access-button {
-    position: absolute;
-    bottom: 200px;
-    right: 15px;
-    width: 44px;
-    height: 44px;
     border-radius: 50%;
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 25;
-    cursor: pointer;
-  }
-  
-  /* Comment count badge */
-  .comments-count {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: white;
-    color: black;
-    border-radius: 10px;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 5px;
-    font-size: 12px;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  /* Fix comment section visibility */
-  .image-comments-section {
-    display: block;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 70vh; /* Taller comments section */
-    background: var(--bg-primary);
-    border-top-left-radius: 15px;
-    border-top-right-radius: 15px;
-    padding: 20px;
-    padding-top: 30px;
     z-index: 200;
-    transform: translateY(100%); /* Start hidden */
-    transition: transform 0.3s ease;
-    box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.3);
-    overflow-y: auto;
+    opacity: 0.9;
+    visibility: visible;
   }
   
-  /* State class to show comments when active */
-  .image-comments-section.active {
-    transform: translateY(0);
-  }
-  
-  /* Swipe indicator for comments panel */
-  .image-comments-section::before {
-    content: '';
-    position: absolute;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 5px;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 3px;
-  }
-  
-  /* Close button for comments panel */
-  .comments-close-button {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: rgba(30, 30, 30, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 10;
-  }
-  
-  /* Fixed comment form at bottom of comments panel */
-  .comments-panel-footer {
-    position: sticky;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    padding: 10px 0;
-    background: var(--bg-primary);
-    z-index: 5;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    margin-top: 10px;
-  }
-  
-  /* Better comment list scrolling in panel */
-  .image-comments-list {
-    max-height: calc(70vh - 130px);
-    overflow-y: auto;
-    padding-bottom: 70px;
-  }
-  
-  /* Ensure modal title and info are visible */
-  .image-modal-title {
-    color: white;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-    font-weight: 600;
-    width: 70%;
-  }
-  
-  /* Add overlay background to ensure info is readable */
+  /* TikTok-style overlay for info */
   .image-info-overlay {
     position: absolute;
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 200px;
+    height: 70%;
     background: linear-gradient(
       to top,
-      rgba(0, 0, 0, 0.7) 0%,
-      rgba(0, 0, 0, 0.5) 50%,
+      rgba(0, 0, 0, 0.9) 0%,
+      rgba(0, 0, 0, 0.6) 30%,
+      rgba(0, 0, 0, 0.3) 60%,
       rgba(0, 0, 0, 0) 100%
     );
     pointer-events: none;
     z-index: 4;
   }
-}
-
-/* Fix mobile comment panel styling */
-
-/* Mobile comments panel */
-@media (max-width: 768px) {
-  /* Make sure comments panel is visible and comes up properly */
-  .image-comments-section.active {
-    transform: translateY(0);
-    opacity: 1;
-    pointer-events: auto;
+  
+  /* User info (avatar and username) */
+  .image-info-header {
+    position: absolute;
+    bottom: 20px;
+    left: 15px;
+    display: flex;
+    align-items: center;
+    background: transparent;
+    border: none;
+    z-index: 20;
+    width: 70%;
   }
   
-  /* Ensure comment panel has correct z-index and visibility */
+  .user-avatar-wrapper {
+    position: relative;
+  }
+  
+  .user-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+  }
+  
+  .image-user-details {
+    margin-left: 12px;
+  }
+  
+  .image-user-details h4 {
+    color: white;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  }
+  
+  .image-creation-date {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 12px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  }
+  
+  /* Premium badge */
+  .premium-badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #ff9500, #ff2d55);
+    border: 2px solid var(--bg-secondary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+  }
+  
+  /* Image info elements (title, prompt, loras) */
+  .image-modal-title {
+    position: absolute;
+    bottom: 80px;
+    left: 15px;
+    max-width: 80%;
+    color: white;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+    z-index: 5;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  
+  .image-modal-prompt {
+    position: absolute;
+    bottom: 120px;
+    left: 15px;
+    max-width: 80%;
+    z-index: 5;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    line-height: 1.4;
+    display: block !important;
+  }
+  
+  .prompt-text {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    line-height: 1.4;
+    padding-right: 25px;
+    max-height: 60px;
+    overflow: auto;
+  }
+  
+  .prompt-text.expanded {
+    max-height: 500px;
+  }
+
+  .prompt-text::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 2px;
+    width: 18px;
+    height: 18px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='rgba(255,255,255,0.7)'%3E%3Cpath d='M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z'/%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+  }
+
+  .prompt-text:hover::after {
+    opacity: 1;
+  }
+
+  .prompt-copy-tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s, transform 0.3s;
+    z-index: 100;
+    top: -30px;
+    right: 0;
+  }
+  
+  /* Show tooltip when active */
+  .prompt-copy-tooltip.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .show-more-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 0;
+    margin-top: 5px;
+    font-size: 12px;
+  }
+  
+  .image-modal-loras {
+    position: absolute;
+    bottom: 185px;
+    left: 15px;
+    max-width: 80%;
+    z-index: 5;
+    display: block !important;
+  }
+  
+  .metadata-heading {
+    color: white;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  
+  .lora-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  
+  .lora-pill {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 12px;
+    padding: 4px 10px;
+    margin-right: 6px;
+    margin-bottom: 6px;
+    display: inline-block;
+    font-size: 12px;
+  }
+  
+  /* Navigation buttons */
+  .image-modal-nav-left,
+  .image-modal-nav-right {
+    opacity: 1;
+  }
+  
+  /* Side action buttons (like, comment, share) */
+  .image-side-actions {
+    position: absolute;
+    right: 15px;
+    bottom: 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    z-index: 20;
+  }
+  
+  .image-side-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .image-side-action-btn {
+    width: 44px;
+    height: 44px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+  
+  .image-side-action-btn.liked {
+    color: rgb(255, 50, 120);
+  }
+  
+  .image-side-action-label {
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  }
+  
+  /* Comments section */
   .image-comments-section {
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 70vh;
+    height: 80vh;
     background: var(--bg-primary);
     border-top-left-radius: 15px;
     border-top-right-radius: 15px;
-    z-index: 200;
+    z-index: 100;
     transform: translateY(100%);
     opacity: 0;
     transition: transform 0.3s ease, opacity 0.3s ease;
@@ -2351,193 +1749,74 @@ body.holographic-cursor::after {
     pointer-events: none;
     padding: 15px;
     padding-top: 30px;
-    display: block;
   }
   
-  /* Make sure comment button is visible and accessible */
-  .comments-access-button {
-    position: absolute;
-    bottom: 200px;
-    right: 15px;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 25;
-    cursor: pointer;
+  .image-comments-section.active {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
   }
   
-  /* Comment count badge */
-  .comments-count {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: white;
-    color: black;
-    border-radius: 10px;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 5px;
-    font-size: 12px;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  /* Fix comment list styling in mobile panel */
-  .image-comments-section .image-comments-list {
-    max-height: calc(70vh - 130px);
-    overflow-y: auto;
-    margin-top: 15px;
-    margin-bottom: 60px;
-    padding: 0;
-  }
-  
-  /* Fix comment input on mobile */
-  .comments-panel-footer {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background: var(--bg-primary);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 10px 15px;
-    z-index: 5;
-  }
-  
-  /* Close button for comments panel */
   .comments-close-button {
     position: absolute;
     top: 10px;
     right: 10px;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: rgba(30, 30, 30, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 10;
-  }
-  
-  /* Make heading stay at the top */
-  .image-comments-heading {
-    position: sticky;
-    top: 0;
-    background: var(--bg-primary);
-    margin-top: 0;
-    padding-bottom: 10px;
-    z-index: 5;
-  }
-}
-
-/* Fix duplicate comment input on mobile */
-
-@media (max-width: 768px) {
-  /* Hide the main comment input in the info footer on mobile */
-  .image-modal-info .image-info-footer {
-    display: none;
-  }
-  
-  /* Ensure only the comment input inside the comments panel is shown */
-  .comments-panel-footer {
-    position: sticky;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background: var(--bg-primary);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 10px 15px;
-    z-index: 5;
-    display: flex;
-  }
-  
-  /* Fix comment input styling in the panel */
-  .comments-panel-footer .image-comment-input {
-    width: 100%;
-    background: rgba(40, 40, 40, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 20px;
-    padding: 10px 45px 10px 15px;
-  }
-  
-  /* Fix comment submit button in panel */
-  .comments-panel-footer .image-comment-submit {
-    position: absolute;
-    right: 25px;
-    top: 50%;
-    transform: translateY(-50%);
     background: transparent;
     border: none;
-    color: white;
+    color: var(--text-primary);
+    cursor: pointer;
+    z-index: 2;
   }
   
-  /* Ensure comments panel is properly sized and scrollable */
-  .image-comments-section {
-    padding-bottom: 70px; /* Make space for the fixed comment input */
+  .image-comments-heading {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
   
-  /* Ensure the comments button has higher z-index than side actions */
-  .comments-access-button {
-    z-index: 26; /* Higher than side actions */
+  .image-comments-list {
+    height: calc(100% - 120px);
+    overflow-y: auto;
+    padding-bottom: 70px;
   }
-}
-
-/* Fix remaining mobile layout issues */
-
-@media (max-width: 768px) {
-  /* Fix image container to prevent extra scrolling space */
-  .image-modal-image-container {
-    height: 100vh; /* Full height */
-    min-height: 0;
-    max-height: 100vh;
-    overflow: hidden; /* Prevent image overflow */
+  
+  /* Comment items */
+  .image-comment-item {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
+    margin-bottom: 16px;
+    padding: 10px;
   }
   
-  /* Make sure image fits within the container properly */
-  .image-modal-image {
-    max-height: 100vh;
-    width: auto;
-    max-width: 100%;
-    object-fit: contain;
-  }
-  
-  /* Remove duplicate comment button */
-  .image-side-action:nth-child(2) {
-    display: none; /* Hide the redundant comments button in side actions */
-  }
-  
-  /* Fix comments button position - make it more prominent */
-  .comments-access-button {
-    position: absolute;
-    bottom: 180px;
-    right: 15px;
-    width: 44px;
-    height: 44px;
+  .comment-avatar {
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 26; /* Make sure it's above other elements */
+    margin-right: 12px;
   }
   
-  /* Fix comment panel footer to be at the bottom */
+  .image-comment-content {
+    flex: 1;
+  }
+  
+  .image-comment-username {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+  }
+  
+  .image-comment-time {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-left: 8px;
+  }
+  
+  .image-comment-text {
+    font-size: 14px;
+    line-height: 1.4;
+    margin: 4px 0;
+  }
+  
+  /* Comment footer with input */
   .comments-panel-footer {
     position: fixed;
     bottom: 0;
@@ -2545,238 +1824,30 @@ body.holographic-cursor::after {
     width: 100%;
     background: var(--bg-primary);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 12px 15px;
-    z-index: 201; /* Above the panel content */
+    padding: 15px;
+    z-index: 101;
   }
   
-  /* Ensure comments panel scrolling stops above input */
-  .image-comments-section .image-comments-list {
-    max-height: calc(70vh - 80px); /* Account for header and footer */
-    margin-bottom: 60px; /* Make space for fixed footer */
-  }
-  
-  /* Fix the modal content structure */
-  .image-modal-main {
-    height: 100vh;
-    overflow: hidden;
-  }
-  
-  /* Remove any remaining scrollable areas in mobile view */
-  .image-modal-content {
-    overflow: hidden;
-  }
-  
-  /* Fix gradient overlay to ensure text is readable but not too dark */
-  .image-info-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
+  .comments-panel-footer .image-comment-form {
+    position: relative;
     width: 100%;
-    height: 50%;
-    background: linear-gradient(
-      to top,
-      rgba(0, 0, 0, 0.7) 0%,
-      rgba(0, 0, 0, 0.5) 30%,
-      rgba(0, 0, 0, 0.1) 80%,
-      rgba(0, 0, 0, 0) 100%
-    );
-    pointer-events: none;
-    z-index: 4;
-  }
-  
-  /* Better positioning for title and user info */
-  .image-modal-title {
-    position: absolute;
-    bottom: 120px;
-    left: 15px;
-    max-width: 80%;
     margin: 0;
     padding: 0;
-    color: white;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-    z-index: 5;
   }
   
-  /* Username and avatar positioning */
-  .image-info-header {
-    position: absolute;
-    bottom: 60px;
-    left: 10px;
-    background: transparent;
-    border: none;
-    z-index: 5;
-  }
-  
-  /* Make sure prompt stays visible */
-  .image-modal-prompt {
-    position: absolute;
-    bottom: 150px;
-    left: 15px;
-    max-width: 80%;
-    margin: 0;
-    padding: 0;
-    z-index: 5;
-  }
-  
-  /* Hide unused elements on mobile */
-  .image-modal-info .image-comments-section,
-  .image-info-body > *:not(.image-modal-title):not(.image-modal-prompt) {
-    display: none;
-  }
-  
-  /* Make sure navigation buttons are visible */
-  .image-modal-nav-left,
-  .image-modal-nav-right {
-    opacity: 0.9;
-    background: rgba(0, 0, 0, 0.3);
-  }
-  
-  /* Fix comment section to cover entire viewport when active */
-  .image-comments-section.active {
-    height: 85vh; /* Taller */
-  }
-}
-
-/* Fix comment button - keep original TikTok style */
-
-@media (max-width: 768px) {
-  /* Remove the added comments-access-button */
-  .comments-access-button {
-    display: none;
-  }
-  
-  /* Make the original side action comment button work properly */
-  .image-side-actions {
-    position: absolute;
-    right: 15px;
-    bottom: 180px;
-    display: flex;
-    flex-direction: column;
-    z-index: 25;
-  }
-  
-  /* Make side actions more prominent */
-  .image-side-action {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-  }
-  
-  /* Make comment button slightly larger and more visible */
-  .image-side-action-btn {
-    background: rgba(0, 0, 0, 0.6);
+  .comments-panel-footer .image-comment-input {
+    width: 100%;
+    background: rgba(40, 40, 40, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  
-  /* Make count labels more visible */
-  .image-side-action-label {
-    color: white;
+    border-radius: 20px;
+    padding: 10px 45px 10px 15px;
     font-size: 14px;
-    font-weight: 500;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-  }
-}
-
-/* Fix missing comment button in mobile view */
-
-@media (max-width: 768px) {
-  /* Make sure side actions are visible */
-  .image-side-actions {
-    position: absolute;
-    right: 15px;
-    bottom: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    z-index: 25;
-    opacity: 1;
-    visibility: visible;
-  }
-  
-  /* Make comment button more visible and prominent */
-  .image-side-action-btn {
-
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
     color: white;
-    opacity: 1;
-    visibility: visible;
   }
   
-  /* Show second side action (comment button) */
-  .image-side-action:nth-child(2) {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  /* Ensure any hiding styles are overridden */
-  .image-side-action {
-    display: flex !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-  }
-  
-  /* Make sure side action label (comment count) is visible */
-  .image-side-action-label {
-    color: white;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-    font-size: 14px;
-    margin-top: 5px;
-    visibility: visible;
-  }
-  
-  /* Make comment icon visible */
-  .image-side-action svg {
-    fill: currentColor;
-    opacity: 1;
-  }
-  
-  /* Fix broken z-index issues */
-  .image-info-overlay {
-    z-index: 4;
-  }
-  
-  .image-comments-section {
-    z-index: 100;
-  }
-  
-  /* Ensure toggleComments function is connected to the button */
-  .image-side-action-btn {
-    pointer-events: auto !important;
-  }
-}
-
-/* Fix mobile comment button visibility when input is focused */
-
-@media (max-width: 768px) {
-  /* Change the submit button color when input is focused */
-  .image-comment-input:focus + .image-comment-submit svg {
-    fill: #000; /* Black color when input is focused */
-  }
-  
-  /* Ensure the button remains visible with a darker background */
-  .image-comment-input:focus + .image-comment-submit {
-    background: transparent;
-    color: #000;
-  }
-  
-  /* Increase visual prominence of the button */
   .comments-panel-footer .image-comment-submit {
     position: absolute;
-    right: 25px;
+    right: 15px;
     top: 50%;
     transform: translateY(-50%);
     background: transparent;
@@ -2786,23 +1857,245 @@ body.holographic-cursor::after {
     align-items: center;
     justify-content: center;
     padding: 5px;
-    z-index: 2; /* Ensure it's above the input */
   }
   
-  /* Circle behind the send button for better visibility */
+  /* Fix input focus issue */
+  .comments-panel-footer .image-comment-input:focus + .image-comment-submit svg {
+    fill: black !important;
+  }
+  .comments-panel-footer .image-comment-input:focus + .image-comment-submit {
+    background: transparent !important;
+    color: black !important;
+  }
   .comments-panel-footer .image-comment-submit::before {
     content: '';
     position: absolute;
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(0, 0, 0, 0.05);
     z-index: -1;
     transition: background 0.2s;
   }
-  
-  /* Change background on input focus */
-  .image-comment-input:focus + .image-comment-submit::before {
-    background: rgba(0, 0, 0, 0.2);
+  .comments-panel-footer .image-comment-input:focus + .image-comment-submit::before {
+    background: rgba(255, 255, 255, 0.8);
   }
+  
+  /* Empty comment state */
+  .no-comments-message {
+    text-align: center;
+    padding: 20px 0;
+    color: var(--text-secondary);
+    font-style: italic;
+  }
+  
+  /* Like and reply buttons */
+  .image-comment-actions {
+    display: flex;
+    align-items: center;
+    margin-top: 5px;
+  }
+  
+  .image-comment-like-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .image-comment-like-btn.liked {
+    color: rgb(255, 50, 120);
+  }
+  
+  .image-comment-like-btn svg {
+    margin-right: 4px;
+  }
+  
+  .image-comment-reply-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 12px;
+    margin-left: 10px;
+  }
+  
+  /* Fix for navigation */
+  .image-modal-nav-left.disabled,
+  .image-modal-nav-right.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .mobile-user-info {
+    position: absolute;
+    bottom: 20px;
+    left: 15px;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    max-width: 70%;
+  }
+  
+  .mobile-user-details {
+    margin-left: 12px;
+    color: white;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  }
+  
+  .mobile-user-details h4 {
+    margin: 0;
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+  }
+  
+  /* Title positioning */
+  .mobile-image-title {
+    position: absolute;
+    bottom: 80px;
+    left: 15px;
+    max-width: 80%;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+    z-index: 20;
+  }
+  
+  /* Prompt positioning */
+  .mobile-image-prompt {
+    position: absolute;
+    bottom: 120px;
+    left: 15px;
+    max-width: 80%;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    line-height: 1.4;
+    z-index: 20;
+  }
+  
+  /* Loras positioning */
+  .mobile-image-loras {
+    position: absolute;
+    bottom: 185px;
+    left: 15px;
+    max-width: 80%;
+    z-index: 20;
+  }
+  
+  /* Comment button color fix */
+  .comments-panel-footer .image-comment-input:focus + .image-comment-submit svg {
+    fill: black;
+  }
+
+  .mobile-info-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin-bottom: 3rem;
+    width: 100%;
+    padding: 15px;
+    padding-bottom: 60px;
+    z-index: 20;
+    transition: height 0.3s ease, background 0.3s ease;
+    height: 130px; /* Default collapsed height */
+    overflow: hidden;
+  }
+  
+  /* When expanded, show all content */
+  .mobile-info-container.expanded {
+    height: auto;
+    max-height: 80vh;
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.95) 0%,
+      rgba(0, 0, 0, 0.8) 70%,
+      rgba(0, 0, 0, 0.6) 85%,
+      rgba(0, 0, 0, 0.3) 100%
+    );
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 80px;
+  }
+  
+  /* Container for expandable content */
+  .mobile-expandable-content {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    padding-top: 20px;
+    padding-bottom: 60px;
+    display: none; /* Hide by default */
+  }
+  
+  /* Show expandable content when expanded */
+  .mobile-info-container.expanded .mobile-expandable-content {
+    opacity: 1;
+    transform: translateY(0);
+    display: block; /* Show when expanded */
+  }
+
+  .mobile-info-container.expanded .mobile-image-prompt,
+  .mobile-info-container.expanded .image-modal-loras {
+    position: relative !important;
+    bottom: auto !important;
+    left: 15px !important;
+    right: 15px !important;
+    margin-bottom: 20px !important;
+    width: calc(100% - 30px) !important;
+  }
+  
+  /* Toggle indicator */
+  .mobile-info-toggle {
+    position: absolute;
+    right: 15px;
+    bottom: 20px;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    transition: transform 0.3s ease;
+  }
+  
+  /* Rotate toggle when expanded */
+  .mobile-info-container.expanded .mobile-info-toggle {
+    transform: rotate(180deg);
+  }
+
+  .mobile-image-prompt, 
+  .image-modal-loras {
+    position: relative !important; /* Override absolute positioning */
+    bottom: auto !important;
+    left: auto !important;
+    margin-bottom: 15px !important;
+    z-index: 20 !important;
+    max-width: 100% !important;
+    color: white !important;
+  }
+  
+  /* Make sure mobile-user-info is always visible */
+  .mobile-user-info {
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+    z-index: 30;
+  }
+  
+  /* Adjust title to be always visible */
+  .mobile-image-title {
+    position: absolute;
+    bottom: 75px;
+    left: 15px;
+    max-width: 75%;
+    z-index: 25;
+  }
+
 }
