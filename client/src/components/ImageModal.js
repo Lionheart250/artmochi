@@ -177,37 +177,126 @@ const ImageModal = ({
   }, [isOpen, isBodyLocked]);
 
   useEffect(() => {
-    // Fix for iOS viewport height issues
+    // Fix for iOS viewport height and bottom gap issues
     const updateViewportHeight = () => {
+      // For iOS Safari, we need to use a more reliable viewport measurement
       const vh = window.innerHeight * 0.01;
       document.documentElement.style.setProperty('--vh', `${vh}px`);
+      
+      // Force recalculation of modal height - critical for iOS
+      const modal = document.querySelector('.image-modal');
+      if (modal) {
+        modal.style.height = `calc(var(--vh, 1vh) * 100)`;
+        modal.style.maxHeight = `calc(var(--vh, 1vh) * 100)`;
+        // Fix for bottom gap on iPhone
+        modal.style.minHeight = `calc(var(--vh, 1vh) * 100)`;
+        modal.style.paddingBottom = `env(safe-area-inset-bottom, 0px)`;
+      }
+      
+      // Also set the container height
+      const container = document.querySelector('.image-modal-image-container');
+      if (container) {
+        container.style.height = `calc(var(--vh, 1vh) * 100)`;
+        container.style.maxHeight = `calc(var(--vh, 1vh) * 100)`;
+        container.style.minHeight = `calc(var(--vh, 1vh) * 100)`;
+        container.style.paddingBottom = `env(safe-area-inset-bottom, 0px)`;
+      }
+      
+      // Position mobile elements correctly
+      if (isIOS) {
+        const userInfo = document.querySelector('.mobile-user-info');
+        const imageTitle = document.querySelector('.mobile-image-title');
+        const sideActions = document.querySelector('.image-side-actions');
+        const infoToggle = document.querySelector('.mobile-info-toggle');
+        
+        if (userInfo) userInfo.style.bottom = `calc(20px + env(safe-area-inset-bottom, 0px))`;
+        if (imageTitle) imageTitle.style.bottom = `calc(80px + env(safe-area-inset-bottom, 0px))`;
+        if (sideActions) sideActions.style.bottom = `calc(120px + env(safe-area-inset-bottom, 0px))`;
+        if (infoToggle) infoToggle.style.bottom = `calc(20px + env(safe-area-inset-bottom, 0px))`;
+      }
     };
     
-    // Detect iOS devices
+    // Add styles for extra iOS bottom area coverage
+    const addExtraBottomCoverage = () => {
+      // Add a style element if it doesn't exist
+      let styleEl = document.getElementById('ios-fixes');
+      if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'ios-fixes';
+        document.head.appendChild(styleEl);
+      }
+      
+      // Add CSS to extend modal beyond visible area to prevent gaps
+      styleEl.innerHTML = `
+        .ios-device .image-modal::after {
+          content: '';
+          display: block;
+          position: absolute;
+          bottom: -50px;
+          left: 0;
+          width: 100%;
+          height: 50px;
+          background-color: black;
+          z-index: 5;
+        }
+        
+        .ios-device .image-modal-content,
+        .ios-device .image-modal-main,
+        .ios-device .image-modal-image-container {
+          min-height: calc(var(--vh, 1vh) * 100);
+          max-height: -webkit-fill-available;
+        }
+      `;
+    };
+    
+    // Improved iOS detection
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    if (isIOS) document.documentElement.classList.add('ios-device');
+    const isMacSafari = /Mac/.test(navigator.userAgent) && navigator.maxTouchPoints > 0;
+    
+    // Apply iOS class
+    if (isIOS || isMacSafari) {
+      document.documentElement.classList.add('ios-device');
+      addExtraBottomCoverage();
+    }
     
     // Initial calculation
     updateViewportHeight();
     
+    // Special handler for orientation changes on iOS
+    const handleOrientationChange = () => {
+      if (isIOS || isMacSafari) {
+        // Wait for the orientation change animation to complete
+        setTimeout(() => {
+          updateViewportHeight();
+          // Force redraw
+          const modal = document.querySelector('.image-modal');
+          if (modal) {
+            modal.style.display = 'none';
+            void modal.offsetHeight; // Force reflow
+            modal.style.display = '';
+          }
+        }, 300);
+      }
+    };
+    
     // Update on resize and orientation change
     window.addEventListener('resize', updateViewportHeight);
-    window.addEventListener('orientationchange', updateViewportHeight);
+    window.addEventListener('orientationchange', handleOrientationChange);
     
     // Reset expanded info state when navigating images or closing modal
     setExpandedMobileInfo(false);
     
     return () => {
       window.removeEventListener('resize', updateViewportHeight);
-      window.removeEventListener('orientationchange', updateViewportHeight);
-      if (isIOS) document.documentElement.classList.remove('ios-device');
+      window.removeEventListener('orientationchange', handleOrientationChange);
+      if (isIOS || isMacSafari) {
+        document.documentElement.classList.remove('ios-device');
+        // Remove the style element we added
+        const styleEl = document.getElementById('ios-fixes');
+        if (styleEl) styleEl.parentNode.removeChild(styleEl);
+      }
     };
   }, [activeImageId]); // Reset when image changes
-
-  useEffect(() => {
-    // Reset expanded state whenever activeImageId changes (navigation)
-    setExpandedMobileInfo(false);
-  }, [activeImageId]);
 
   const handleClose = () => {
     // IMMEDIATE actions before any animation or state changes
