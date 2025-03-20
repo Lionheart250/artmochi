@@ -1443,8 +1443,6 @@ body.holographic-cursor::after {
   opacity: 1;
 }
 
-/* ========= CLEAN MOBILE LAYOUT FOR IMAGE MODAL (768px and below) ========= */
-
 @media (max-width: 768px) {
   /* Core containers */
   .image-modal,
@@ -1452,7 +1450,9 @@ body.holographic-cursor::after {
   .image-modal-main,
   .image-modal-image-container {
     height: 100vh;
+    height: calc(100vh - var(--sat) - var(--sab));
     max-height: 100vh;
+    max-height: -webkit-fill-available;
     width: 100%;
     overflow: hidden;
   }
@@ -1467,13 +1467,14 @@ body.holographic-cursor::after {
     width: auto;
     max-width: 100%;
     max-height: 100vh;
+    max-height: calc(100vh - var(--sat) - var(--sab));
     object-fit: contain;
   }
   
   /* Close button */
   .image-close-button {
-    top: 15px;
-    left: 15px;
+    top: max(15px, var(--sat));
+    left: max(15px, var(--sal));
     width: 36px;
     height: 36px;
     background: rgba(0, 0, 0, 0.6);
@@ -1508,7 +1509,7 @@ body.holographic-cursor::after {
   /* User info (avatar and username) */
   .image-info-header {
     position: absolute;
-    bottom: 20px;
+    bottom: max(20px, calc(20px + var(--sab)));
     left: 15px;
     display: flex;
     align-items: center;
@@ -1566,7 +1567,7 @@ body.holographic-cursor::after {
   /* Image info elements (title, prompt, loras) */
   .image-modal-title {
     position: absolute;
-    bottom: 80px;
+    bottom: max(80px, calc(80px + var(--sab)));
     left: 15px;
     max-width: 80%;
     color: white;
@@ -1578,7 +1579,7 @@ body.holographic-cursor::after {
   
   .image-modal-prompt {
     position: absolute;
-    bottom: 120px;
+    bottom: max(120px, calc(120px + var(--sab)));
     left: 15px;
     max-width: 80%;
     z-index: 5;
@@ -1595,12 +1596,14 @@ body.holographic-cursor::after {
     padding-right: 25px;
     max-height: 60px;
     overflow: auto;
+    position: relative;
+    cursor: pointer;
   }
   
   .prompt-text.expanded {
     max-height: 500px;
   }
-
+  
   .prompt-text::after {
     content: '';
     position: absolute;
@@ -1614,11 +1617,11 @@ body.holographic-cursor::after {
     opacity: 0.6;
     transition: opacity 0.2s;
   }
-
+  
   .prompt-text:hover::after {
     opacity: 1;
   }
-
+  
   .prompt-copy-tooltip {
     position: absolute;
     background: rgba(0, 0, 0, 0.8);
@@ -1652,7 +1655,7 @@ body.holographic-cursor::after {
   
   .image-modal-loras {
     position: absolute;
-    bottom: 185px;
+    bottom: max(185px, calc(185px + var(--sab)));
     left: 15px;
     max-width: 80%;
     z-index: 5;
@@ -1691,8 +1694,8 @@ body.holographic-cursor::after {
   /* Side action buttons (like, comment, share) */
   .image-side-actions {
     position: absolute;
-    right: 15px;
-    bottom: 120px;
+    right: max(15px, var(--sar));
+    bottom: max(120px, calc(120px + var(--sab)));
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -1748,6 +1751,7 @@ body.holographic-cursor::after {
     pointer-events: none;
     padding: 15px;
     padding-top: 30px;
+    padding-bottom: max(15px, calc(15px + var(--sab)));
   }
   
   .image-comments-section.active {
@@ -1774,9 +1778,9 @@ body.holographic-cursor::after {
   }
   
   .image-comments-list {
-    height: calc(100% - 120px);
+    height: calc(100% - 120px - var(--sab));
     overflow-y: auto;
-    padding-bottom: 70px;
+    padding-bottom: max(70px, calc(70px + var(--sab)));
   }
   
   /* Comment items */
@@ -1818,12 +1822,13 @@ body.holographic-cursor::after {
   /* Comment footer with input */
   .comments-panel-footer {
     position: fixed;
-    bottom: 0;
+    bottom: var(--sab, 0);
     left: 0;
     width: 100%;
     background: var(--bg-primary);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     padding: 15px;
+    padding-bottom: max(15px, calc(15px + var(--sab)));
     z-index: 101;
   }
   
@@ -1926,12 +1931,13 @@ body.holographic-cursor::after {
     opacity: 0.4;
     pointer-events: none;
   }
-
+  
+  /* Mobile user info */
   .mobile-user-info {
     position: absolute;
-    bottom: 20px;
+    bottom: max(20px, calc(20px + var(--sab)));
     left: 15px;
-    z-index: 20;
+    z-index: 30;
     display: flex;
     align-items: center;
     max-width: 70%;
@@ -1953,20 +1959,20 @@ body.holographic-cursor::after {
   /* Title positioning */
   .mobile-image-title {
     position: absolute;
-    bottom: 80px;
+    bottom: max(80px, calc(80px + var(--sab)));
     left: 15px;
     max-width: 80%;
     color: white;
     font-size: 16px;
     font-weight: 600;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
-    z-index: 20;
+    z-index: 25;
   }
   
   /* Prompt positioning */
   .mobile-image-prompt {
     position: absolute;
-    bottom: 120px;
+    bottom: max(120px, calc(120px + var(--sab)));
     left: 15px;
     max-width: 80%;
     color: rgba(255, 255, 255, 0.9);
@@ -1978,7 +1984,7 @@ body.holographic-cursor::after {
   /* Loras positioning */
   .mobile-image-loras {
     position: absolute;
-    bottom: 185px;
+    bottom: max(185px, calc(185px + var(--sab)));
     left: 15px;
     max-width: 80%;
     z-index: 20;
@@ -1988,17 +1994,18 @@ body.holographic-cursor::after {
   .comments-panel-footer .image-comment-input:focus + .image-comment-submit svg {
     fill: black;
   }
-
+  
+  /* Mobile info container */
   .mobile-info-container {
     position: absolute;
-    bottom: 0;
+    bottom: var(--sab, 0);
     left: 0;
     right: 0;
-    margin-bottom: 3rem;
+    margin-bottom: max(3rem, calc(3rem + var(--sab)));
     width: 100%;
     padding: 15px;
-    padding-bottom: 60px;
-    z-index: 9999;
+    padding-bottom: max(60px, calc(60px + var(--sab)));
+    z-index: 20;
     transition: height 0.3s ease, background 0.3s ease;
     height: 130px; /* Default collapsed height */
     overflow: visible;
@@ -2007,7 +2014,7 @@ body.holographic-cursor::after {
   /* When expanded, show all content */
   .mobile-info-container.expanded {
     height: auto;
-    max-height: 96vh;
+    max-height: 70vh;
     background: linear-gradient(
       to top,
       rgba(0, 0, 0, 0.8) 0%,
@@ -2017,8 +2024,7 @@ body.holographic-cursor::after {
     );
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 160px;
-    overflow: hidden;
+    padding-bottom: max(160px, calc(160px + var(--sab)));
   }
   
   /* Container for expandable content */
@@ -2037,7 +2043,8 @@ body.holographic-cursor::after {
     transform: translateY(0);
     display: block; /* Show when expanded */
   }
-
+  
+  /* Adjust mobile prompt in expanded view */
   .mobile-info-container.expanded .mobile-image-prompt {
     position: relative !important;
     bottom: auto !important;
@@ -2046,16 +2053,22 @@ body.holographic-cursor::after {
     margin-bottom: 20px !important;
     width: calc(100% - 30px) !important;
   }
-
+  
+  /* Adjust mobile loras in expanded view */
   .mobile-info-container.expanded .image-modal-loras {
     margin-bottom: 15px !important;
+    position: relative !important;
+    bottom: auto !important;
+    left: 15px !important;
+    right: 15px !important;
+    width: calc(100% - 30px) !important;
   }
   
   /* Toggle indicator */
   .mobile-info-toggle {
     position: absolute;
     right: 15px;
-    bottom: 20px;
+    bottom: max(20px, calc(20px + var(--sab)));
     width: 30px;
     height: 30px;
     display: flex;
@@ -2066,13 +2079,15 @@ body.holographic-cursor::after {
     border: 1px solid rgba(255, 255, 255, 0.2);
     color: white;
     transition: transform 0.3s ease;
+    z-index: 30;
   }
   
   /* Rotate toggle when expanded */
   .mobile-info-container.expanded .mobile-info-toggle {
     transform: rotate(180deg);
   }
-
+  
+  /* Make sure the prompt is visible and properly positioned */
   .mobile-image-prompt {
     position: relative !important; /* Override absolute positioning */
     bottom: auto !important;
@@ -2083,6 +2098,7 @@ body.holographic-cursor::after {
     color: white !important;
   }
   
+  /* Make sure loras are visible and properly positioned */
   .image-modal-loras {
     position: relative !important; /* Override absolute positioning */
     bottom: auto !important;
@@ -2091,37 +2107,23 @@ body.holographic-cursor::after {
     z-index: 20 !important;
     max-width: 100% !important;
   }
-  
-  /* Make sure mobile-user-info is always visible */
-  .mobile-user-info {
-    position: absolute;
-    bottom: 15px;
-    left: 15px;
-    z-index: 30;
-  }
-  
-  /* Adjust title to be always visible */
-  .mobile-image-title {
-    position: absolute;
-    bottom: 75px;
-    left: 15px;
-    max-width: 75%;
-    z-index: 25;
-  }
-
 }
 
 /* iOS specific overrides */
 .ios-device .mobile-user-info {
-  bottom: calc(100px + var(--sab)) !important;
+  bottom: calc(70px + var(--sab)) !important;
 }
 
 .ios-device .mobile-image-title {
-  bottom: calc(160px + var(--sab)) !important;
+  bottom: calc(130px + var(--sab)) !important;
 }
 
 .ios-device .image-side-actions {
-  bottom: calc(180px + var(--sab)) !important;
+  bottom: calc(150px + var(--sab)) !important;
+}
+
+.ios-device .mobile-info-toggle {
+  bottom: calc(70px + var(--sab)) !important;
 }
 
 /* Use the custom viewport height variable */
@@ -2131,4 +2133,10 @@ body.holographic-cursor::after {
 
 .ios-device .image-comments-section.active {
   max-height: calc(var(--vh, 1vh) * 100 - var(--sab));
+}
+
+/* Fix expanded container on iOS */
+.ios-device .mobile-info-container.expanded {
+  padding-bottom: calc(200px + var(--sab));
+  max-height: 65vh;
 }

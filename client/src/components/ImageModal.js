@@ -177,29 +177,32 @@ const ImageModal = ({
   }, [isOpen, isBodyLocked]);
 
   useEffect(() => {
-    // Detect iOS
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    // Fix for iOS viewport height issues
+    const updateViewportHeight = () => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
     
-    if (isIOS) {
-      // Add iOS-specific class to body
-      document.body.classList.add('ios-device');
-      
-      // Calculate visible viewport height (accounts for iOS UI elements)
-      const updateViewportHeight = () => {
-        const vh = window.innerHeight * 0.01;
-        document.documentElement.style.setProperty('--vh', `${vh}px`);
-      };
-      
-      // Initial calculation and add listener for orientation changes
-      updateViewportHeight();
-      window.addEventListener('resize', updateViewportHeight);
-      
-      return () => {
-        window.removeEventListener('resize', updateViewportHeight);
-        document.body.classList.remove('ios-device');
-      };
-    }
-  }, []);
+    // Detect iOS devices
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    if (isIOS) document.documentElement.classList.add('ios-device');
+    
+    // Initial calculation
+    updateViewportHeight();
+    
+    // Update on resize and orientation change
+    window.addEventListener('resize', updateViewportHeight);
+    window.addEventListener('orientationchange', updateViewportHeight);
+    
+    // Reset expanded info state when navigating images or closing modal
+    setExpandedMobileInfo(false);
+    
+    return () => {
+      window.removeEventListener('resize', updateViewportHeight);
+      window.removeEventListener('orientationchange', updateViewportHeight);
+      if (isIOS) document.documentElement.classList.remove('ios-device');
+    };
+  }, [activeImageId]); // Reset when image changes
 
   useEffect(() => {
     // Reset expanded state whenever activeImageId changes (navigation)
