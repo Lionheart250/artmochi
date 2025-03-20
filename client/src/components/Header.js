@@ -100,7 +100,7 @@ const Header = () => {
             if (document.body.classList.contains('modal-open')) {
                 forceHeaderPosition('top');
             }
-        }, 100);
+        }, 0);
         window.addEventListener('resize', debouncedResize);
         
         // Track when modal closing has been handled to prevent duplicates
@@ -128,7 +128,7 @@ const Header = () => {
             // Reset flag after a while
             modalCloseTimer = setTimeout(() => {
                 justHandledModalClosing = false;
-            }, 1500);
+            }, 0);
         };
         
         // Add event listeners using the named functions

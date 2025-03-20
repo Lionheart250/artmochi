@@ -59,82 +59,47 @@ const ImageModal = ({
     setExpandedMobileInfo(!expandedMobileInfo);
   };
 
+  const [tooltipVisible, setTooltipVisible] = useState(false);
+  const [tooltipText, setTooltipText] = useState('');
+  const tooltipTimeoutRef = useRef(null);
+
   const copyPromptToClipboard = (e, promptText) => {
-    // Stop event propagation so it doesn't trigger other click handlers
     e.stopPropagation();
-    
-    // Get a safe reference to the element
-    const targetElement = e.currentTarget;
-    
-    // Safety check - if element is not valid, use a different approach
-    if (!targetElement || typeof targetElement.appendChild !== 'function') {
-      // Fallback - just copy to clipboard without visual feedback
-      navigator.clipboard.writeText(promptText)
-        .then(() => console.log("Copied to clipboard"))
-        .catch(err => console.error('Failed to copy:', err));
-      return;
+
+    // Clear any existing timeout
+    if (tooltipTimeoutRef.current) {
+      clearTimeout(tooltipTimeoutRef.current);
     }
     
-    // Copy text to clipboard
+    // Use clipboard API
     navigator.clipboard.writeText(promptText)
       .then(() => {
-        // Create the tooltip element
-        const tooltip = document.createElement('div');
-        tooltip.className = 'prompt-copy-tooltip';
-        tooltip.innerText = 'Copied to clipboard!';
-        tooltip.style.position = 'absolute';
-        tooltip.style.zIndex = '9999';
-        tooltip.style.background = 'rgba(0, 0, 0, 0.8)';
-        tooltip.style.color = 'white';
-        tooltip.style.padding = '5px 10px';
-        tooltip.style.borderRadius = '4px';
-        tooltip.style.fontSize = '12px';
-        tooltip.style.top = '-30px';
-        tooltip.style.right = '0';
-        tooltip.style.opacity = '0';
-        tooltip.style.transition = 'opacity 0.3s';
+        setTooltipText('Copied to clipboard!');
+        setTooltipVisible(true);
         
-        // Set position relative to ensure tooltip positioning works
-        const currentPosition = window.getComputedStyle(targetElement).position;
-        if (currentPosition === 'static') {
-          targetElement.style.position = 'relative';
-        }
-        
-        // Append tooltip to the clicked element
-        targetElement.appendChild(tooltip);
-        
-        // Wait a bit to show the animation
-        setTimeout(() => {
-          tooltip.style.opacity = '1';
-        }, 10);
-        
-        // Remove tooltip after a delay
-        setTimeout(() => {
-          tooltip.style.opacity = '0';
-          setTimeout(() => {
-            // Check if the element still has the tooltip as a child before removing
-            if (targetElement && targetElement.contains(tooltip)) {
-              try {
-                targetElement.removeChild(tooltip);
-              } catch (error) {
-                console.log("Clean up error, already removed:", error);
-              }
-            }
-            
-            // Reset position if we changed it
-            if (currentPosition === 'static') {
-              targetElement.style.position = 'static';
-            }
-          }, 300);
+        // Store timeout reference so we can clear it if needed
+        tooltipTimeoutRef.current = setTimeout(() => {
+          setTooltipVisible(false);
         }, 2000);
       })
       .catch(err => {
-        console.error('Failed to copy: ', err);
+        console.error('Failed to copy:', err);
+        setTooltipText('Failed to copy');
+        setTooltipVisible(true);
         
-        // Show error message to user
-        alert('Failed to copy to clipboard. Please try again.');
+        tooltipTimeoutRef.current = setTimeout(() => {
+          setTooltipVisible(false);
+        }, 2000);
       });
   };
+
+  useEffect(() => {
+    return () => {
+      if (tooltipTimeoutRef.current) {
+        clearTimeout(tooltipTimeoutRef.current);
+      }
+    };
+  }, []);
 
   
   // Move the current image declaration up here, before the hooks
@@ -275,7 +240,7 @@ const ImageModal = ({
             void modal.offsetHeight; // Force reflow
             modal.style.display = '';
           }
-        }, 300);
+        }, 0);
       }
     };
     
@@ -346,7 +311,7 @@ const ImageModal = ({
     // Navigate to the user's profile
     setTimeout(() => {
       navigate(`/profile/${userId}`);
-    }, 300);
+    }, 0);
   };
 
   // Now the rest of your effects can use handleClose
@@ -377,20 +342,30 @@ const ImageModal = ({
   // Add this useEffect to the ImageModal.js component
   useEffect(() => {
     if (isOpen) {
-      // Force header to TOP position when modal opens
-      document.dispatchEvent(new CustomEvent('forceheaderposition', {
-        detail: { position: 'top' }
+      // Inform the app about modal state - Header will respond to this
+      document.dispatchEvent(new CustomEvent('modalStateChange', {
+        detail: { isOpen: true }
       }));
       
-      // Mark body with both classes for redundancy
+      // Add body class for modal-specific styling
       document.body.classList.add('modal-open');
-      document.body.classList.add('modal-in-profile');
+      
+      return () => {
+        // Clean up when modal closes
+        document.body.classList.remove('modal-open');
+        
+        // Inform app modal is closed
+        document.dispatchEvent(new CustomEvent('modalStateChange', {
+          detail: { isOpen: false }
+        }));
+        
+        // Small delay to ensure header transition happens after modal closes
+        setTimeout(() => {
+          // Final notification after animations complete
+          document.dispatchEvent(new CustomEvent('modalTransitionComplete'));
+        }, 300);
+      };
     }
-    
-    return () => {
-      // Cleanup when modal closes or unmounts
-      document.body.classList.remove('modal-in-profile');
-    };
   }, [isOpen]);
 
   // Add this effect to reset expanded prompts when the active image changes
@@ -514,7 +489,7 @@ const ImageModal = ({
             onClose(); 
           }
           setClosingAnimation(false);
-        }, 300);
+        }, 0);
         
         return true; // Allow navigation to proceed
       }
@@ -849,6 +824,11 @@ const ImageModal = ({
                       >
                         {expandedPrompts.has(activeImageId) ? 'Show less' : 'Show more'}
                       </button>
+                      {tooltipVisible && (
+                        <div className="prompt-copy-tooltip active">
+                          {tooltipText}
+                        </div>
+                      )}
                     </div>
 
                     {/* Mobile LoRAs section */}
@@ -1043,6 +1023,11 @@ const ImageModal = ({
                   >
                     {expandedPrompts.has(activeImageId) ? 'Show less' : 'Show more'}
                   </button>
+                  {tooltipVisible && (
+                    <div className="prompt-copy-tooltip active">
+                      {tooltipText}
+                    </div>
+                  )}
                 </div>
                 
                 {/* LoRAs section */}
