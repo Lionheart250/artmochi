@@ -1,10 +1,19 @@
-const CACHE_NAME = 'artmochi-lora-cache-v4'; // Increment version
+const CACHE_NAME = 'artmochi-lora-cache-v5'; // Increment version
 const LORA_ASSETS = /\.(webp|jpg|jpeg|png|gif)$/i;
 
-// Add this whitelist of domains that should bypass the service worker
+// FIXED: Hardcode your API domains or use self.__WB_MANIFEST for injection
 const BYPASS_DOMAINS = [
-  process.env.REACT_APP_API_URL, // Your API server 
-  'localhost'
+  // List your actual API domains explicitly since env vars don't work in service workers
+  'api.artmochi.ai',
+  'artmochi-api.herokuapp.com',
+  'localhost:3001',
+  'localhost:8000'
+];
+
+// Add specific patterns to bypass
+const BYPASS_PATTERNS = [
+  '/optimized-image',
+  '/images'
 ];
 
 self.addEventListener('install', (event) => {
@@ -34,16 +43,14 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   
-  // Skip interception for optimized images from your server
-  // This is the critical fix that prevents caching huge images
-  for (const domain of BYPASS_DOMAINS) {
-    if (url.href.includes(domain)) {
-      console.log('Bypassing service worker for optimized image:', url.href);
-      return; // Do not intercept
-    }
+  // FIXED: Check domain AND patterns that should bypass service worker
+  // Skip API server and optimized image requests
+  if (BYPASS_DOMAINS.some(domain => url.hostname.includes(domain)) ||
+      BYPASS_PATTERNS.some(pattern => url.pathname.includes(pattern))) {
+    return; // Do not intercept
   }
   
-  // Only intercept image requests from non-excluded domains
+  // Only process image assets from approved sources
   if (event.request.url.match(LORA_ASSETS)) {
     // Skip blob URLs
     if (url.protocol === 'blob:') {
