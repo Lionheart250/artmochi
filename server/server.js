@@ -1129,8 +1129,40 @@ app.get('/images', cors(corsOptions), optionalAuthenticateToken, async (req, res
 
         const totalCount = (await pool.query(totalQuery, category !== 'all' ? [category] : [])).rows[0].count;
 
+        // Detect if request is from mobile
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            req.headers['user-agent']
+        );
+        
+        // Choose appropriate image size based on device
+        const defaultWidth = isMobile ? 600 : 1200;
+
+        // Optimize images before sending response
+        const optimizedImages = await Promise.all(result.rows.map(async (image) => {
+            // Only optimize image_url field
+            if (image.image_url) {
+                try {
+                    // Get optimized version
+                    const optimizedResult = await getOptimizedImage(image.image_url, {
+                        width: defaultWidth,
+                        format: 'webp',
+                        quality: 80
+                    });
+                    
+                    // Replace URL with optimized version if successful
+                    if (!optimizedResult.error) {
+                        image.image_url = optimizedResult.url;
+                    }
+                } catch (e) {
+                    // On error, keep original URL
+                    console.error('Image optimization error for image ID ' + image.id + ':', e);
+                }
+            }
+            return image;
+        }));
+
         res.json({
-            images: result.rows,
+            images: optimizedImages,
             hasMore: offset + result.rows.length < totalCount,
             total: parseInt(totalCount)
         });
