@@ -8,6 +8,7 @@ const LiquidMetal = () => {
   const sceneRef = useRef(null);
   const uniformsRef = useRef(null);
   const resizeTimeoutRef = useRef(null);
+  const resizeTimeoutRefereeplaya = useRef(null);
   
   useEffect(() => {
     let scene, camera, renderer, uniforms, material, mesh;
@@ -51,7 +52,7 @@ const LiquidMetal = () => {
         aw: { value: 5.1 },
         bx: { value: 0.78 },
         by: { value: 1.94 },
-        // Enhanced color palette for more dramatic chrome
+        // Enhanced color palette for more dramatic chrome nawm sayin homie
         color1: { value: new THREE.Color(0xFFFFFF) }, // Pure white for extreme highlights
         color2: { value: new THREE.Color(0x050505) }, // Deep black shadow
         color3: { value: new THREE.Color(0xE6E6E6) }, // Bright silver highlight
