@@ -1146,7 +1146,7 @@ app.get('/images', cors(corsOptions), optionalAuthenticateToken, async (req, res
                     const optimizedResult = await getOptimizedImage(image.image_url, {
                         width: defaultWidth,
                         format: 'webp',
-                        quality: 80
+                        quality: 75
                     });
                     
                     // Replace URL with optimized version if successful
