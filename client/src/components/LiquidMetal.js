@@ -27,7 +27,8 @@ const LiquidMetal = () => {
         antialias: true, 
         alpha: true,
         preserveDrawingBuffer: true,
-        powerPreference: "high-performance"
+        powerPreference: "high-performance",
+        failIfMajorPerformanceCaveat: false
       });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // Limit to 1.5 on mobile
@@ -70,7 +71,8 @@ const LiquidMetal = () => {
         highlightIntensity: { value: 3.8 },    // Brighter highlights
         fresnelPower: { value: 4.0 },          // Edge highlight intensity
         iridescenceStrength: { value: 0.2 },   // Color shifting amount
-        streakIntensity: { value: 0.15 }       // Anisotropic streak amount
+        streakIntensity: { value: 0.15 },      // Anisotropic streak amount
+        timeScale: { value: 0.003 }            // Animation speed
       };
       uniformsRef.current = uniforms;
       
@@ -241,6 +243,9 @@ const LiquidMetal = () => {
         // Lower quality on mobile for better performance
         renderer.setPixelRatio(1.0); // Force to 1.0 on mobile
         uniforms.scale.value = 2.0; // Slightly larger scale for mobile
+        uniforms.timeScale.value = 0.001; // Reduce animation speed on mobile to prevent context loss
+      } else {
+        uniforms.timeScale.value = 0.003;
       }
 
       setIsReady(true);
@@ -250,7 +255,7 @@ const LiquidMetal = () => {
     const animate = () => {
       // Always animate at constant speed
       if (uniformsRef.current) {
-        uniformsRef.current.time.value += 0.003; // Keep consistent animation speed
+        uniformsRef.current.time.value += uniformsRef.current.timeScale.value; // Use the new timeScale uniform instead of hardcoded value
       }
       
       // Always render
@@ -293,6 +298,35 @@ const LiquidMetal = () => {
     viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
     document.head.appendChild(viewportMeta);
     
+    // Handle lost context
+    renderer.domElement.addEventListener('webglcontextlost', (event) => {
+      event.preventDefault();
+      console.log('WebGL context lost. Trying to restore...');
+      
+      // Stop animation temporarily
+      cancelAnimationFrame(animationFrameId);
+      
+      // Force the browser to acknowledge the event
+      setTimeout(() => {
+        // Attempt to restart
+        if (rendererRef.current) {
+          animationFrameId = requestAnimationFrame(animate);
+        }
+      }, 500);
+    }, false);
+    
+    // Add touch event handlers to prevent default behavior
+    const preventDefaultTouch = (e) => {
+      // Only prevent scrolling when touching the canvas itself
+      if (e.target === renderer.domElement) {
+        e.preventDefault();
+      }
+    };
+
+    // Passive: false is important to allow preventDefault
+    renderer.domElement.addEventListener('touchstart', preventDefaultTouch, { passive: false });
+    renderer.domElement.addEventListener('touchmove', preventDefaultTouch, { passive: false });
+    
     // Cleanup on unmount
     return () => {
       window.removeEventListener('resize', onWindowResize);
@@ -303,6 +337,11 @@ const LiquidMetal = () => {
       document.head.removeChild(viewportMeta);
       if (resizeTimeoutRef.current) {
         clearTimeout(resizeTimeoutRef.current);
+      }
+      if (renderer && renderer.domElement) {
+        renderer.domElement.removeEventListener('touchstart', preventDefaultTouch);
+        renderer.domElement.removeEventListener('touchmove', preventDefaultTouch);
+        renderer.domElement.removeEventListener('webglcontextlost', () => {});
       }
     };
   }, []);
@@ -318,7 +357,10 @@ const LiquidMetal = () => {
         width: '100%', 
         height: '100%',
         zIndex: -1,
-        overflow: 'hidden'
+        overflow: 'hidden',
+        willChange: 'transform',
+        transform: 'translateZ(0)',
+        backfaceVisibility: 'hidden'
       }}
     />
   );
