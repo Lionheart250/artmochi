@@ -1,5 +1,11 @@
-const CACHE_NAME = 'artmochi-lora-cache-v3'; // Increment version
+const CACHE_NAME = 'artmochi-lora-cache-v4'; // Increment version
 const LORA_ASSETS = /\.(webp|jpg|jpeg|png|gif)$/i;
+
+// Add this whitelist of domains that should bypass the service worker
+const BYPASS_DOMAINS = [
+  process.env.REACT_APP_API_URL, // Your API server 
+  'localhost'
+];
 
 self.addEventListener('install', (event) => {
   console.log('Service Worker installing.');
@@ -26,10 +32,19 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only intercept image requests
+  const url = new URL(event.request.url);
+  
+  // Skip interception for optimized images from your server
+  // This is the critical fix that prevents caching huge images
+  for (const domain of BYPASS_DOMAINS) {
+    if (url.href.includes(domain)) {
+      console.log('Bypassing service worker for optimized image:', url.href);
+      return; // Do not intercept
+    }
+  }
+  
+  // Only intercept image requests from non-excluded domains
   if (event.request.url.match(LORA_ASSETS)) {
-    const url = new URL(event.request.url);
-    
     // Skip blob URLs
     if (url.protocol === 'blob:') {
       return;
