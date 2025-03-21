@@ -8,7 +8,6 @@ const LiquidMetal = () => {
   const sceneRef = useRef(null);
   const uniformsRef = useRef(null);
   const resizeTimeoutRef = useRef(null);
-  const resizeTimeoutRefereeplaya = useRef(null);
   
   useEffect(() => {
     let scene, camera, renderer, uniforms, material, mesh;
