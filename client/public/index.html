@@ -9,6 +9,127 @@
 </head>
 <body>
     <div id="root"></div> <!-- Root div for React -->
-
+    <script>
+      // Emergency redirect loop breaker
+      (function() {
+        const MAX_REDIRECTS = 5;
+        const TIMEOUT = 3000; // 3 seconds
+        
+        // Check if we're in a mobile redirect loop
+        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+          // Get or initialize the count
+          let count = parseInt(sessionStorage.getItem('redirectCount') || '0');
+          let timestamp = parseInt(sessionStorage.getItem('redirectTimestamp') || '0');
+          const now = Date.now();
+          
+          // If timestamp is too old, reset
+          if (now - timestamp > TIMEOUT) {
+            count = 1;
+            sessionStorage.setItem('redirectTimestamp', now.toString());
+          } else {
+            count++;
+          }
+          
+          sessionStorage.setItem('redirectCount', count.toString());
+          
+          // If too many redirects, break the loop
+          if (count >= MAX_REDIRECTS) {
+            console.error('EMERGENCY: Breaking redirect loop');
+            
+            // Add query param to indicate emergency mode
+            if (!window.location.search.includes('emergency=true')) {
+              window.location.replace(window.location.pathname + '?emergency=true');
+              return;
+            }
+            
+            // In emergency mode, disable all navigation
+            if (window.location.search.includes('emergency=true')) {
+              // Override all navigation methods
+              window.history.pushState = function() { 
+                console.log('Navigation blocked by emergency mode');
+                return;
+              };
+              window.history.replaceState = function() {
+                console.log('Navigation blocked by emergency mode');
+                return;
+              };
+              // Reset session storage after a while
+              setTimeout(() => {
+                sessionStorage.removeItem('redirectCount');
+                sessionStorage.removeItem('redirectTimestamp');
+              }, 10000);
+            }
+          }
+        }
+      })();
+    </script>
+    <script>
+      (function() {
+        // Create a visible debug log on mobile
+        const createDebugLog = () => {
+          const debugLog = document.createElement('div');
+          debugLog.id = 'mobileDebugLog';
+          debugLog.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:200px;background:rgba(0,0,0,0.8);color:white;z-index:9999;overflow:auto;padding:10px;font-size:12px;';
+          document.body.appendChild(debugLog);
+          return debugLog;
+        };
+        
+        // Only run on mobile
+        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+          const debugLog = createDebugLog();
+          
+          // Log navigation events
+          const log = (msg) => {
+            const entry = document.createElement('div');
+            entry.textContent = `${new Date().toISOString().substr(11, 8)}: ${msg}`;
+            debugLog.insertBefore(entry, debugLog.firstChild);
+          };
+          
+          // Log initial page load
+          log(`Page loaded: ${window.location.href}`);
+          log(`Modal open: ${document.body.classList.contains('modal-open')}`);
+          
+          // Redirect count tracker
+          const redirectCount = sessionStorage.getItem('redirectCount') || 0;
+          sessionStorage.setItem('redirectCount', parseInt(redirectCount) + 1);
+          log(`Redirect count: ${parseInt(redirectCount) + 1}`);
+          
+          // Inspect CustomHistory
+          log(`CustomHistory available: ${typeof customHistory !== 'undefined'}`);
+          
+          // Log navigation events
+          const oldPushState = history.pushState;
+          history.pushState = function() {
+            log(`pushState: ${arguments[2]}`);
+            return oldPushState.apply(this, arguments);
+          };
+          
+          const oldReplaceState = history.replaceState;
+          history.replaceState = function() {
+            log(`replaceState: ${arguments[2]}`);
+            return oldReplaceState.apply(this, arguments);
+          };
+          
+          // Monitor your CustomHistory
+          if (typeof window.customHistory !== 'undefined') {
+            const oldPush = window.customHistory.push;
+            window.customHistory.push = async function() {
+              log(`customHistory.push: ${arguments[0]}`);
+              return await oldPush.apply(this, arguments);
+            };
+          }
+          
+          // Check for modal events
+          document.addEventListener('forcemodalclose', () => {
+            log('forcemodalclose event triggered');
+          });
+          
+          // Log service worker activity
+          if ('serviceWorker' in navigator) {
+            log(`Service Worker registered: ${!!navigator.serviceWorker.controller}`);
+          }
+        }
+      })();
+    </script>
 </body>
 </html>

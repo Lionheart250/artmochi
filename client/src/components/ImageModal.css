@@ -29,23 +29,6 @@
   100% { opacity: 1; transform: translateY(0); }
 }
 
-/* Hide side header when modal is open */
-body.modal-open .side-header {
-  display: none !important;
-}
-
-/* Show standard header when modal is open */
-body.modal-open .standard-header {
-  display: block !important;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 100000; /* Above modal */
-  background: var(--bg-primary);
-  border-bottom: 1px solid var(--border-light);
-}
-
 /* Fix cursor visibility issue - completely remove holographic cursor */
 body.holographic-cursor {
   cursor: auto !important; /* Force normal cursor */
