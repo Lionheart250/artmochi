@@ -240,8 +240,10 @@ const LiquidMetal = () => {
       // Detect if mobile
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       if (isMobile) {
-        // Keep original quality but still adjust timeScale
-        uniforms.timeScale.value = 0.0015; // Slight reduction but not drastic
+        // Lower quality on mobile for better performance
+        renderer.setPixelRatio(1.0); // Force to 1.0 on mobile
+        uniforms.scale.value = 2.0; // Slightly larger scale for mobile
+        uniforms.timeScale.value = 0.001; // Reduce animation speed on mobile to prevent context loss
       } else {
         uniforms.timeScale.value = 0.003;
       }
@@ -290,6 +292,12 @@ const LiquidMetal = () => {
     // Add event listeners
     window.addEventListener('resize', onWindowResize);
     
+    // Setup viewport meta tag for mobile
+    const viewportMeta = document.createElement('meta');
+    viewportMeta.name = 'viewport';
+    viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+    document.head.appendChild(viewportMeta);
+    
     // Handle lost context
     renderer.domElement.addEventListener('webglcontextlost', (event) => {
       event.preventDefault();
@@ -298,18 +306,13 @@ const LiquidMetal = () => {
       // Stop animation temporarily
       cancelAnimationFrame(animationFrameId);
       
-      // Force a redraw after a short delay
+      // Force the browser to acknowledge the event
       setTimeout(() => {
+        // Attempt to restart
         if (rendererRef.current) {
-          // Force canvas to be redrawn
-          const width = window.innerWidth;
-          const height = window.innerHeight;
-          rendererRef.current.setSize(width, height);
-          
-          // Restart animation
           animationFrameId = requestAnimationFrame(animate);
         }
-      }, 300);
+      }, 500);
     }, false);
     
     // Add touch event handlers to prevent default behavior
@@ -324,18 +327,6 @@ const LiquidMetal = () => {
     renderer.domElement.addEventListener('touchstart', preventDefaultTouch, { passive: false });
     renderer.domElement.addEventListener('touchmove', preventDefaultTouch, { passive: false });
     
-    // Add scroll event listener to prevent page layout shifts
-    document.addEventListener('scroll', (e) => {
-      // Prevent layout recalculation during scroll
-      if (rendererRef.current && rendererRef.current.domElement) {
-        // Force the canvas to stay in the viewport
-        rendererRef.current.domElement.style.transform = 'translateZ(0)';
-      }
-    }, { passive: true });
-
-    // Prevent all touch interactions on canvas
-    renderer.domElement.style.touchAction = 'none';
-    
     // Cleanup on unmount
     return () => {
       window.removeEventListener('resize', onWindowResize);
@@ -343,6 +334,7 @@ const LiquidMetal = () => {
       if (mesh) scene.remove(mesh);
       if (material) material.dispose();
       if (renderer) renderer.dispose();
+      document.head.removeChild(viewportMeta);
       if (resizeTimeoutRef.current) {
         clearTimeout(resizeTimeoutRef.current);
       }
@@ -351,8 +343,6 @@ const LiquidMetal = () => {
         renderer.domElement.removeEventListener('touchmove', preventDefaultTouch);
         renderer.domElement.removeEventListener('webglcontextlost', () => {});
       }
-      // Remove scroll listener
-      document.removeEventListener('scroll', () => {});
     };
   }, []);
   
@@ -370,11 +360,7 @@ const LiquidMetal = () => {
         overflow: 'hidden',
         willChange: 'transform',
         transform: 'translateZ(0)',
-        backfaceVisibility: 'hidden',
-        // Add this to isolate from page layout shifts
-        isolation: 'isolate',
-        // Critical to prevent DOM changes during scroll
-        contain: 'strict'
+        backfaceVisibility: 'hidden'
       }}
     />
   );
