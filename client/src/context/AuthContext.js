@@ -64,13 +64,45 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const refreshAuthToken = async () => {
+            // Add check for emergency loop prevention at the top
+            if (localStorage.getItem('pauseAuthRefresh') === 'true') {
+                console.log('Auth refresh is paused due to too many failures');
+                return; // Skip the entire function if we're in emergency mode
+            }
+
             if (refreshToken && isTokenExpired(token)) {
                 try {
-                    const response = await axios.post('http://localhost:3000/refresh', { refreshToken });
+                    // Use environment variable or window.location
+                    const baseUrl = process.env.REACT_APP_API_URL || 
+                                    (window.location.hostname === 'localhost' ? 
+                                    'http://localhost:3000' : 
+                                    'https://api.artmochi.com'); // Or your actual production API URL
+                    
+                    // Use this baseUrl for refresh
+                    const response = await axios.post(`${baseUrl}/refresh`, { refreshToken });
                     const { token: newToken, refreshToken: newRefreshToken } = response.data;
                     login(newToken, newRefreshToken);
                 } catch (error) {
                     console.error('Failed to refresh token:', error);
+                    
+                    // Emergency Loop Prevention - Check how many failures we've had
+                    const failCount = parseInt(localStorage.getItem('tokenRefreshFails') || '0');
+                    localStorage.setItem('tokenRefreshFails', (failCount + 1).toString());
+                    
+                    // If we've failed too many times, just stop trying for a while
+                    if (failCount > 3) {
+                        console.log('Too many token refresh failures, suspending auth checks for 1 minute');
+                        localStorage.setItem('pauseAuthRefresh', 'true');
+                        
+                        // Resume after 1 minute
+                        setTimeout(() => {
+                            localStorage.removeItem('tokenRefreshFails');
+                            localStorage.removeItem('pauseAuthRefresh');
+                        }, 60000);
+                        
+                        return; // Don't logout, just stop the cycle
+                    }
+                    
                     logout();
                 }
             } else if (token) {

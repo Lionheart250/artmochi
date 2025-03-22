@@ -23,6 +23,81 @@ import './styles/theme.css';
 import { customHistory } from './utils/CustomHistory';
 import ErrorBoundary from './components/ErrorBoundary';
 
+// Emergency redirect loop breaker
+if (typeof window !== 'undefined') {
+  // Check if we're in a redirect loop
+  const urlParams = new URLSearchParams(window.location.search);
+  if (!urlParams.has('breakLoop')) {
+    const redirectCount = parseInt(localStorage.getItem('redirectCount') || '0');
+    const redirectTime = parseInt(localStorage.getItem('redirectTime') || '0');
+    const now = Date.now();
+    
+    // If we've had 3+ redirects in the last 5 seconds, we're in a loop
+    if (redirectCount > 3 && (now - redirectTime < 5000)) {
+      console.log('Breaking redirect loop');
+      // Set emergency flag to prevent further redirects
+      localStorage.setItem('breakLoop', 'true');
+      
+      // Try to clear potential causes
+      localStorage.removeItem('token');
+      sessionStorage.clear();
+      
+      // Reload with clean slate
+      window.location.replace('/?breakLoop=true');
+    } else {
+      // Update redirect count
+      localStorage.setItem('redirectCount', (redirectCount + 1).toString());
+      localStorage.setItem('redirectTime', now.toString());
+      
+      // Auto-reset counter after 10 seconds of successful page load
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          localStorage.setItem('redirectCount', '0');
+        }, 10000);
+      });
+    }
+  } else {
+    // We're in emergency mode - reset counters
+    localStorage.removeItem('redirectCount');
+    localStorage.removeItem('redirectTime');
+    // Clear emergency flag after page loads successfully
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        localStorage.removeItem('breakLoop');
+      }, 5000);
+    });
+  }
+}
+
+useEffect(() => {
+  // If we detect we're in a production environment
+  if (window.location.hostname !== 'localhost' && 
+      window.location.hostname !== '127.0.0.1') {
+    
+    // Check if we might be in a redirect loop
+    const pageLoads = parseInt(localStorage.getItem('pageLoads') || '0');
+    localStorage.setItem('pageLoads', (pageLoads + 1).toString());
+    
+    // If we've loaded the page too many times in a short period
+    if (pageLoads > 5) {
+      console.log('Detected potential redirect loop, clearing auth state');
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      localStorage.setItem('pageLoads', '0');
+      
+      // Force a clean reload
+      if (!window.location.search.includes('clean=1')) {
+        window.location.replace(window.location.pathname + '?clean=1');
+      }
+    }
+    
+    // Reset the counter after 10 seconds
+    setTimeout(() => {
+      localStorage.setItem('pageLoads', '0');
+    }, 10000);
+  }
+}, []);
+
 // Setup global error handler for DOM insertion errors
 if (typeof window !== 'undefined' && !window.__insertionErrorHandlerAdded) {
   window.__insertionErrorHandlerAdded = true;
@@ -62,6 +137,13 @@ if (typeof window !== 'undefined' && !window.__insertionErrorHandlerAdded) {
 }
 
 function App() {
+  // Add this state
+  const [isEmergencyMode] = useState(
+    () => typeof window !== 'undefined' && 
+    (localStorage.getItem('breakLoop') === 'true' || 
+     window.location.search.includes('breakLoop=true'))
+  );
+
   // History state protection for smooth transitions
   useEffect(() => {
     const originalPush = window.history.pushState;
@@ -94,11 +176,20 @@ function App() {
       <AuthProvider>
         <SubscriptionProvider>
           <ModalProvider>
-            <Router navigator={customHistory} location={window.location.pathname}>
-              <ErrorBoundary>
-                <AppContent />
-              </ErrorBoundary>
-            </Router>
+            {/* Conditionally use custom history */}
+            {isEmergencyMode ? (
+              <Router>
+                <ErrorBoundary>
+                  <AppContent isEmergencyMode={true} />
+                </ErrorBoundary>
+              </Router>
+            ) : (
+              <Router navigator={customHistory} location={window.location.pathname}>
+                <ErrorBoundary>
+                  <AppContent isEmergencyMode={false} />
+                </ErrorBoundary>
+              </Router>
+            )}
           </ModalProvider>
         </SubscriptionProvider>
       </AuthProvider>
@@ -107,13 +198,23 @@ function App() {
 }
 
 // Separate component to use router hooks
-function AppContent() {
+function AppContent({ isEmergencyMode }) {
   const location = useLocation();
-  const background = location.state?.background;
+  const background = isEmergencyMode ? null : location.state?.background;
 
   return (
     <>
       <Header />
+      {isEmergencyMode && (
+        <div style={{
+          background: '#ffebee', 
+          padding: '10px', 
+          textAlign: 'center',
+          borderBottom: '1px solid #ffcdd2'
+        }}>
+          Recovered from redirect loop. Some features may be limited.
+        </div>
+      )}
       <Routes location={background || location}>
         <Route path="/" element={<Home />} />
         <Route 
