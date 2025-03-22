@@ -51,7 +51,7 @@ const LiquidMetal = () => {
         aw: { value: 5.1 },
         bx: { value: 0.78 },
         by: { value: 1.94 },
-        // Enhanced color palette for more dramatic chrome nawm sayin homie
+        // Enhanced color palette for more dramatic chrome nawm sayin
         color1: { value: new THREE.Color(0xFFFFFF) }, // Pure white for extreme highlights
         color2: { value: new THREE.Color(0x050505) }, // Deep black shadow
         color3: { value: new THREE.Color(0xE6E6E6) }, // Bright silver highlight
