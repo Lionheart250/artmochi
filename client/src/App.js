@@ -69,35 +69,6 @@ if (typeof window !== 'undefined') {
   }
 }
 
-useEffect(() => {
-  // If we detect we're in a production environment
-  if (window.location.hostname !== 'localhost' && 
-      window.location.hostname !== '127.0.0.1') {
-    
-    // Check if we might be in a redirect loop
-    const pageLoads = parseInt(localStorage.getItem('pageLoads') || '0');
-    localStorage.setItem('pageLoads', (pageLoads + 1).toString());
-    
-    // If we've loaded the page too many times in a short period
-    if (pageLoads > 5) {
-      console.log('Detected potential redirect loop, clearing auth state');
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
-      localStorage.setItem('pageLoads', '0');
-      
-      // Force a clean reload
-      if (!window.location.search.includes('clean=1')) {
-        window.location.replace(window.location.pathname + '?clean=1');
-      }
-    }
-    
-    // Reset the counter after 10 seconds
-    setTimeout(() => {
-      localStorage.setItem('pageLoads', '0');
-    }, 10000);
-  }
-}, []);
-
 // Setup global error handler for DOM insertion errors
 if (typeof window !== 'undefined' && !window.__insertionErrorHandlerAdded) {
   window.__insertionErrorHandlerAdded = true;
