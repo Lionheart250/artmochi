@@ -290,12 +290,6 @@ const LiquidMetal = () => {
     // Add event listeners
     window.addEventListener('resize', onWindowResize);
     
-    // Setup viewport meta tag for mobile
-    const viewportMeta = document.createElement('meta');
-    viewportMeta.name = 'viewport';
-    viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
-    document.head.appendChild(viewportMeta);
-    
     // Handle lost context
     renderer.domElement.addEventListener('webglcontextlost', (event) => {
       event.preventDefault();
@@ -338,6 +332,9 @@ const LiquidMetal = () => {
         rendererRef.current.domElement.style.transform = 'translateZ(0)';
       }
     }, { passive: true });
+
+    // Prevent all touch interactions on canvas
+    renderer.domElement.style.touchAction = 'none';
     
     // Cleanup on unmount
     return () => {
@@ -346,7 +343,6 @@ const LiquidMetal = () => {
       if (mesh) scene.remove(mesh);
       if (material) material.dispose();
       if (renderer) renderer.dispose();
-      document.head.removeChild(viewportMeta);
       if (resizeTimeoutRef.current) {
         clearTimeout(resizeTimeoutRef.current);
       }
