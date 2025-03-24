@@ -808,6 +808,7 @@ button.lora-selector span {
 @media (max-width: 1024px) {
   .loraselector-popup {
     width: 90%;
+    margin-left: 0px;
     max-width: 1600px; /* Increased to allow more space */
   }
   

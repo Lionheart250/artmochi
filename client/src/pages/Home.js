@@ -2,8 +2,9 @@ import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useProfile } from '../context/ProfileContext';
 import { useAuth } from '../context/AuthContext';
-import DitherBackground from '../components/DitherBackground';
-import LiquidMetal from '../components/LiquidMetal';
+import TribalLiquidMetal from '../components/TribalLiquidMetal';
+import LiquidMetalContainer from '../components/LiquidMetalContainer';
+import LiquidMetalButton from '../components/LiquidMetalButton'; // Import LiquidMetalButton
 import './Home.css';
 
 const Home = () => {
@@ -43,44 +44,51 @@ const Home = () => {
 
     return (
         <div className="home-container" ref={containerRef}>
-            {/* Liquid Metal Background */}
-            <LiquidMetal />
+            {/* Tribal Liquid Metal Background - ensure it fills screen */}
+            <TribalLiquidMetal />
             
             {/* Content Container */}
             <div className="content-container">
-                <div className="interface-layer">
-                    {/* System Status */}
-                    <div className="system-status">
-                        <div className="status-line">NEURAL_ENGINE: ONLINE</div>
-                        <div className="status-metrics">AI_SYSTEMS: READY</div>
-                    </div>
-
-                    {/* Main Content */}
-                    <div className="content-frame">
+                {/* Remove any width/height constraints on content-container */}
+                <div className="liquid-metal-wrapper">
+                    {/* The wrapper ensures LiquidMetalContainer gets proper dimensions */}
+                    <LiquidMetalContainer 
+                        borderWidth={12}
+                        className="custom-container"
+                        style={{ 
+                            width: '100%', 
+                            height: '100%',
+                            margin: '0 auto',
+                            maxWidth: '900px' 
+                        }}
+                    >
                         <h1 className="glitch-title">
                             <span className="glitch-text" data-text="ArtMochi">ArtMochi</span>
                         </h1>
                         
                         <p className="site-tagline">AI ART CREATION & GALLERY PLATFORM</p>
 
-                        {/* Neural Interface Controls */}
+                        {/* Neural Interface Controls - Now with LiquidMetalButtons */}
                         <div className="neural-interface">
-                            <Link to="/imagegenerator" className="neural-link">
+                            <LiquidMetalButton 
+                                to="/imagegenerator" 
+                                borderWidth={6}
+                                className="create-button"
+                            >
                                 <span className="link-text">CREATE ART</span>
-                                <span className="link-path">/neural/create</span>
-                            </Link>
+                                <span className="link-path">/create</span>
+                            </LiquidMetalButton>
 
-                            <Link to="/gallery" className="neural-link">
+                            <LiquidMetalButton 
+                                to="/gallery" 
+                                borderWidth={6}
+                                className="gallery-button"
+                            >
                                 <span className="link-text">EXPLORE GALLERY</span>
-                                <span className="link-path">/neural/gallery</span>
-                            </Link>
+                                <span className="link-path">/gallery</span>
+                            </LiquidMetalButton>
                         </div>
-                    </div>
-
-                    {/* System Signature */}
-                    <div className="system-signature">
-                        <span className="signature-text">[NEURAL_ART_ENGINE:V2.0]</span>
-                    </div>
+                    </LiquidMetalContainer>
                 </div>
             </div>
         </div>
