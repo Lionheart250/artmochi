@@ -1,4 +1,7 @@
 {
+  "name": "artmochi",
+  "version": "1.0.0",
+  "private": true,
   "dependencies": {
     "@runware/sdk-js": "^1.1.36",
     "crypto": "^1.0.1",
@@ -7,11 +10,14 @@
     "sharp": "^0.33.5"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "cd server && npm start",
     "prebuild": "node create-thumbnails.js",
-    "build": "react-scripts build",
+    "build": "cd client && bash ./build.sh",
     "build:thumbnails": "node create-thumbnails.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }
