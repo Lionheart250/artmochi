@@ -178,12 +178,9 @@ function AppContent({ isEmergencyMode }) {
       <Header />
       {isEmergencyMode && (
         <div style={{
-          background: '#ffebee', 
-          padding: '10px', 
-          textAlign: 'center',
-          borderBottom: '1px solid #ffcdd2'
+          
         }}>
-          Recovered from redirect loop. Some features may be limited.
+          
         </div>
       )}
       <Routes location={background || location}>

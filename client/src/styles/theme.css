@@ -1,0 +1,228 @@
+/* ========= ArtMochi Global Theme - Monochromatic Edition ========= */
+/* Reality System Variables */
+:root {
+  /* Monochromatic base - extreme contrast */
+  --black-pure: #000000;
+  --black-soft: #050505;
+  --gray-dark: #111111;
+  --gray-mid: #222222;
+  --gray-accent: #333333;
+  --gray-light: #999999;
+  --gray-lighter: #cccccc;
+  --white: #FFFFFF;
+  
+  /* Monochromatic accent palette */
+  --accent: rgba(255, 255, 255, 0.9);     /* Primary accent - bright white */
+  --accent-dark: rgba(200, 200, 200, 0.9); /* Darker accent for shadows */
+  --accent-glow: rgba(255, 255, 255, 0.2); /* White glow effect */
+  --accent-bright: rgba(255, 255, 255, 0.9); /* Bright version for highlights */
+  --accent-secondary: rgba(220, 220, 220, 0.9); /* Secondary accent */
+  
+  /* Secondary accents - used sparingly and still monochrome */
+  --highlight: rgba(255, 255, 255, 0.7);   /* Highlight color */
+  --lowlight: rgba(100, 100, 100, 0.7);    /* Lowlight color */
+  
+  /* Functional color mapping */
+  --bg-primary: var(--black-pure);
+  --bg-secondary: var(--black-soft);
+  --bg-tertiary: var(--gray-dark);
+  --bg-elevated: var(--gray-mid);
+  
+  /* Interface elements - monochromatic */
+  --bg-main: rgba(0, 0, 0, 0.85);
+  --bg-element: rgba(10, 10, 10, 0.85);
+  --border-light: rgba(255, 255, 255, 0.2);
+  --border-accent: rgba(255, 255, 255, 0.5);
+  
+  /* Text hierarchy */
+  --text-primary: var(--white);
+  --text-secondary: var(--gray-light);
+  --text-accent: var(--white);  /* Changed to white from cyan */
+  --text-terminal: var(--white); /* Changed to white from cyan */
+  --text-glow: 0 0 5px rgba(255, 255, 255, 0.5); /* White text glow */
+  
+  /* Interaction states - updated to monochrome */
+  --focus-border: var(--white);
+  --hover-effect: var(--gray-accent);
+  --active-glow: rgba(255, 255, 255, 0.5); /* Changed to white */
+  
+  /* Effects - updating to match monochromatic aesthetic */
+  --shadow-brutal: 4px 4px 0px rgba(255, 255, 255, 0.8);
+  --shadow-brutal-alt: 4px 4px 0px rgba(200, 200, 200, 0.8);
+  --border-brutal: 2px solid var(--white);
+  
+  /* Digital artifacts */
+  --scanline: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.03),
+    rgba(255, 255, 255, 0.03) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  
+  /* No rounded corners in brutalism */
+  --radius-none: 0px;
+  
+  /* Border widths */
+  --border-thin: 1px;
+  --border-medium: 2px;
+  --border-thick: 3px;
+  
+  /* Animation */
+  --transition-glitch: 0.1s steps(2, end);
+  --transition-fast: 0.2s ease;
+  --transition-speed: 0.3s;
+  
+  /* Fonts */
+  --font-display: 'Chakra Petch', 'Eurostile', sans-serif;
+  --font-body: 'IBM Plex Mono', monospace;
+  --font-terminal: 'VT323', monospace;
+
+  /* Core Colors - now monochromatic */
+  --void: #000000;
+  --signal: #ffffff;
+  --grid: rgba(255, 255, 255, 0.15);
+  
+  /* Effect Layers */
+  --z-background: 1;
+  --z-effects: 5;
+  --z-content: 10;
+  --z-interface: 10;
+  --z-overlay: 15;
+  --z-modal: 20;
+  
+  /* Structural */
+  --header-height: 60px; 
+  --footer-height: 40px;
+  --content-margin: 60px;
+}
+
+/* Custom scrollbar - updated to match monochrome theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--black-pure);
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gray-mid);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-accent);
+}
+
+/* Global Reset & Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Body styling */
+body {
+  background: var(--bg-primary);
+  background-image: var(--scanline);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Brutalist card - now monochrome */
+.card {
+  background-color: var(--bg-secondary);
+  border: var(--border-medium) solid var(--white);
+  border-radius: var(--radius-none);
+  padding: 20px;
+  box-shadow: var(--shadow-brutal);
+  position: relative;
+}
+
+/* Brutalist button - primary - now monochrome */
+.button-primary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: var(--border-medium) solid var(--white);
+  border-radius: var(--radius-none);
+  padding: 12px 20px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 rgba(255, 255, 255, 0.8);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.button-primary:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* Brutalist button - secondary */
+.button-secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: var(--border-medium) solid var(--white);
+  padding: 10px 16px;
+  font-family: var(--font-display);
+  box-shadow: 4px 4px 0 rgba(180, 180, 180, 0.8);
+}
+
+/* Terminal text effect - now white */
+.terminal-text {
+  color: var(--text-terminal);
+  font-family: var(--font-terminal);
+  position: relative;
+}
+
+.terminal-text::after {
+  content: '▌';
+  animation: blink 1s infinite;
+}
+
+/* Brutal heading - now monochrome */
+.heading-brutal {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border-bottom: var(--border-medium) solid var(--white);
+  padding-bottom: 8px;
+  display: inline-block;
+}
+
+/* Animations */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes scan {
+  0% { top: -100%; }
+  100% { top: 100%; }
+}
+
+@keyframes status-scan {
+  0% { left: -50%; }
+  100% { left: 100%; }
+}
+
+@keyframes subtle-pulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 30px rgba(0, 0, 0, 0.8),
+      0 0 50px rgba(255, 255, 255, 0.05);
+  }
+  50% {
+    box-shadow: 
+      0 0 30px rgba(0, 0, 0, 0.8),
+      0 0 50px rgba(255, 255, 255, 0.1);
+  }
+}

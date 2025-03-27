@@ -95,7 +95,7 @@ html, body {
   overflow-x: hidden;
   scrollbar-width: thin;
   scrollbar-color: var(--accent-primary) var(--surface-tertiary);
-  cursor: none !important;
+  cursor: auto !important;
 }
 
 html {
@@ -106,14 +106,10 @@ body {
   position: relative;
 }
 
-a, button, input, textarea, select, [role="button"], 
-.interactive, .clickable {
-  cursor: none !important;
-}
-
 a {
   color: inherit;
   text-decoration: none;
+  cursor: pointer !important;
 }
 
 button {
@@ -121,6 +117,50 @@ button {
   border: none;
   font-family: inherit;
   color: inherit;
+  cursor: pointer !important;
+}
+
+input, textarea, select, [role="button"], 
+.interactive, .clickable {
+  cursor: pointer !important;
+}
+
+.normal-cursor * {
+  cursor: auto !important;
+}
+
+.normal-cursor a, 
+.normal-cursor button, 
+.normal-cursor input[type="submit"], 
+.normal-cursor [role="button"], 
+.normal-cursor .interactive, 
+.normal-cursor .clickable {
+  cursor: pointer !important;
+  pointer-events: auto !important;
+}
+
+/* Override any styles that might have pointer-events: none */
+.home-container {
+  pointer-events: auto !important;
+}
+
+.home-background-elements * {
+  pointer-events: none !important;
+}
+
+/* Make sure buttons remain clickable */
+.home-primary-button, 
+.home-secondary-button {
+  position: relative;
+  z-index: 5;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+/* Ensure gallery items are clickable */
+.home-gallery-item {
+  cursor: pointer !important;
+  pointer-events: auto !important;
 }
 
 /* Custom scrollbar */
@@ -144,50 +184,6 @@ button {
 }
 
 /* ===== Custom Cursor - Optimized for Performance ===== */
-.custom-cursor {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  pointer-events: none;
-  z-index: var(--z-max);
-  transform-origin: center;
-  mix-blend-mode: difference;
-  
-  /* Performance optimizations */
-  will-change: transform;
-  transform: translate3d(0, 0, 0);
-  
-  /* Don't use transition for position - causes lag */
-  transition: width 0.2s, height 0.2s, border-color 0.2s;
-}
-
-.custom-cursor.enlarged {
-  width: 60px;
-  height: 60px;
-  border-color: rgba(0, 190, 255, 0.7);
-}
-
-.cursor-dot {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 6px;
-  height: 6px;
-  background-color: #fff;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  transition: width 0.2s, height 0.2s, background 0.2s;
-}
-
-.custom-cursor.enlarged .cursor-dot {
-  width: 8px;
-  height: 8px;
-  background-color: var(--accent-primary);
-}
 
 /* ===== Main Container ===== */
 .artmochi-home {
@@ -337,7 +333,7 @@ button {
   max-width: 1400px;
   margin: 0 auto;
   padding-top: var(--space-xxl);
-  z-index: var(--z-base);
+  z-index: 9999;
   position: relative;
 }
 
@@ -1059,6 +1055,7 @@ button {
   border-radius: var(--border-radius-md);
   aspect-ratio: 1;
   cursor: pointer;
+  pointer-events: auto !important;
 }
 
 .home-gallery-item::before {
@@ -1774,10 +1771,4 @@ button {
   .home-scroll-indicator {
     bottom: 80px;
   }
-}
-
-/* Ensure cursor doesn't flicker */
-html, body, a, button, input, textarea, select, 
-[role="button"], .interactive, .clickable {
-  cursor: none !important;
 }
