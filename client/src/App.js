@@ -11,7 +11,6 @@ import Profile from './pages/Profile';
 import EmailVerification from './pages/EmailVerification';
 import VerificationSent from './pages/VerificationSent';
 import Header from './components/Header';
-import Footer from './components/Footer';
 import { AuthProvider } from './context/AuthContext';
 import { ProfileProvider } from './context/ProfileContext';
 import { SubscriptionProvider } from './features/subscriptions/store/SubscriptionContext';
@@ -218,7 +217,7 @@ function AppContent({ isEmergencyMode }) {
           />
         </Routes>
       )}
-      <Footer />
+
     </>
   );
 }

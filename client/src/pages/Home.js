@@ -398,9 +398,9 @@ const Home = () => {
                     <span className="home-luxury-letter">A</span>I-
                     <span className="home-luxury-letter">P</span>owered
                   </span> 
-                  <span className="home-luxury-letter"></span>Art
+                  <span className="home-luxury-letter">Art</span>
                   <div className="home-title-row">
-                    <span className="home-luxury-letter"></span>Creation
+                    <span className="home-luxury-letter">Creation</span>
                     <span className="home-highlight">
                       <span className="home-luxury-letter">S</span>tudio
                     </span>

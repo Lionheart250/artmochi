@@ -1,93 +1,161 @@
-import React, { Suspense, useEffect, useRef } from 'react';
-import { Canvas, useFrame, useThree, extend } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
+import React, { useRef, Suspense, useMemo } from 'react';
+import { Canvas, useThree, useFrame } from '@react-three/fiber';
+import { Environment, ContactShadows } from '@react-three/drei';
 import * as THREE from 'three';
 import NeuralNetwork from './NeuralNetwork';
 
-// Import Three.js post-processing classes directly
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
-import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
-
-// Extend Three.js classes so they can be used in JSX
-extend({ EffectComposer, RenderPass, UnrealBloomPass, ShaderPass });
-
-// Custom post-processing using raw Three.js classes - no react-postprocessing
-const Effects = () => {
-  const { gl, scene, camera, size } = useThree();
-  const composer = useRef();
+// Ambient particles that float around the scene
+const AmbientParticles = () => {
+  const points = useRef();
+  const count = 80;
   
-  useEffect(() => {
-    // Create a new effect composer
-    composer.current = new EffectComposer(gl);
-    
-    // Add render pass
-    const renderPass = new RenderPass(scene, camera);
-    composer.current.addPass(renderPass);
-    
-    // Add bloom pass
-    const bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(size.width, size.height),
-      1.5,  // strength
-      0.4,  // radius
-      0.85  // threshold
-    );
-    composer.current.addPass(bloomPass);
-    
-    // Handle resize
-    return () => {
-      composer.current.dispose();
-    };
-  }, [gl, scene, camera, size]);
-  
-  // Handle window resize
-  useEffect(() => {
-    const handleResize = () => {
-      if (composer.current) {
-        composer.current.setSize(size.width, size.height);
-      }
-    };
-    
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [size]);
-  
-  // Use composer for rendering instead of default WebGLRenderer
-  useFrame((_, delta) => {
-    if (composer.current) {
-      composer.current.render(delta);
+  // Create particle positions
+  const positions = useMemo(() => {
+    const pos = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      pos[i * 3] = (Math.random() - 0.5) * 10;
+      pos[i * 3 + 1] = (Math.random() - 0.5) * 10;
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 10;
     }
-  }, 1);
+    return pos;
+  }, [count]);
+  
+  useFrame(({ clock }) => {
+    if (!points.current) return;
+    
+    const time = clock.getElapsedTime();
+    const positionArray = points.current.geometry.attributes.position.array;
+    
+    for (let i = 0; i < count; i++) {
+      const i3 = i * 3;
+      // Gentle movement
+      positionArray[i3] += Math.sin(time * 0.1 + i) * 0.005;
+      positionArray[i3 + 1] += Math.cos(time * 0.1 + i) * 0.005;
+    }
+    
+    points.current.geometry.attributes.position.needsUpdate = true;
+  });
+  
+  return (
+    <points ref={points}>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          count={count}
+          array={positions}
+          itemSize={3}
+        />
+      </bufferGeometry>
+      <pointsMaterial
+        size={0.1}
+        color="#0088ff"
+        transparent
+        opacity={0.6}
+        sizeAttenuation
+      />
+    </points>
+  );
+};
+
+// Subtle ambient glow effect
+const AmbientGlow = () => {
+  const mesh = useRef();
+  
+  useFrame(({ clock }) => {
+    if (!mesh.current) return;
+    
+    const time = clock.getElapsedTime();
+    mesh.current.material.opacity = 0.3 + Math.sin(time * 0.5) * 0.1;
+  });
+  
+  return (
+    <mesh ref={mesh} position={[0, 0, 0]}>
+      <sphereGeometry args={[3, 32, 32]} />
+      <meshBasicMaterial 
+        color="#003A80" 
+        transparent={true} 
+        opacity={0.3}
+        side={THREE.BackSide}
+      />
+    </mesh>
+  );
+};
+
+// Camera controller with smooth damping
+const CameraController = () => {
+  const { camera } = useThree();
+  
+  useFrame(({ mouse }) => {
+    // Set initial position if needed
+    if (!camera.userData.initialized) {
+      camera.position.set(4, 2, 8);
+      camera.lookAt(0, 0, 0);
+      camera.userData.initialized = true;
+    }
+    
+    // Subtle camera movement following mouse
+    const damping = 0.05;
+    const x = mouse.x * 2;
+    const y = mouse.y * 1;
+    
+    camera.position.x = THREE.MathUtils.lerp(camera.position.x, 4 + x, damping);
+    camera.position.y = THREE.MathUtils.lerp(camera.position.y, 2 + y, damping);
+    
+    camera.lookAt(0, 0, 0);
+  });
   
   return null;
 };
 
-// Main 3D scene
-const Neural3DScene = ({ className }) => {
+// Main scene component - NO POST PROCESSING EFFECTS AT ALL
+const Neural3DScene = () => {
   return (
-    <div className={className || "neural-scene-container"} style={{ width: "100%", height: "100%" }}>
-      <Canvas 
-        dpr={[1, 1.5]} 
-        camera={{ position: [0, 0, 5], fov: 45 }}
-        gl={{ 
-          powerPreference: "high-performance",
-          antialias: true,
-          alpha: true
-        }}
-      >
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[10, 10, 5]} intensity={1.5} />
-        <pointLight position={[-5, 0, -5]} intensity={1} color="#2080ff" />
+    <Canvas 
+      shadows 
+      gl={{ 
+        antialias: true, 
+        alpha: true,
+        powerPreference: "high-performance" 
+      }}
+      dpr={[1, 1.5]}
+      style={{ background: 'transparent' }}
+    >
+      <color attach="background" args={['#000']} />
+      
+      <CameraController />
+      
+      <ambientLight intensity={0.2} />
+      <directionalLight 
+        position={[5, 8, 5]} 
+        intensity={0.8} 
+        castShadow 
+      />
+      <pointLight position={[-3, 0, -3]} intensity={0.4} color="#0066FF" />
+      <pointLight position={[3, 2, 3]} intensity={0.3} color="#00AAFF" />
+      
+      <Suspense fallback={null}>
+        <NeuralNetwork />
+        <AmbientParticles />
+        <AmbientGlow />
         
-        <Suspense fallback={null}>
-          <NeuralNetwork />
-          <Effects />
-        </Suspense>
+        <Environment preset="warehouse" />
         
-        <OrbitControls enableZoom={false} enablePan={false} />
-      </Canvas>
-    </div>
+        <ContactShadows 
+          opacity={0.5} 
+          scale={10} 
+          blur={2} 
+          far={5} 
+          resolution={256} 
+          color="#000000" 
+        />
+      </Suspense>
+      
+      {/* Manual bloom fallback */}
+      <mesh scale={[30, 30, 30]}>
+        <sphereGeometry args={[1, 16, 16]} />
+        <meshBasicMaterial color="black" side={THREE.BackSide} />
+      </mesh>
+    </Canvas>
   );
 };
 

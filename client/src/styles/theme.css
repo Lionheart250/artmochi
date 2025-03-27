@@ -51,15 +51,6 @@
   --shadow-brutal-alt: 4px 4px 0px rgba(200, 200, 200, 0.8);
   --border-brutal: 2px solid var(--white);
   
-  /* Digital artifacts */
-  --scanline: repeating-linear-gradient(
-    0deg,
-    rgba(255, 255, 255, 0.03),
-    rgba(255, 255, 255, 0.03) 1px,
-    transparent 1px,
-    transparent 2px
-  );
-  
   /* No rounded corners in brutalism */
   --radius-none: 0px;
   
@@ -124,16 +115,7 @@
   box-sizing: border-box;
 }
 
-/* Body styling */
-body {
-  background: var(--bg-primary);
-  background-image: var(--scanline);
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  line-height: 1.6;
-  overflow-x: hidden;
-  position: relative;
-}
+
 
 /* Brutalist card - now monochrome */
 .card {
@@ -176,18 +158,6 @@ body {
   box-shadow: 4px 4px 0 rgba(180, 180, 180, 0.8);
 }
 
-/* Terminal text effect - now white */
-.terminal-text {
-  color: var(--text-terminal);
-  font-family: var(--font-terminal);
-  position: relative;
-}
-
-.terminal-text::after {
-  content: '▌';
-  animation: blink 1s infinite;
-}
-
 /* Brutal heading - now monochrome */
 .heading-brutal {
   font-family: var(--font-display);
@@ -196,22 +166,6 @@ body {
   border-bottom: var(--border-medium) solid var(--white);
   padding-bottom: 8px;
   display: inline-block;
-}
-
-/* Animations */
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-@keyframes scan {
-  0% { top: -100%; }
-  100% { top: 100%; }
-}
-
-@keyframes status-scan {
-  0% { left: -50%; }
-  100% { left: 100%; }
 }
 
 @keyframes subtle-pulse {
