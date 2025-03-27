@@ -8,6 +8,9 @@ node_modules/
 **/node_modules/
 /.pnp
 .pnp.js
+client/package-lock.json
+client/node_modules
+server/node_modules
 
 # Build outputs
 /build

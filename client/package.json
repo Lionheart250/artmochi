@@ -38,9 +38,9 @@
     "start": "NODE_ENV=development REACT_APP_ENV=development react-scripts start",
     "dev": "NODE_ENV=development REACT_APP_ENV=development react-scripts start",
     "build": "NODE_ENV=production REACT_APP_ENV=production GENERATE_SOURCEMAP=false react-scripts build",
+    "build:railway": "node prebuild.js",
     "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "build:railway": "npm install --legacy-peer-deps && NODE_ENV=production REACT_APP_ENV=production GENERATE_SOURCEMAP=false react-scripts build"
+    "eject": "react-scripts eject"
   },
   "browserslist": {
     "production": [
