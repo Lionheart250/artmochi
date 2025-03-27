@@ -11,6 +11,10 @@ import axios from 'axios';
 import LazyImage from '../components/LazyImage';
 import './Home.css';
 import { Float32BufferAttribute } from 'three';
+import { EffectComposer, Bloom, ChromaticAberration } from '@react-three/postprocessing';
+import { BlendFunction } from 'postprocessing';
+import NeuralNetwork from '../components/NeuralNetwork';
+import Neural3DScene from '../components/Neural3DScene';
 
 // Animated 3D sphere component
 const AnimatedSphere = () => {
@@ -44,85 +48,6 @@ const AnimatedSphere = () => {
   );
 };
 
-// Neural network visualization
-const NeuralNetwork = () => {
-  const { viewport } = useThree();
-  const group = useRef();
-  const [nodes, setNodes] = useState([]);
-  const [connections, setConnections] = useState([]);
-  
-  useEffect(() => {
-    // Create nodes
-    const newNodes = [];
-    for (let i = 0; i < 50; i++) {
-      newNodes.push({
-        id: i,
-        position: [
-          (Math.random() - 0.5) * 5,
-          (Math.random() - 0.5) * 5,
-          (Math.random() - 0.5) * 5
-        ],
-        size: Math.random() * 0.05 + 0.02
-      });
-    }
-    setNodes(newNodes);
-    
-    // Create connections
-    const newConnections = [];
-    for (let i = 0; i < 70; i++) {
-      const startNode = Math.floor(Math.random() * newNodes.length);
-      const endNode = Math.floor(Math.random() * newNodes.length);
-      if (startNode !== endNode) {
-        newConnections.push({
-          id: i,
-          start: startNode,
-          end: endNode
-        });
-      }
-    }
-    setConnections(newConnections);
-  }, []);
-  
-  useFrame(() => {
-    if (group.current) {
-      group.current.rotation.y += 0.001;
-    }
-  });
-  
-  return (
-    <group ref={group}>
-      {nodes.map((node) => (
-        <mesh key={node.id} position={node.position}>
-          <sphereGeometry args={[node.size, 16, 16]} />
-          <meshBasicMaterial color="#00BBFF" transparent opacity={0.7} />
-        </mesh>
-      ))}
-      
-      {connections.map((connection) => {
-        if (!nodes[connection.start] || !nodes[connection.end]) return null;
-        
-        const start = nodes[connection.start].position;
-        const end = nodes[connection.end].position;
-        
-        // Use line with older version
-        return (
-          <line key={connection.id}>
-            <bufferGeometry>
-              <bufferAttribute
-                attach="attributes-position"
-                count={2}
-                array={new Float32Array([...start, ...end])}
-                itemSize={3}
-              />
-            </bufferGeometry>
-            <lineBasicMaterial color="#00BBFF" opacity={0.2} transparent />
-          </line>
-        );
-      })}
-    </group>
-  );
-};
-
 // Main Home component
 const Home = () => {
     const { user } = useAuth();
@@ -130,38 +55,81 @@ const Home = () => {
     const navigate = useNavigate();
     const containerRef = useRef(null);
     const heroRef = useRef(null);
+    const requestRef = useRef();
+    const previousScrollY = useRef(0);
     const [isLoaded, setIsLoaded] = useState(false);
     const [activeSection, setActiveSection] = useState(0);
     const [featuredImages, setFeaturedImages] = useState([]);
     const [loadingImages, setLoadingImages] = useState(true);
     const [heroImage, setHeroImage] = useState(null);
     const [showMobileMenu, setShowMobileMenu] = useState(false);
-    const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
-    const [cursorEnlarged, setCursorEnlarged] = useState(false);
     const cursorRef = useRef(null);
+    const cursorPositionRef = useRef({ x: 0, y: 0 });
+    const cursorEnlargedRef = useRef(false);
+    const [isHovering, setIsHovering] = useState(false);
 
-    const [scrollProgress, setScrollProgress] = useState({ heroY: 0, featuresY: 0 });
+    const [scrollProgress, setScrollProgress] = useState({ 
+      heroY: 0, 
+      heroBackgroundY: 0,
+      heroForegroundY: 0,
+      featuresY: 0,
+      featuresRotate: 0
+    });
 
+    // Smooth animation loop for parallax effects
+    const animateScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Apply parallax effect directly to DOM elements for better performance
+      if (heroRef.current) {
+        // Get references to layer elements (create these refs at the component top level)
+        const heroBackground = heroRef.current.querySelector('.home-hero-layer.home-hero-background');
+        const heroMidground = heroRef.current.querySelector('.home-hero-layer.home-hero-midground');
+        const heroForeground = heroRef.current.querySelector('.home-hero-layer.home-hero-foreground');
+        const featuresFloating = document.querySelector('.home-features-floating');
+        
+        // Calculate parallax values
+        const heroY = Math.min(200, Math.max(0, (currentScrollY / 500) * 200));
+        const heroBackgroundY = Math.min(300, Math.max(0, (currentScrollY / 500) * 300));
+        const heroForegroundY = Math.min(100, Math.max(0, (currentScrollY / 500) * 100));
+        const featuresY = Math.min(100, Math.max(0, ((currentScrollY - 800) / 500) * 100));
+        const featuresRotate = Math.min(5, Math.max(0, ((currentScrollY - 800) / 1000) * 5));
+        
+        // Direct DOM manipulation for maximum performance
+        if (heroBackground) {
+          heroBackground.style.transform = `translateY(${heroBackgroundY}px)`;
+        }
+        
+        if (heroMidground) {
+          heroMidground.style.transform = `translateY(${heroY}px)`;
+        }
+        
+        if (heroForeground) {
+          heroForeground.style.transform = `translateY(${heroForegroundY}px)`;
+        }
+        
+        if (featuresFloating) {
+          featuresFloating.style.transform = `translateY(${featuresY}px) rotate(${featuresRotate}deg)`;
+        }
+        
+        // Store the scroll position
+        previousScrollY.current = currentScrollY;
+      }
+      
+      // Continue animation loop
+      requestRef.current = requestAnimationFrame(animateScroll);
+    };
+
+    // Set up the scroll animation
     useEffect(() => {
-      const handleScroll = () => {
-        const currentScrollY = window.scrollY;
-        
-        // Calculate heroY transform (0-200px based on scroll position 0-500)
-        const newHeroY = Math.min(200, Math.max(0, (currentScrollY / 500) * 200));
-        
-        // Calculate featuresY transform (0-100px based on scroll position 800-1300)
-        const newFeaturesY = Math.min(100, Math.max(0, ((currentScrollY - 800) / 500) * 100));
-        
-        setScrollProgress({
-          heroY: newHeroY,
-          featuresY: newFeaturesY
-        });
+      requestRef.current = requestAnimationFrame(animateScroll);
+      
+      // Clean up on unmount
+      return () => {
+        if (requestRef.current) {
+          cancelAnimationFrame(requestRef.current);
+        }
       };
-      
-      window.addEventListener('scroll', handleScroll);
-      handleScroll(); // Initialize values
-      
-      return () => window.removeEventListener('scroll', handleScroll);
     }, []);
     
     // Animation variants for motion components
@@ -195,52 +163,56 @@ const Home = () => {
     
     // Custom cursor and window event listeners
     useEffect(() => {
-      const handleMouseMove = (e) => {
-        const x = e.clientX;
-        const y = e.clientY;
-        setCursorPosition({ x, y });
+      // Directly manipulate the DOM for cursor position (no React state updates)
+      const updateCursorPosition = (e) => {
+        if (!cursorRef.current) return;
         
-        // Set css variables for radial gradient
-        document.documentElement.style.setProperty('--mouse-x', `${(x / window.innerWidth) * 100}%`);
-        document.documentElement.style.setProperty('--mouse-y', `${(y / window.innerHeight) * 100}%`);
+        // Store position in ref (not state)
+        cursorPositionRef.current = { x: e.clientX, y: e.clientY };
+        
+        // Apply position directly to DOM element
+        cursorRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+        
+        // Set CSS variables for radial gradient (also directly)
+        document.documentElement.style.setProperty('--mouse-x', `${(e.clientX / window.innerWidth) * 100}%`);
+        document.documentElement.style.setProperty('--mouse-y', `${(e.clientY / window.innerHeight) * 100}%`);
       };
       
-      const handleScroll = () => {
-        // Calculate active section based on scroll position
-        const sections = document.querySelectorAll('section');
-        const currentPosition = window.scrollY + window.innerHeight / 2;
-        
-        sections.forEach((section, index) => {
-          const sectionTop = section.offsetTop;
-          const sectionBottom = sectionTop + section.offsetHeight;
-          
-          if (currentPosition >= sectionTop && currentPosition < sectionBottom) {
-            setActiveSection(index);
-          }
-        });
+      // Track mouse entering/leaving interactive elements
+      const handleMouseEnter = () => {
+        cursorEnlargedRef.current = true;
+        setIsHovering(true);
+        if (cursorRef.current) {
+          cursorRef.current.classList.add('enlarged');
+        }
       };
       
-      const handleHoverStart = () => setCursorEnlarged(true);
-      const handleHoverEnd = () => setCursorEnlarged(false);
+      const handleMouseLeave = () => {
+        cursorEnlargedRef.current = false;
+        setIsHovering(false);
+        if (cursorRef.current) {
+          cursorRef.current.classList.remove('enlarged');
+        }
+      };
       
       // Add event listeners
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('scroll', handleScroll);
+      document.addEventListener('mousemove', updateCursorPosition, { passive: true });
       
-      // Add hover listeners to all interactive elements
-      const interactiveElements = document.querySelectorAll('a, button, .interactive');
-      interactiveElements.forEach(el => {
-        el.addEventListener('mouseenter', handleHoverStart);
-        el.addEventListener('mouseleave', handleHoverEnd);
+      // Find all interactive elements
+      const interactiveElements = document.querySelectorAll('a, button, input, [role="button"], .interactive');
+      
+      // Add listeners to all interactive elements
+      interactiveElements.forEach(element => {
+        element.addEventListener('mouseenter', handleMouseEnter);
+        element.addEventListener('mouseleave', handleMouseLeave);
       });
       
+      // Clean up
       return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('scroll', handleScroll);
-        
-        interactiveElements.forEach(el => {
-          el.removeEventListener('mouseenter', handleHoverStart);
-          el.removeEventListener('mouseleave', handleHoverEnd);
+        document.removeEventListener('mousemove', updateCursorPosition);
+        interactiveElements.forEach(element => {
+          element.removeEventListener('mouseenter', handleMouseEnter);
+          element.removeEventListener('mouseleave', handleMouseLeave);
         });
       };
     }, []);
@@ -295,25 +267,84 @@ const Home = () => {
       
       fetchFeaturedImages();
     }, []);
+
+    useEffect(() => {
+      // Setup for liquid morph animation
+      const liquidMorph = document.querySelector('.home-liquid-morph');
+      if (liquidMorph) {
+        const updateLiquidMorph = () => {
+          const now = Date.now() / 1000;
+          const x = Math.sin(now * 0.5) * 50 + 50;
+          const y = Math.cos(now * 0.3) * 50 + 50;
+          liquidMorph.style.background = `radial-gradient(circle at ${x}% ${y}%, rgba(32, 223, 255, 0.2), transparent 50%), 
+                                          radial-gradient(circle at ${100-x}% ${100-y}%, rgba(255, 82, 224, 0.15), transparent 50%)`;
+        };
+        
+        const liquidInterval = setInterval(updateLiquidMorph, 50);
+        return () => clearInterval(liquidInterval);
+      }
+    }, []);
+
+    // Add sequential hero animation
+    useEffect(() => {
+      if (isLoaded) {
+        const sequence = async () => {
+          // Staggered reveal of UI elements
+          const elements = [
+            '.home-hero-overline',
+            '.home-hero-title',
+            '.home-hero-description',
+            '.home-hero-cta',
+            '.home-hero-visual'
+          ];
+          
+          for (let i = 0; i < elements.length; i++) {
+            const el = document.querySelector(elements[i]);
+            if (el) {
+              el.classList.add('reveal-element');
+              await new Promise(resolve => setTimeout(resolve, 200));
+            }
+          }
+          
+          // Add pulsing glow to neural network after sequence
+          document.querySelector('.home-hero-canvas-wrapper').classList.add('glow-pulse');
+        };
+        
+        sequence();
+      }
+    }, [isLoaded]);
+
+    // Add a dynamic color palette system
+    useEffect(() => {
+      // Create a sophisticated color palette system
+      const updateColorPalette = () => {
+        const time = Date.now() / 10000; // Very slow shift
+        const hue1 = ((Math.sin(time) * 0.5 + 0.5) * 60 + 180) % 360; // Cyan range
+        const hue2 = ((Math.cos(time) * 0.5 + 0.5) * 60 + 300) % 360; // Purple range
+        
+        document.documentElement.style.setProperty('--primary-hue', hue1);
+        document.documentElement.style.setProperty('--accent-hue', hue2);
+      };
+      
+      const colorInterval = setInterval(updateColorPalette, 100);
+      return () => clearInterval(colorInterval);
+    }, []);
     
     return (
       <>
-        {/* Custom cursor */}
+        {/* Single custom cursor */}
         <div 
-          className={`home-custom-cursor ${cursorEnlarged ? 'enlarged' : ''}`} 
+          className="custom-cursor"
           ref={cursorRef}
-          style={{
-            transform: `translate3d(${cursorPosition.x}px, ${cursorPosition.y}px, 0) scale(${cursorEnlarged ? 1.5 : 1})`,
-          }}
         >
-          <div className="home-cursor-dot"></div>
+          <div className="cursor-dot"></div>
         </div>
-      
-        <div className={`artmochi-home ${isLoaded ? 'loaded' : ''}`} ref={containerRef}>
-          {/* Background elements */}
+        
+        <div className="home-container" ref={containerRef}>
           <div className="home-background-elements">
             <div className="home-digital-grid"></div>
             <div className="home-radial-gradient"></div>
+            <div className="home-liquid-morph"></div>
             <div className="home-particle-container">
               {[...Array(50)].map((_, i) => (
                 <div 
@@ -363,8 +394,18 @@ const Home = () => {
                 </motion.span>
                 
                 <motion.h1 className="home-hero-title" variants={slideUp}>
-                  <span className="home-gradient-text">AI-Powered</span> Art
-                  <div className="home-title-row">Creation <span className="home-highlight">Studio</span></div>
+                  <span className="home-gradient-text">
+                    <span className="home-luxury-letter">A</span>I-
+                    <span className="home-luxury-letter">P</span>owered
+                  </span> 
+                  <span className="home-luxury-letter">A</span>rt
+                  <div className="home-title-row">
+                    <span className="home-luxury-letter">C</span>reation 
+                    <span className="home-highlight">
+                      <span className="home-luxury-letter">S</span>tudio
+                    </span>
+                  </div>
+                  <div className="home-title-accent"></div>
                 </motion.h1>
                 
                 <motion.p className="home-hero-description" variants={slideUp}>
@@ -401,17 +442,7 @@ const Home = () => {
                 transition={{ duration: 1, ease: [0.43, 0.13, 0.23, 0.96], delay: 0.5 }}
               >
                 <div className="home-hero-canvas-wrapper">
-                  <Canvas 
-                    dpr={[1, 2]} 
-                    camera={{ position: [0, 0, 5], fov: 45 }}
-                  >
-                    <ambientLight intensity={0.5} />
-                    <directionalLight position={[10, 10, 5]} intensity={1} />
-                    <Suspense fallback={null}>
-                      <NeuralNetwork />
-                    </Suspense>
-                    <OrbitControls enableZoom={false} enablePan={false} />
-                  </Canvas>
+                  <Neural3DScene />
                   
                   <div className="home-canvas-overlay">
                     {heroImage ? (
@@ -453,6 +484,36 @@ const Home = () => {
               </motion.div>
             </motion.div>
             
+            <motion.div 
+              className="home-hero-layer home-hero-background"
+              style={{
+                transform: `translateY(${scrollProgress.heroBackgroundY}px)`,
+                transition: 'transform 0s linear' // Remove transition delay for smooth movement
+              }}
+            >
+              {/* Background content */}
+            </motion.div>
+
+            <motion.div 
+              className="home-hero-layer home-hero-midground"
+              style={{
+                transform: `translateY(${scrollProgress.heroY}px)`,
+                transition: 'transform 0s linear'
+              }}
+            >
+              {/* Midground content */}
+            </motion.div>
+
+            <motion.div 
+              className="home-hero-layer home-hero-foreground"
+              style={{
+                transform: `translateY(${scrollProgress.heroForegroundY}px)`,
+                transition: 'transform 0s linear'
+              }}
+            >
+              {/* Foreground content */}
+            </motion.div>
+
             <div className="home-scroll-indicator">
               <div className="home-mouse">
                 <div className="home-mouse-wheel"></div>
@@ -528,6 +589,13 @@ const Home = () => {
                           y: -10, 
                           boxShadow: "0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 200, 255, 0.2)" 
                         }}
+                        onHoverStart={() => {
+                          document.documentElement.style.setProperty('--feature-hue', `${index * 40}`);
+                          document.body.classList.add('feature-hover');
+                        }}
+                        onHoverEnd={() => {
+                          document.body.classList.remove('feature-hover');
+                        }}
                       >
                         <div className="home-feature-icon">
                           {feature.icon === "text" && (
@@ -571,12 +639,22 @@ const Home = () => {
                         <h3 className="home-feature-title">{feature.title}</h3>
                         <p className="home-feature-description">{feature.description}</p>
                         <div className="home-feature-decoration"></div>
+                        <div className="home-feature-shine"></div> {/* Add glass shine effect */}
                       </motion.div>
                     ))}
                   </motion.div>
                 </motion.div>
               )}
             </InView>
+            <motion.div 
+              className="home-features-floating"
+              style={{
+                transform: `translateY(${scrollProgress.featuresY}px) rotate(${scrollProgress.featuresRotate}deg)`,
+                transition: 'transform 0s linear'
+              }}
+            >
+              {/* Features content */}
+            </motion.div>
           </section>
           
           {/* Gallery Section */}
@@ -672,6 +750,31 @@ const Home = () => {
                         >
                           <span className="home-button-text">Create First Artwork</span>
                         </motion.button>
+                      </motion.div>
+                    )}
+                    
+                    {/* Add a floating gallery label */}
+                    <motion.div 
+                      className="home-gallery-label"
+                      initial={{ opacity: 0 }}
+                      animate={inView ? { opacity: 1 } : { opacity: 0 }}
+                      transition={{ delay: 0.8 }}
+                    >
+                      <div className="home-gallery-badge">CURATED SELECTION</div>
+                    </motion.div>
+                    
+                    {/* Add museum-style image descriptions */}
+                    {featuredImages.length > 0 && (
+                      <motion.div 
+                        className="home-gallery-caption"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                        transition={{ delay: 1 }}
+                      >
+                        <div className="home-caption-line"></div>
+                        <div className="home-caption-text">
+                          Artwork by our neural engine, {new Date().getFullYear()}
+                        </div>
                       </motion.div>
                     )}
                   </motion.div>
