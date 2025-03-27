@@ -139,7 +139,30 @@ const Home = () => {
     const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
     const [cursorEnlarged, setCursorEnlarged] = useState(false);
     const cursorRef = useRef(null);
-    const { scrollY } = useScroll();
+
+    const [scrollProgress, setScrollProgress] = useState({ heroY: 0, featuresY: 0 });
+
+    useEffect(() => {
+      const handleScroll = () => {
+        const currentScrollY = window.scrollY;
+        
+        // Calculate heroY transform (0-200px based on scroll position 0-500)
+        const newHeroY = Math.min(200, Math.max(0, (currentScrollY / 500) * 200));
+        
+        // Calculate featuresY transform (0-100px based on scroll position 800-1300)
+        const newFeaturesY = Math.min(100, Math.max(0, ((currentScrollY - 800) / 500) * 100));
+        
+        setScrollProgress({
+          heroY: newHeroY,
+          featuresY: newFeaturesY
+        });
+      };
+      
+      window.addEventListener('scroll', handleScroll);
+      handleScroll(); // Initialize values
+      
+      return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
     
     // Animation variants for motion components
     const fadeIn = {
@@ -273,11 +296,6 @@ const Home = () => {
       fetchFeaturedImages();
     }, []);
     
-    // Framer-motion scroll animations
-
-    const heroY = useTransform(scrollY, [0, 500], [0, 200]);
-    const featuresY = useTransform(scrollY, [800, 1300], [0, 100]);
-    
     return (
       <>
         {/* Custom cursor */}
@@ -332,7 +350,7 @@ const Home = () => {
           <section className="home-hero-section" ref={heroRef}>
             <motion.div 
               className="home-hero-content"
-              style={{ y: heroY }}
+              style={{ y: scrollProgress.heroY }}
             >
               <motion.div 
                 className="home-hero-text"
@@ -466,7 +484,7 @@ const Home = () => {
                   
                   <motion.div 
                     className="home-features-grid"
-                    style={{ y: featuresY }}
+                    style={{ y: scrollProgress.featuresY }}
                   >
                     {[
                       {
