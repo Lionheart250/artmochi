@@ -836,16 +836,16 @@ const Neural3DScene = () => {
         <CameraController />
         <ChromeSphere />
         <AmbientParticles />
-        <AmbientGlow />
-        <NeuralNetwork />
-        <Environment preset="city" />
+        {/*<AmbientGlow />*/}
+       {/* <NeuralNetwork /> */}
+       {/* <Environment preset="city" />
         <ContactShadows
           position={[0, -5, 0]}
           opacity={0.25}
           scale={10}
           blur={1.5}
-          far={10}
-        />
+          far={10} 
+        /> */}
       </Suspense>
     </Canvas>
   );
