@@ -619,11 +619,70 @@ input, textarea, select, [role="button"],
 .home-hero-canvas-wrapper {
   position: relative;
   width: 100%;
-  height: 500px;
-  border-radius: var(--border-radius-lg);
+  height: 400px; /* Adjust as needed */
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  background: radial-gradient(circle at center, var(--surface-secondary), var(--surface-primary));
+  border-radius: 12px;
+  background-color: rgba(0, 0, 0, 0.2);
+  z-index: 1;
+}
+
+.home-hero-canvas-wrapper canvas {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 2; /* Ensure canvas is above the image */
+}
+
+.home-canvas-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3; /* Above canvas */
+  pointer-events: none; /* Allow interactions with canvas below */
+}
+
+.home-hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.6 !important; /* Ensure opacity is applied */
+  mix-blend-mode: overlay !important; /* Blend with background */
+}
+
+.home-overlay-glare {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0) 50%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  z-index: 4; /* Above image */
+}
+
+.home-canvas-frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5; /* Above everything */
+  pointer-events: none;
+}
+
+.home-corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .home-canvas-overlay {

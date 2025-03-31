@@ -289,6 +289,9 @@ const Home = () => {
     useEffect(() => {
       if (isLoaded) {
         const sequence = async () => {
+          // Add a variable to track if component is still mounted
+          let isMounted = true;
+          
           // Staggered reveal of UI elements
           const elements = [
             '.home-hero-overline',
@@ -298,7 +301,7 @@ const Home = () => {
             '.home-hero-visual'
           ];
           
-          for (let i = 0; i < elements.length; i++) {
+          for (let i = 0; i < elements.length && isMounted; i++) {
             const el = document.querySelector(elements[i]);
             if (el) {
               el.classList.add('reveal-element');
@@ -306,12 +309,28 @@ const Home = () => {
             }
           }
           
-          // Add pulsing glow to neural network after sequence
-          document.querySelector('.home-hero-canvas-wrapper').classList.add('glow-pulse');
+          // Add pulsing glow to neural network after sequence - WITH NULL CHECK
+          const canvasWrapper = document.querySelector('.home-hero-canvas-wrapper');
+          if (canvasWrapper) {
+            canvasWrapper.classList.add('glow-pulse');
+          }
         };
         
         sequence();
       }
+    }, [isLoaded]);
+
+    // Add sequential hero animation
+    useEffect(() => {
+      let isMounted = true;
+      
+      if (isLoaded && isMounted) {
+        sequence();
+      }
+      
+      return () => {
+        isMounted = false; // Mark as unmounted on cleanup
+      };
     }, [isLoaded]);
 
     // Add a dynamic color palette system
@@ -329,6 +348,63 @@ const Home = () => {
       const colorInterval = setInterval(updateColorPalette, 100);
       return () => clearInterval(colorInterval);
     }, []);
+    
+    // Define this outside of sequence to avoid recreation on each call
+    const safelyAddClass = (selector, className) => {
+      try {
+        const element = document.querySelector(selector);
+        if (element) {
+          element.classList.add(className);
+          return true;
+        }
+      } catch (error) {
+        console.warn(`Error adding class to ${selector}:`, error.message);
+      }
+      return false;
+    };
+    
+    const sequence = async () => {
+      let mounted = true;
+      
+      // Staggered reveal of UI elements with safety checks
+      const elements = [
+        '.home-hero-overline',
+        '.home-hero-title',
+        '.home-hero-description',
+        '.home-hero-cta',
+        '.home-hero-visual'
+      ];
+      
+      for (let i = 0; i < elements.length; i++) {
+        if (!mounted) return;
+        safelyAddClass(elements[i], 'reveal-element');
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+      
+      // Add pulsing glow to neural network after sequence with safety check
+      safelyAddClass('.home-hero-canvas-wrapper', 'glow-pulse');
+    };
+    
+    useEffect(() => {
+      let isMounted = true;
+      
+      if (isLoaded && isMounted) {
+        // Use a try/catch to ensure any errors in the sequence don't break the app
+        try {
+          sequence().catch(err => {
+            if (isMounted) {
+              console.warn('Animation sequence error (handled):', err.message);
+            }
+          });
+        } catch (err) {
+          console.warn('Animation sequence error (outer catch):', err.message);
+        }
+      }
+      
+      return () => {
+        isMounted = false;
+      };
+    }, [isLoaded]);
     
     return (
       <>
@@ -437,7 +513,7 @@ const Home = () => {
               
               <motion.div 
                 className="home-hero-visual"
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 1, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 1, ease: [0.43, 0.13, 0.23, 0.96], delay: 0.5 }}
               >
