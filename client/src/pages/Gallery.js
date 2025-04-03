@@ -14,7 +14,6 @@ import ImageModal from '../components/ImageModal';
 import { customHistory } from '../utils/CustomHistory';
 import LazyImage from '../components/LazyImage'; // Ensure LazyImage component is imported
 
-
 const Gallery = () => {
     const { user, profile } = useAuth();
     const { fetchUserProfile } = useProfile();
@@ -64,87 +63,73 @@ const Gallery = () => {
     const [pageHistory, setPageHistory] = useState([1]);
     const [galleryState, setGalleryState] = useState(null);
 
-    // Add this cleanupDOM function near the top of your Gallery component
-const cleanupDOM = useCallback(() => {
-    console.log('Running DOM cleanup before navigation');
-    
-    // Clean up dropdowns first - CRITICAL FOR FIXING THE ERROR
-    document.querySelectorAll('.custom-dropdown-wrapper').forEach(wrapper => {
-      if (wrapper && wrapper.parentNode) {
-        try {
-          // First remove event listeners to prevent memory leaks
-          const selected = wrapper.querySelector('.custom-dropdown-selected');
-          if (selected && selected._clickHandler) {
-            selected.removeEventListener('click', selected._clickHandler);
-          }
-          wrapper.parentNode.removeChild(wrapper);
-        } catch (e) {
-          console.error('Error removing dropdown:', e);
+    const cleanupDOM = useCallback(() => {
+        console.log('Running DOM cleanup before navigation');
+        
+        document.querySelectorAll('.custom-dropdown-wrapper').forEach(wrapper => {
+            if (wrapper && wrapper.parentNode) {
+                try {
+                    const selected = wrapper.querySelector('.custom-dropdown-selected');
+                    if (selected && selected._clickHandler) {
+                        selected.removeEventListener('click', selected._clickHandler);
+                    }
+                    wrapper.parentNode.removeChild(wrapper);
+                } catch (e) {
+                    console.error('Error removing dropdown:', e);
+                }
+            }
+        });
+        
+        if (window._closeAllDropdowns) {
+            document.removeEventListener('click', window._closeAllDropdowns);
+            window._closeAllDropdowns = null;
         }
-      }
-    });
+        
+        document.querySelectorAll('.modal-transition-overlay').forEach(el => {
+            if (el && el.parentNode) {
+                try {
+                    el.parentNode.removeChild(el);
+                } catch (e) {
+                    console.error('Error removing overlay:', e);
+                }
+            }
+        });
+        
+        document.body.classList.remove('modal-open');
+        window.__internalImageNavigation = false;
+    }, []);
     
-    // Clean up global click handler
-    if (window._closeAllDropdowns) {
-      document.removeEventListener('click', window._closeAllDropdowns);
-      window._closeAllDropdowns = null;
-    }
-    
-    // Clean up any modal overlays
-    document.querySelectorAll('.modal-transition-overlay').forEach(el => {
-      if (el && el.parentNode) {
-        try {
-          el.parentNode.removeChild(el);
-        } catch (e) {
-          console.error('Error removing overlay:', e);
-        }
-      }
-    });
-    
-    // Clean up body classes
-    document.body.classList.remove('modal-open');
-    
-    // Reset any flags
-    window.__internalImageNavigation = false;
-  }, []);
-  
-  // Add this useEffect to make the cleanup function available globally
-  useEffect(() => {
-    // Make cleanup function available to header navigation
-    window.__galleryCleanup = cleanupDOM;
-    
-    // Clean up on unmount
-    return () => {
-      cleanupDOM();
-      delete window.__galleryCleanup;
-    };
-  }, [cleanupDOM]);
+    useEffect(() => {
+        window.__galleryCleanup = cleanupDOM;
+        return () => {
+            cleanupDOM();
+            delete window.__galleryCleanup;
+        };
+    }, [cleanupDOM]);
 
-    // Replace the problematic useEffect with:
     useEffect(() => {
         const loadProfile = async () => {
-            if (profileLoaded.current) return; // Skip if already loaded
+            if (profileLoaded.current) return;
             
             const token = localStorage.getItem('token');
             if (user && token && !profile) {
                 try {
-                    profileLoaded.current = true; // Mark as loaded before fetch
+                    profileLoaded.current = true;
                     await fetchUserProfile(token);
                 } catch (error) {
                     console.error('Error fetching profile:', error);
-                    profileLoaded.current = false; // Reset on error
+                    profileLoaded.current = false;
                 }
             }
         };
 
         loadProfile();
-    }, []); // Empty dependency array since we're using refs
+    }, []);
 
     useEffect(() => {
         const fetchImagesAndCheckAuth = async () => {
             const token = localStorage.getItem('token');
             
-            // Check auth status first
             if (token) {
                 try {
                     const decoded = jwtDecode(token);
@@ -157,7 +142,6 @@ const cleanupDOM = useCallback(() => {
                 }
             }
     
-            // Fetch images with auth header if token exists
             try {
                 const response = await fetch(`${process.env.REACT_APP_API_URL}/images`, {                    
                     headers: token ? {
@@ -176,27 +160,23 @@ const cleanupDOM = useCallback(() => {
         fetchImagesAndCheckAuth();
     }, []);
 
-    // 2. Optimize fetchImageDetails with caching and parallel requests
     const fetchImageDetails = async (imageId) => {
         if (!imageId) return;
         const token = localStorage.getItem('token');
         
         try {
-            // First get image details and user profile in parallel
             const imageResponse = await fetch(`${process.env.REACT_APP_API_URL}/images/${imageId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
             const imageData = await imageResponse.json();
             
-            // Get image owner's profile data
             const userProfileResponse = await fetch(`${process.env.REACT_APP_API_URL}/user_profile/${imageData.user_id}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
             const userProfileData = await userProfileResponse.json();
 
-            // Set image details with owner's profile
             setImageUserDetails(prev => ({
                 ...prev,
                 [imageId]: {
@@ -204,11 +184,10 @@ const cleanupDOM = useCallback(() => {
                     username: userProfileData.username,
                     profile_picture: userProfileData.profile_picture,
                     user_id: imageData.user_id,
-                    loras_used: imageData.loras_used  // Make sure loras_used is explicitly included
+                    loras_used: imageData.loras_used
                 }
             }));
 
-            // Fetch comments, follow status, and likes in parallel
             const [commentsResponse, followStatusResponse, likesResponse] = await Promise.all([
                 fetch(`${process.env.REACT_APP_API_URL}/fetch_comments?id=${imageId}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -227,23 +206,19 @@ const cleanupDOM = useCallback(() => {
                 likesResponse.json()
             ]);
 
-            // Update follow status
             if (followStatusResponse.ok) {
                 setIsFollowing(followStatus.is_following);
             }
 
-            // Update likes
             setLikes(prev => ({ ...prev, [imageId]: likesData.count }));
 
             if (commentsResponse.ok) {
-                // First, initialize comments array
                 setComments(prev => ({
                     ...prev,
                     [imageId]: commentsData.comments || []
                 }));
                 
                 if (commentsData.comments?.length > 0) {
-                    // Get each comment author's profile and likes
                     for (const comment of commentsData.comments) {
                         try {
                             const [profileResponse, commentLikesResponse] = await Promise.all([
@@ -260,7 +235,6 @@ const cleanupDOM = useCallback(() => {
                                 commentLikesResponse.json()
                             ]);
                             
-                            // Update comments with profile data
                             setComments(prev => ({
                                 ...prev,
                                 [imageId]: prev[imageId].map(c => 
@@ -274,7 +248,6 @@ const cleanupDOM = useCallback(() => {
                                 )
                             }));
 
-                            // Update comment likes
                             setCommentLikes(prev => ({
                                 ...prev,
                                 [comment.id]: commentLikesData.count
@@ -316,13 +289,11 @@ const cleanupDOM = useCallback(() => {
     
             const data = await response.json();
             
-            // Update likes count
             setLikes(prev => ({
                 ...prev,
                 [imageId]: data.count
             }));
     
-            // Toggle like status
             setUserLikedImages(prev => {
                 const newSet = new Set(prev);
                 if (isLiked) {
@@ -338,7 +309,6 @@ const cleanupDOM = useCallback(() => {
         }
     };
 
-    // Update comment state when adding new comment
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
         const token = localStorage.getItem('token');
@@ -348,7 +318,6 @@ const cleanupDOM = useCallback(() => {
             const decoded = jwtDecode(token);
             const userId = decoded.userId;
     
-            // Post the new comment
             const response = await fetch(`${process.env.REACT_APP_API_URL}/add_comment`, {                
                 method: 'POST',
                 headers: {
@@ -359,7 +328,6 @@ const cleanupDOM = useCallback(() => {
             });
     
             if (response.ok) {
-                // After adding the comment, fetch all comments again
                 const commentsResponse = await fetch(`${process.env.REACT_APP_API_URL}/fetch_comments?id=${activeImageId}`, {                    
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -368,15 +336,12 @@ const cleanupDOM = useCallback(() => {
     
                 if (commentsResponse.ok) {
                     const commentsData = await commentsResponse.json();
-                    // Update comments state with the latest comments
                     setComments((prev) => ({
                         ...prev,
-                        [activeImageId]: commentsData.comments, // Use the fetched comments
+                        [activeImageId]: commentsData.comments,
                     }));
-                    setCommentInput(''); // Clear the comment input
-
-                    // Fetch image details to update profiles
-                fetchImageDetails(activeImageId);
+                    setCommentInput('');
+                    fetchImageDetails(activeImageId);
                 } else {
                     console.error('Error fetching comments:', await commentsResponse.json());
                 }
@@ -454,7 +419,6 @@ const cleanupDOM = useCallback(() => {
                 return newSet;
             });
     
-            // Fetch updated like count
             await fetchCommentLikeCount(commentId);
         } catch (error) {
             console.error('Error toggling comment like:', error);
@@ -464,47 +428,36 @@ const cleanupDOM = useCallback(() => {
     const navigateImage = (direction, specificId = null) => {
         if (!images.length) return;
         
-        // Set the internal navigation flag to tell the system this is an intentional image navigation
         window.__internalImageNavigation = true;
         
         let newIndex;
         
         if (specificId) {
-          // Navigate to a specific image
-          newIndex = images.findIndex(img => img.id === specificId);
-          if (newIndex === -1) return; // Image not found
+            newIndex = images.findIndex(img => img.id === specificId);
+            if (newIndex === -1) return;
         } else {
-          // Find current index
-          const currentIndex = images.findIndex(img => img.id === activeImageId);
-          if (currentIndex === -1) return; // Current image not found
-          
-          // Calculate new index based on direction
-          if (direction === 'next' || direction === 1) {
-            newIndex = (currentIndex + 1) % images.length;
-          } else {
-            newIndex = (currentIndex - 1 + images.length) % images.length;
-          }
+            const currentIndex = images.findIndex(img => img.id === activeImageId);
+            if (currentIndex === -1) return;
+            
+            if (direction === 'next' || direction === 1) {
+                newIndex = (currentIndex + 1) % images.length;
+            } else {
+                newIndex = (currentIndex - 1 + images.length) % images.length;
+            }
         }
         
-        // Update state with new image
         setActiveImageId(images[newIndex].id);
         setSelectedImage(images[newIndex].image_url);
         
-        // Update URL using PUSH (not replace) to create proper browser history
         const newUrl = `/gallery/image/${images[newIndex].id}`;
         customHistory.replace(newUrl, { fromGallery: true }); 
-
         
-        
-        // Fetch details for the new image if needed
         if (typeof fetchImageDetails === 'function') {
-          fetchImageDetails(images[newIndex].id);
+            fetchImageDetails(images[newIndex].id);
         }
     };
 
-    // Updated openModal that captures complete view state
     const openModal = (image) => {
-        // Save full gallery state before opening modal
         const stateToSave = {
             page: page,
             scrollPosition: window.scrollY,
@@ -519,94 +472,76 @@ const cleanupDOM = useCallback(() => {
         setActiveImageId(image.id);
         setModalOpen(true);
         
-        // Fetch data for this image
         fetchImageDetails(image.id);
         
-        // Update URL using customHistory for proper back button support
         const newUrl = `/gallery/image/${image.id}`;
         customHistory.push(newUrl, { 
             background: location,
             fromGallery: true
         });
         
-        // Add modal-open class to body
         document.body.classList.add('modal-open');
     };
 
-    // Update your closeModal function:
-
-const closeModal = () => {
-    // Get saved state from sessionStorage
-    const savedState = JSON.parse(sessionStorage.getItem('galleryState'));
-    
-    if (!savedState || typeof savedState.scrollPosition !== 'number') {
-        console.error('Missing valid gallery state - cannot restore position');
-        setModalOpen(false);
-        document.body.classList.remove('modal-open');
-        setSelectedImage(null);
-        setActiveImageId(null);
-        return;
-    }
-    
-    const scrollPos = savedState.scrollPosition;
-    console.log('Restoring to position:', scrollPos);
-    
-    // CRITICAL: Completely disable history functions temporarily
-    const originalPushState = window.history.pushState;
-    const originalReplaceState = window.history.replaceState;
-    
-    // Override history methods to prevent any navigation
-    window.history.pushState = function() { return; };
-    window.history.replaceState = function() { return; };
-    
-    // Create opacity transition overlay FIRST
-    const blackOverlay = document.createElement('div');
-    blackOverlay.className = 'modal-transition-overlay';
-    blackOverlay.style.position = 'fixed';
-    blackOverlay.style.top = '0';
-    blackOverlay.style.left = '0';
-    blackOverlay.style.width = '100%';
-    blackOverlay.style.height = '100%';
-    blackOverlay.style.backgroundColor = 'black';
-    blackOverlay.style.zIndex = '9999';
-    blackOverlay.style.opacity = '1';
-    document.body.insertBefore(blackOverlay, document.body.firstChild);
-    
-    // WAIT FOR THE OVERLAY TO BE VISIBLE before closing modal
-    setTimeout(() => {
-        // NOW close the modal (after overlay is visible)
-        setModalOpen(false);
-        document.body.classList.remove('modal-open');
-        setSelectedImage(null);
-        setActiveImageId(null);
+    const closeModal = () => {
+        const savedState = JSON.parse(sessionStorage.getItem('galleryState'));
         
-        // After another tiny delay to allow state updates to complete:
+        if (!savedState || typeof savedState.scrollPosition !== 'number') {
+            console.error('Missing valid gallery state - cannot restore position');
+            setModalOpen(false);
+            document.body.classList.remove('modal-open');
+            setSelectedImage(null);
+            setActiveImageId(null);
+            return;
+        }
+        
+        const scrollPos = savedState.scrollPosition;
+        console.log('Restoring to position:', scrollPos);
+        
+        const originalPushState = window.history.pushState;
+        const originalReplaceState = window.history.replaceState;
+        
+        window.history.pushState = function() { return; };
+        window.history.replaceState = function() { return; };
+        
+        const blackOverlay = document.createElement('div');
+        blackOverlay.className = 'modal-transition-overlay';
+        blackOverlay.style.position = 'fixed';
+        blackOverlay.style.top = '0';
+        blackOverlay.style.left = '0';
+        blackOverlay.style.width = '100%';
+        blackOverlay.style.height = '100%';
+        blackOverlay.style.backgroundColor = 'black';
+        blackOverlay.style.zIndex = '9999';
+        blackOverlay.style.opacity = '1';
+        document.body.insertBefore(blackOverlay, document.body.firstChild);
+        
         setTimeout(() => {
-            // Force scroll position first
-            window.scrollTo(0, scrollPos);
+            setModalOpen(false);
+            document.body.classList.remove('modal-open');
+            setSelectedImage(null);
+            setActiveImageId(null);
             
-            // Restore history functions but still prevent navigation
-            window.history.pushState = originalPushState;
-            window.history.replaceState = originalReplaceState;
-            
-            // Only NOW update the URL, after scroll position is set
-            window.history.replaceState(null, '', '/gallery');
-            
-            // Wait a moment, then fade out overlay
             setTimeout(() => {
-                blackOverlay.style.transition = 'opacity 300ms ease';
-                blackOverlay.style.opacity = '0';
+                window.scrollTo(0, scrollPos);
                 
-                // Remove overlay after fade completes
+                window.history.pushState = originalPushState;
+                window.history.replaceState = originalReplaceState;
+                
+                window.history.replaceState(null, '', '/gallery');
+                
                 setTimeout(() => {
-                    blackOverlay.remove();
-                }, 300);
-            }, 50);
-        }, 10);
-    }, 20); // Small delay to ensure overlay is visible first
-};
+                    blackOverlay.style.transition = 'opacity 300ms ease';
+                    blackOverlay.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        blackOverlay.remove();
+                    }, 300);
+                }, 50);
+            }, 10);
+        }, 20);
+    };
 
-    // Add effect to watch image loading
     useEffect(() => {
         if (fetchingRef.current && images.length > 0) {
             fetchingRef.current = false;
@@ -618,12 +553,10 @@ const closeModal = () => {
             if (!selectedImage) return;
             switch(e.key) {
                 case 'ArrowLeft':
-                    // Set internal navigation flag before navigating
                     window.__internalImageNavigation = true;
                     navigateImage(-1);
                     break;
                 case 'ArrowRight':
-                    // Set internal navigation flag before navigating
                     window.__internalImageNavigation = true;
                     navigateImage(1);
                     break;
@@ -639,16 +572,11 @@ const closeModal = () => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [selectedImage]);
     
-    // Add this useEffect near your other effects
     useEffect(() => {
-        // We'll let the ImageModal component handle the body styles
-        // This is just a safety measure
         return () => {
-            // Ensure scrolling is restored when component unmounts
         };
     }, []);
 
-    // Add this utility function
     const formatTimestamp = (timestamp) => {
         if (!timestamp) return '';
         const date = new Date(timestamp);
@@ -678,7 +606,6 @@ const closeModal = () => {
         navigate(`/profile/${user_id}`);
     };
 
-    // Add formatDate function
     const formatDate = (date) => {
         if (!date) return '';
         const d = new Date(date);
@@ -690,7 +617,6 @@ const closeModal = () => {
     };
 
     const sortImages = (images, sortType, timeRange) => {
-        // First filter by time range if needed
         let filteredImages = [...images];
         
         if (sortType === 'trending') {
@@ -704,14 +630,12 @@ const closeModal = () => {
             filteredImages = filteredImages.filter(img => new Date(img.created_at) > cutoff);
         }
     
-        // Filter by category if selected
         if (selectedCategory !== 'all') {
             filteredImages = filteredImages.filter(img => 
                 img.categories?.includes(selectedCategory)
             );
         }
     
-        // Sort based on type
         switch(sortType) {
             case 'newest':
                 return filteredImages.sort((a, b) => 
@@ -727,25 +651,22 @@ const closeModal = () => {
                 return filteredImages.sort((a, b) => 
                     (comments[b.id]?.length || 0) - (comments[a.id]?.length || 0)
                 );
-                case 'trending':
-                    return filteredImages.sort((a, b) => {
-                        // Get likes and comments
-                        const aLikes = (likes[a.id] || 0);
-                        const bLikes = (likes[b.id] || 0);
-                        const aComments = (comments[a.id]?.length || 0);
-                        const bComments = (comments[b.id]?.length || 0);
-                        
-                        // Hours since post (minimum 1 hour)
-                        const aHours = Math.max(1, (Date.now() - new Date(a.created_at)) / 3600000);
-                        const bHours = Math.max(1, (Date.now() - new Date(b.created_at)) / 3600000);
-                        
-                        // Reddit-inspired algorithm with comments weighted 2x
-                        const gravity = 1.8; // Higher = faster decay
-                        const aScore = (aLikes + (aComments * 2)) / Math.pow(aHours, gravity);
-                        const bScore = (bLikes + (bComments * 2)) / Math.pow(bHours, gravity);
-                        
-                        return bScore - aScore;
-                    });
+            case 'trending':
+                return filteredImages.sort((a, b) => {
+                    const aLikes = (likes[a.id] || 0);
+                    const bLikes = (likes[b.id] || 0);
+                    const aComments = (comments[a.id]?.length || 0);
+                    const bComments = (comments[b.id]?.length || 0);
+                    
+                    const aHours = Math.max(1, (Date.now() - new Date(a.created_at)) / 3600000);
+                    const bHours = Math.max(1, (Date.now() - new Date(b.created_at)) / 3600000);
+                    
+                    const gravity = 1.8;
+                    const aScore = (aLikes + (aComments * 2)) / Math.pow(aHours, gravity);
+                    const bScore = (bLikes + (bComments * 2)) / Math.pow(bHours, gravity);
+                    
+                    return bScore - aScore;
+                });
             default:
                 return filteredImages;
         }
@@ -757,14 +678,10 @@ const closeModal = () => {
             return Array(columnCount).fill().map(() => []);
         }
         
-        // Initialize empty columns array
         const cols = Array(columnCount).fill().map(() => []);
         
-        // SIMPLE SEQUENTIAL DISTRIBUTION - WITHOUT TRIMMING REMAINDERS
         images.forEach((image, index) => {
-            // Calculate column index by simple modulo (remainder)
             const columnIndex = index % columnCount;
-            // Add image to corresponding column
             cols[columnIndex].push(image);
         });
         
@@ -774,8 +691,8 @@ const closeModal = () => {
     useEffect(() => {
         const handleResize = () => {
             const width = window.innerWidth;
-            const columnWidth = 250; // Base column width
-            const containerWidth = width - 200; // Account for sidebar and margins
+            const columnWidth = 250;
+            const containerWidth = width - 200;
             const calculatedColumns = Math.floor(containerWidth / columnWidth);
             setColumns(Math.min(4, Math.max(1, calculatedColumns)));
         };
@@ -786,7 +703,6 @@ const closeModal = () => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
     
-    // Add admin controls
     const handleBulkDelete = async () => {
         if (!isAdmin || selectedImages.size === 0) return;
         
@@ -796,7 +712,6 @@ const closeModal = () => {
         let failedDeletes = 0;
     
         try {
-            // Delete images sequentially
             for (const imageId of selectedImages) {
                 try {
                     const response = await fetch(`${process.env.REACT_APP_API_URL}/images/${imageId}`, {                        
@@ -816,7 +731,6 @@ const closeModal = () => {
                 }
             }
     
-            // Update UI
             setImages(prev => prev.filter(img => !selectedImages.has(img.id)));
             setSelectedImages(new Set());
             setSelectionMode(false);
@@ -835,7 +749,6 @@ const closeModal = () => {
         setSelectedImages(allImageIds);
     };
 
-    // Add function to fetch all counts
     const fetchAllCounts = async () => {
         const token = localStorage.getItem('token');
         try {
@@ -868,7 +781,6 @@ const closeModal = () => {
         fetchImagesForPage(page);
     }, [page, sortType, timeRange, selectedCategory, selectedAspectRatio]);
 
-    // 1. Image loading handlers with proper logging
     const handleImageLoadStart = () => {
         setImagesLoading(prev => {
             const newCount = prev + 1;
@@ -885,36 +797,19 @@ const closeModal = () => {
         });
     };
 
-    // Replace your fetchImagesForPage function with this one:
-
     const fetchImagesForPage = async (pageNum) => {
         if (loading || fetchingRef.current) return;
+        
         setLoading(true);
         fetchingRef.current = true;
         
-        // Track that we've loaded this page
-        if (!pageHistory.includes(pageNum)) {
-            setPageHistory(prev => [...prev, pageNum]);
-        }
-        
-        // Instead of hiding the entire gallery, just add a loading state
-        if (pageNum > 1) {
-            // Add a loading indicator at the bottom of the gallery
-            const loadingIndicator = document.createElement('div');
-            loadingIndicator.className = 'gallery-bottom-loader';
-            loadingIndicator.innerHTML = '<div class="spinner"></div><div>Loading more images...</div>';
-            gridRef.current?.appendChild(loadingIndicator);
-        }
+        console.log(`📥 Fetching page ${pageNum}`);
         
         try {
             const token = localStorage.getItem('token');
             
-            // Capture the current column count
-            const currentColumnCount = columns;
-            
-            // Calculate request size based on columns
-            const IMAGES_PER_COLUMN = 4; // Each column gets this many new images
-            const batchSize = currentColumnCount * IMAGES_PER_COLUMN;
+            const IMAGES_PER_COLUMN = 4; 
+            const batchSize = columns * IMAGES_PER_COLUMN;
             
             const params = new URLSearchParams({
                 page: pageNum,
@@ -925,7 +820,7 @@ const closeModal = () => {
                 hidePrivate: true
             });
 
-            console.log(`Fetching ${batchSize} images for ${currentColumnCount} columns`);
+            console.log(`📊 Request params: Batch size=${batchSize}, Sort=${sortType}, Category=${selectedCategory}`);
 
             const response = await fetch(
                 `${process.env.REACT_APP_API_URL}/images?${params}`,
@@ -943,35 +838,17 @@ const closeModal = () => {
             const data = await response.json();
             const newImages = (data?.images || []).filter(img => !img.private);
             
-            // Reset imagesLoading counter for new images
-            setImagesLoading(0);
+            console.log(`📥 Received ${newImages.length} images for page ${pageNum}`);
             
             setImages(prev => {
-                const allImages = pageNum === 1 ? [...newImages] : [...prev, ...newImages];
-                
-                // Don't trim the remainder at all - keep ALL images
-                // This ensures we show everything, even if it's not divisible by column count
-                return allImages;
+                return pageNum === 1 ? [...newImages] : [...prev, ...newImages];
             });
             
-            // Update hasMore logic to be more accurate:
-            // If we got fewer images than requested, we've reached the end
-            setHasMore(newImages.length > 0 && newImages.length >= batchSize);
+            setHasMore(newImages.length > 0);
             
-            // Force a rerender after a delay
             setTimeout(() => {
                 setForceRerender(prev => prev + 1);
             }, 100);
-            
-            // If this was the last page to restore, handle scroll restoration
-            const storedState = galleryState;
-            if (storedState && pageNum === storedState.page) {
-                setTimeout(() => {
-                    window.scrollTo(0, storedState.scrollPosition);
-                    // Clear stored state now that we've used it
-                    setGalleryState(null);
-                }, 100);
-            }
             
         } catch (error) {
             console.error('Error fetching images:', error);
@@ -980,80 +857,108 @@ const closeModal = () => {
             setLoading(false);
             fetchingRef.current = false;
             
-            // Clean up loading indicators
-            setTimeout(() => {
-                document.querySelectorAll('.gallery-bottom-loader').forEach(el => el.remove());
-                document.querySelectorAll('.loading-indicator').forEach(el => el.remove());
-                setHidingColumns(false);
-                setScrollLock(false);
-                document.body.classList.remove('loading-images');
-            }, 300);
+            document.querySelectorAll('.gallery-bottom-loader').forEach(el => el.remove());
         }
     };
 
-    // Replace your Intersection Observer with this scroll-based approach
     useEffect(() => {
-        // More reliable scroll-based loading that doesn't depend on observers
         const handleScroll = () => {
-            // Don't check if already loading or no more content
-            if (!hasMore || loading || fetchingRef.current) return;
-    
-            // Get scroll position
-            const scrollY = window.scrollY;
-            const scrollHeight = document.documentElement.scrollHeight;
-            const clientHeight = window.innerHeight;
+            const currentlyLoading = loading || fetchingRef.current;
+            const needsMoreContent = hasMore && !currentlyLoading;
             
-            // Check if we're near the bottom (within 1000px)
-            const isNearBottom = scrollY + clientHeight > scrollHeight - 1000;
+            if (!needsMoreContent) return;
+
+            const scrollY = window.scrollY || window.pageYOffset;
+            const windowHeight = window.innerHeight;
+            const documentHeight = document.documentElement.scrollHeight;
             
-            // Check if we're scrolling down (not up)
+            const distanceFromBottom = documentHeight - (scrollY + windowHeight);
+            
+            const isNearBottom = distanceFromBottom < 500;
+            
             const isScrollingDown = scrollY > lastScrollPosition.current;
             
-            // Update last scroll position
             lastScrollPosition.current = scrollY;
             
-            // If we're near the bottom and scrolling down, load more
-            if (isNearBottom && isScrollingDown) {
-                console.log("🔄 Scroll triggered load, position:", 
-                    Math.round(scrollY), "/", Math.round(scrollHeight - clientHeight));
+            if (isNearBottom) {
+                console.log(`📊 Scroll position: ${Math.round(scrollY)}/${documentHeight}, 
+                            Distance from bottom: ${Math.round(distanceFromBottom)}px, 
+                            Loading: ${currentlyLoading}, Has more: ${hasMore}`);
+            }
+            
+            if (isNearBottom && isScrollingDown && needsMoreContent) {
+                console.log("🔄 Loading next page:", page + 1);
                 setPage(prev => prev + 1);
             }
         };
         
-        // Add scroll throttling to prevent excessive checks
         let scrollTimeout = null;
         const throttledScroll = () => {
             if (scrollTimeout === null) {
                 scrollTimeout = setTimeout(() => {
                     handleScroll();
                     scrollTimeout = null;
-                }, 200);
+                }, 150);
             }
         };
         
         window.addEventListener('scroll', throttledScroll);
-    
-        // Also check on load and resize
+        
         handleScroll();
         window.addEventListener('resize', handleScroll);
+        
+        const observer = new MutationObserver(() => {
+            setTimeout(handleScroll, 100);
+        });
+        
+        if (gridRef.current) {
+            observer.observe(gridRef.current, { 
+                childList: true, 
+                subtree: true 
+            });
+        }
         
         return () => {
             window.removeEventListener('scroll', throttledScroll);
             window.removeEventListener('resize', handleScroll);
+            observer.disconnect();
             clearTimeout(scrollTimeout);
         };
-    }, [hasMore, loading, page]);
+    }, [hasMore, loading, page, gridRef]);
 
-    // Add a cleanup effect that will make sure to finish any pending loads
-    // on component unmount or when changing sort/filter
     useEffect(() => {
         return () => {
-            // If there are any loading indicators left, clean them up
             document.querySelectorAll('.loading-indicator').forEach(el => el.remove());
         };
     }, []);
 
-    // Add follow toggle function
+    useEffect(() => {
+        // Create an intersection observer to detect when we're near the bottom
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const entry = entries[0];
+                if (entry && entry.isIntersecting && hasMore && !loading && !fetchingRef.current) {
+                    console.log('Gallery: Loading next page', page + 1);
+                    setPage(prevPage => prevPage + 1);
+                }
+            },
+            { threshold: 0.1, rootMargin: '300px' }
+        );
+        
+        // Observe the loading reference element
+        const currentRef = loadingRef.current;
+        if (currentRef) {
+            observer.observe(currentRef);
+        }
+        
+        // Clean up
+        return () => {
+            if (currentRef) {
+                observer.unobserve(currentRef);
+            }
+        };
+    }, [hasMore, loading, page]);
+
     const handleModalFollowToggle = async (targetUserId) => {
         const token = localStorage.getItem('token');
         if (!token || targetUserId === user?.userId) return;
@@ -1092,7 +997,6 @@ const closeModal = () => {
     
             if (response.ok) {
                 const data = await response.json();
-                // Update local state
                 setImages(prevImages => prevImages.map(img => 
                     img.id === imageId ? { ...img, private: data.private } : img
                 ));
@@ -1102,10 +1006,8 @@ const closeModal = () => {
         }
     };
 
-    // Add a useEffect to monitor these values instead
     useEffect(() => {
         if (activeImageId && imageUserDetails[activeImageId]) {
-            // Log only when values actually change
             console.log('Image details updated:', {
                 imageId: activeImageId,
                 userDetails: imageUserDetails[activeImageId],
@@ -1114,7 +1016,6 @@ const closeModal = () => {
         }
     }, [activeImageId, imageUserDetails]);
 
-    // Add function to fetch categories
     const fetchCategories = async () => {
         try {
             console.log('Fetching categories...');
@@ -1124,7 +1025,6 @@ const closeModal = () => {
                 console.log('Raw categories data:', data);
                 setAvailableCategories(data);
                 
-                // Log the state after update
                 setTimeout(() => {
                     console.log('Available categories state:', availableCategories);
                 }, 0);
@@ -1136,18 +1036,15 @@ const closeModal = () => {
         }
     };
 
-// Update the useEffect to fetch categories on mount and when navigating back to Gallery
-useEffect(() => {
-    console.log('Gallery component mounted');
-    fetchCategories();
-    
-    // Refresh categories periodically or after navigation
-    const interval = setInterval(fetchCategories, 30000); // Every 30 seconds
-    
-    return () => clearInterval(interval);
-}, []); // Empty dependency array since we only need it on mount/revisit
+    useEffect(() => {
+        console.log('Gallery component mounted');
+        fetchCategories();
+        
+        const interval = setInterval(fetchCategories, 30000);
+        
+        return () => clearInterval(interval);
+    }, []);
 
-    // 3. Update modal render to use cached data
     const renderUserAvatar = (userId) => {
         const imageDetails = imageUserDetails[activeImageId];
         const profilePicUrl = imageDetails?.profile_picture;
@@ -1165,7 +1062,6 @@ useEffect(() => {
         );
     };
 
-    // 4. Update comment rendering to use cached profiles
     const renderCommentAvatar = (comment) => {
         return (
             <img 
@@ -1178,21 +1074,18 @@ useEffect(() => {
         );
     };
 
-    // Add function to organize images into columns
     const organizeIntoColumns = useCallback((imageList) => {
-        const columns = [[], [], [], []]; // 4 columns
+        const columns = [[], [], [], []];
         imageList.forEach((image, index) => {
             columns[index % 4].push(image);
         });
         return columns;
     }, []);
 
-    // Update useEffect to set columnImages when images change
     useEffect(() => {
         setColumnImages(organizeIntoColumns(images));
     }, [images, organizeIntoColumns]);
 
-    // Add these functions after your existing state declarations
     const handleImageEdit = (type, image) => {
         try {
             const imageData = {
@@ -1202,10 +1095,8 @@ useEffect(() => {
                 isImageToImage: type === 'remix'
             };
 
-            // Close the modal before navigating
             closeModal();
             
-            // Store data and navigate
             localStorage.setItem('editImageData', JSON.stringify(imageData));
             navigate('/imagegenerator');
         } catch (error) {
@@ -1214,9 +1105,6 @@ useEffect(() => {
         }
     };
 
-    // These handlers need to reset the state and trigger a new fetch:
-
-    // 1. Aspect Ratio change
     const handleAspectRatioChange = (value) => {
         setSelectedAspectRatio(value);
         setPage(1);
@@ -1226,7 +1114,6 @@ useEffect(() => {
         fetchingRef.current = false;
     };
 
-    // 2. Category change 
     const handleCategoryChange = (value) => {
         setSelectedCategory(value);
         setPage(1);
@@ -1236,7 +1123,6 @@ useEffect(() => {
         fetchingRef.current = false;
     };
 
-    // 3. Sort type change - your current handleSort function
     const handleSort = async (newSortType) => {
         setSortType(newSortType);
         setPage(1);
@@ -1247,21 +1133,16 @@ useEffect(() => {
         await fetchAllCounts();
     };
 
-    // Add this function at the component level
     const getLoraName = (url) => {
-        // First check artistic loras
         const artisticLora = artisticLoras.find(lora => lora.url === url);
         if (artisticLora) return artisticLora.name;
         
-        // Then check realistic loras
         const realisticLora = realisticLoras.find(lora => lora.url === url);
         if (realisticLora) return realisticLora.name;
         
-        // Fallback to model ID if not found
         return url.split(':')[1];
     };
 
-    // Add this function to your component
     const togglePrompt = (imageId) => {
         setExpandedPrompts(prev => {
             const newSet = new Set(prev);
@@ -1274,147 +1155,126 @@ useEffect(() => {
         });
     };
 
-// Fix the initCustomDropdowns function with a truly working click outside handler
-const initCustomDropdowns = () => {
-    const allOptionContainers = [];
-    
-    document.querySelectorAll('.gallery-sort, .gallery-time-range, .gallery-aspect-ratio, .gallery-category').forEach(dropdown => {
-        if (dropdown.style.display === 'none') return;
+    const initCustomDropdowns = () => {
+        const allOptionContainers = [];
         
-        const wrapper = document.createElement('div');
-        wrapper.className = 'custom-dropdown-wrapper';
-        
-        const selected = document.createElement('div');
-        selected.className = 'custom-dropdown-selected';
-        selected.textContent = dropdown.options[dropdown.selectedIndex].text;
-        
-        const options = document.createElement('div');
-        options.className = 'custom-dropdown-options';
-        allOptionContainers.push(options);
-        
-        dropdown.style.display = 'none';
-        
-        Array.from(dropdown.options).forEach(option => {
-            const optionElement = document.createElement('div');
-            optionElement.className = 'custom-dropdown-option';
-            optionElement.textContent = option.text;
-            optionElement.dataset.value = option.value;
+        document.querySelectorAll('.gallery-sort, .gallery-time-range, .gallery-aspect-ratio, .gallery-category').forEach(dropdown => {
+            if (dropdown.style.display === 'none') return;
             
-            optionElement.addEventListener('click', (e) => {
-                e.stopPropagation(); // Stop propagation
-                dropdown.value = option.value;
-                dropdown.dispatchEvent(new Event('change', { bubbles: true }));
-                selected.textContent = option.text;
-                options.classList.remove('show');
+            const wrapper = document.createElement('div');
+            wrapper.className = 'custom-dropdown-wrapper';
+            
+            const selected = document.createElement('div');
+            selected.className = 'custom-dropdown-selected';
+            selected.textContent = dropdown.options[dropdown.selectedIndex].text;
+            
+            const options = document.createElement('div');
+            options.className = 'custom-dropdown-options';
+            allOptionContainers.push(options);
+            
+            dropdown.style.display = 'none';
+            
+            Array.from(dropdown.options).forEach(option => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'custom-dropdown-option';
+                optionElement.textContent = option.text;
+                optionElement.dataset.value = option.value;
+                
+                optionElement.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdown.value = option.value;
+                    dropdown.dispatchEvent(new Event('change', { bubbles: true }));
+                    selected.textContent = option.text;
+                    options.classList.remove('show');
+                });
+                
+                options.appendChild(optionElement);
             });
             
-            options.appendChild(optionElement);
+            selected._clickHandler = (e) => {
+                e.stopPropagation();
+                
+                allOptionContainers.forEach(container => {
+                    if (container !== options && container.classList.contains('show')) {
+                        container.classList.remove('show');
+                    }
+                });
+                
+                options.classList.toggle('show');
+            };
+            
+            selected.addEventListener('click', selected._clickHandler);
+            
+            wrapper.appendChild(selected);
+            wrapper.appendChild(options);
+            dropdown.parentNode.insertBefore(wrapper, dropdown);
         });
+
+        if (typeof window._closeAllDropdowns === 'function') {
+            document.removeEventListener('click', window._closeAllDropdowns);
+        }
         
-        selected._clickHandler = (e) => {
-            e.stopPropagation(); // Prevent click from reaching document
-            
-            allOptionContainers.forEach(container => {
-                if (container !== options && container.classList.contains('show')) {
+        window._closeAllDropdowns = function(event) {
+            const target = event.target;
+            if (!target.closest('.custom-dropdown-wrapper')) {
+                allOptionContainers.forEach(container => {
                     container.classList.remove('show');
-                }
-            });
-            
-            options.classList.toggle('show');
+                });
+            }
         };
         
-        selected.addEventListener('click', selected._clickHandler);
+        document.addEventListener('click', window._closeAllDropdowns);
+    };
+
+    useEffect(() => {
+        const closeDropdownsOnOutsideClick = (e) => {
+            if (!e.target.closest('.custom-dropdown-wrapper')) {
+                document.querySelectorAll('.custom-dropdown-options.show').forEach(dropdown => {
+                    dropdown.classList.remove('show');
+                });
+            }
+        };
+      
+        document.addEventListener('click', closeDropdownsOnOutsideClick);
         
-        wrapper.appendChild(selected);
-        wrapper.appendChild(options);
-        dropdown.parentNode.insertBefore(wrapper, dropdown);
-    });
+        return () => {
+            document.removeEventListener('click', closeDropdownsOnOutsideClick);
+        };
+    }, []);
 
-    // REAL FIX HERE - Make sure to remove old handler and add a new global one
-    if (typeof window._closeAllDropdowns === 'function') {
-        document.removeEventListener('click', window._closeAllDropdowns);
-    }
-    
-    // Create global click handler
-    window._closeAllDropdowns = function(event) {
-        // Only close if click is outside dropdown
-        const target = event.target;
-        if (!target.closest('.custom-dropdown-wrapper')) {
-            allOptionContainers.forEach(container => {
-                container.classList.remove('show');
-            });
-        }
-    };
-    
-    // Add click handler directly to document
-    document.addEventListener('click', window._closeAllDropdowns);
-};
-
-// Add this after your initCustomDropdowns function
-useEffect(() => {
-    // Function to close all dropdowns when clicking elsewhere
-    const closeDropdownsOnOutsideClick = (e) => {
-      // Only run if we didn't click on a dropdown element
-      if (!e.target.closest('.custom-dropdown-wrapper')) {
-        // Find all open dropdown option elements and close them
-        document.querySelectorAll('.custom-dropdown-options.show').forEach(dropdown => {
-          dropdown.classList.remove('show');
-        });
-      }
-    };
-  
-    // Add the handler directly to the document
-    document.addEventListener('click', closeDropdownsOnOutsideClick);
-    
-    // Clean up on unmount
-    return () => {
-      document.removeEventListener('click', closeDropdownsOnOutsideClick);
-    };
-  }, []);
-
-// Also update your useEffect to guarantee removal of old dropdowns before creating new ones
-useEffect(() => {
-    document.querySelectorAll('.custom-dropdown-wrapper').forEach(wrapper => {
-        wrapper.remove();
-    });
-    
-    // Wait a bit for React to update the DOM
-    setTimeout(() => {
-        initCustomDropdowns();
-    }, 20);
-    
-    return () => {
-        // Clean up on unmount
-        document.removeEventListener('click', window._closeAllDropdowns);
+    useEffect(() => {
         document.querySelectorAll('.custom-dropdown-wrapper').forEach(wrapper => {
             wrapper.remove();
         });
-    };
-}, []); // Empty dependency array - only run once
+        
+        setTimeout(() => {
+            initCustomDropdowns();
+        }, 20);
+        
+        return () => {
+            document.removeEventListener('click', window._closeAllDropdowns);
+            document.querySelectorAll('.custom-dropdown-wrapper').forEach(wrapper => {
+                wrapper.remove();
+            });
+        };
+    }, []);
 
-// Add this useEffect to throttle loads and ensure sequential batch completion
-useEffect(() => {
-    // Set a flag when all images in current batch are loaded
-    if (imagesLoading === 0 && !loading && !fetchingRef.current && images.length > 0) {
-        // Reset hiding flag when loading completes
-        document.querySelectorAll('.gallery-column').forEach(col => {
-            col.style.visibility = 'visible';
-        });
-    }
-}, [imagesLoading, loading, images.length]);
+    useEffect(() => {
+        if (imagesLoading === 0 && !loading && !fetchingRef.current && images.length > 0) {
+            document.querySelectorAll('.gallery-column').forEach(col => {
+                col.style.visibility = 'visible';
+            });
+        }
+    }, [imagesLoading, loading, images.length]);
 
-
-    // Add this function to estimate height when not available in your data
     const getEstimatedHeight = (image) => {
-        // If you have width and aspect ratio info
         if (image.width && image.aspect_ratio) {
             return image.width * image.aspect_ratio;
         }
         
-        // Based on common aspect ratios
         if (image.orientation === 'portrait') return 500;
         if (image.orientation === 'landscape') return 300;
-        return 400; // Default for square or unknown
+        return 400;
     };
 
     const loadMoreImages = () => {
@@ -1424,16 +1284,12 @@ useEffect(() => {
         }
     };
 
-    // KKKEEEEEEEP TTTTHHHHHIIIIIIISSSSSSSSSS
     useEffect(() => {
-    // Try to restore previous gallery state
         const savedState = sessionStorage.getItem('galleryState');
         if (savedState) {
             try {
                 const parsed = JSON.parse(savedState);
-                // Restore page number
                 setPage(parsed.page);
-                // Set flag to indicate we're restoring state
                 setGalleryState(parsed);
             } catch (e) {
                 console.error('Failed to parse saved gallery state:', e);
@@ -1441,7 +1297,6 @@ useEffect(() => {
             }
         }
         
-        // Set up cleanup function to save state on unmount
         return () => {
             const stateToSave = {
                 page: page,
@@ -1453,121 +1308,96 @@ useEffect(() => {
             };
             sessionStorage.setItem('galleryState', JSON.stringify(stateToSave));
         };
-    }, []); // Empty dependencies to run only on mount/unmount
+    }, []);
 
-    // Add a useEffect that watches page changes to load multiple pages if needed
     useEffect(() => {
-        // Get saved state
         const storedState = galleryState;
         
-        // If we have saved state and we're on page 1 but need to load more pages
         if (storedState && page === 1 && storedState.page > 1) {
-            // Load pages 2 through storedState.page sequentially
             const loadNextPage = (pageToLoad) => {
                 if (pageToLoad <= storedState.page) {
                     setPage(pageToLoad);
                 }
             };
             
-            // Start loading from page 2
             loadNextPage(2);
         }
     }, [galleryState, page]);
-    
-    // Add this function after your component declarations
 
-const ImageLoader = {
-    queue: [],
-    activeLoads: 0,
-    maxConcurrent: 4,
-    priorityThreshold: 500, // px from viewport edge
+    const ImageLoader = {
+        queue: [],
+        activeLoads: 0,
+        maxConcurrent: 4,
+        priorityThreshold: 500,
+        
+        init() {
+            this.queue = [];
+            this.activeLoads = 0;
+        },
+        
+        add(imageObj, priority = 0) {
+            this.queue.push({ imageObj, priority });
+            this.queue.sort((a, b) => a.priority - b.priority);
+            this.processQueue();
+        },
+        
+        processQueue() {
+            if (this.activeLoads >= this.maxConcurrent || this.queue.length === 0) return;
+            
+            const { imageObj } = this.queue.shift();
+            this.activeLoads++;
+            
+            const img = new Image();
+            img.onload = img.onerror = () => {
+                this.activeLoads--;
+                this.processQueue();
+            };
+            img.src = imageObj.url;
+        },
+        
+        prioritize(imageId) {
+            const index = this.queue.findIndex(item => item.imageObj.id === imageId);
+            if (index !== -1) {
+                const item = this.queue[index];
+                item.priority = -1;
+                this.queue.splice(index, 1);
+                this.queue.unshift(item);
+            }
+        }
+    };
     
-    init() {
-      // Reset on page load
-      this.queue = [];
-      this.activeLoads = 0;
-    },
+    useEffect(() => {
+        ImageLoader.init();
+    }, []);
     
-    add(imageObj, priority = 0) {
-      // Add to queue with priority (0 = highest)
-      this.queue.push({ imageObj, priority });
-      this.queue.sort((a, b) => a.priority - b.priority);
-      this.processQueue();
-    },
-    
-    processQueue() {
-      if (this.activeLoads >= this.maxConcurrent || this.queue.length === 0) return;
-      
-      const { imageObj } = this.queue.shift();
-      this.activeLoads++;
-      
-      // Start loading the image
-      const img = new Image();
-      img.onload = img.onerror = () => {
-        this.activeLoads--;
-        this.processQueue();
-      };
-      img.src = imageObj.url;
-    },
-    
-    prioritize(imageId) {
-      // Move an image to the front of the queue
-      const index = this.queue.findIndex(item => item.imageObj.id === imageId);
-      if (index !== -1) {
-        const item = this.queue[index];
-        item.priority = -1; // Highest priority
-        this.queue.splice(index, 1);
-        this.queue.unshift(item);
-      }
-    }
-  };
-  
-  // Initialize on component mount
-  useEffect(() => {
-    ImageLoader.init();
-  }, []);
-  
-  // Update your useInView hook to prioritize images
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach(entry => {
-          const imageId = entry.target.dataset.imageId;
-          if (entry.isIntersecting) {
-            // Prioritize this image
-            ImageLoader.prioritize(imageId);
-          }
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach(entry => {
+                    const imageId = entry.target.dataset.imageId;
+                    if (entry.isIntersecting) {
+                        ImageLoader.prioritize(imageId);
+                    }
+                });
+            },
+            { rootMargin: '200px' }
+        );
+        
+        document.querySelectorAll('.gallery-item').forEach(el => {
+            observer.observe(el);
         });
-      },
-      { rootMargin: '200px' }
-    );
-    
-    // Observe all image containers
-    document.querySelectorAll('.gallery-item').forEach(el => {
-      observer.observe(el);
-    });
-    
-    return () => observer.disconnect();
-  }, [images]);
+        
+        return () => observer.disconnect();
+    }, [images]);
 
     return (
         <div className="gallery-page">
-            {/* Enhanced background visual effects - no text */}
             <div className="background-effects">
-                {/* Terminal grid and scan lines */}
                 <div className="terminal-grid"></div>
                 <div className="scan-lines"></div>
-                
-                {/* Lain-inspired horizontal scan effect */}
                 <div className="horizontal-scan"></div>
-                
-                {/* Hexagon pattern overlay like NERV interface */}
                 <div className="hexagon-overlay"></div>
-                
-                {/* Ambient pulse background */}
                 <div className="ambient-pulse"></div>
-                
-                {/* EVA-like data blocks that appear and disappear */}
                 <div className="data-blocks">
                     <div className="data-block"></div>
                     <div className="data-block"></div>
@@ -1575,8 +1405,6 @@ const ImageLoader = {
                     <div className="data-block"></div>
                     <div className="data-block"></div>
                 </div>
-                
-                {/* Circuit nodes and connections */}
                 <div className="circuit-connections">
                     <div className="circuit-node"></div>
                     <div className="circuit-node"></div>
@@ -1596,7 +1424,6 @@ const ImageLoader = {
                 </div>
             </div>
             
-            {/* Overlay to close dropdowns when clicking elsewhere */}
             <div className="custom-dropdown-overlay"></div>
             
             <div className="gallery-container">
@@ -1687,7 +1514,6 @@ const ImageLoader = {
                         {createColumns(images, columns).map((col, colIndex) => (
                             <div key={colIndex} className="gallery-column">
                                 {col.map((image, imageIndex) => (
-                                    // Use a combination of column index, image index and image id to ensure uniqueness
                                     <div key={`col${colIndex}-${image.id}-${imageIndex}`} className="gallery-item">
                                         {selectionMode && isAdmin && (
                                             <input
@@ -1715,8 +1541,6 @@ const ImageLoader = {
                                             onLoadStart={() => handleImageLoadStart(colIndex)}
                                             columnIndex={colIndex}
                                         />
-                                        
-                                        {/* Rest of your item rendering code */}
                                     </div>
                                 ))}
                             </div>
